@@ -1,0 +1,22 @@
+{
+  "id": "dev_possess_villager",
+  "interactions": [
+    {
+      "id": "dev_possess_test",
+      "trigger": "InputInteract",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "InZone"
+        }
+      ],
+      "effects": [
+        {
+          "type": "Possess"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+﻿{
+  "Datas": [
+    {
+      "InteractionSetId": null,
+      "templateID": 10,
+      "creatureType": 0,
+      "prefabName": "DEV_TempVillager",
+      "hurtboxLayoutKey": "temp",
+      "StatDatas": [
+        {
+          "sType": 0,
+          "sValue": 6.0
+        },
+        {
+          "sType": 1,
+          "sValue": 10.0
+        },
+        {
+          "sType": 2,
+          "sValue": 10.0
+        },
+        {
+          "sType": 3,
+          "sValue": 0.0
+        },
+        {
+          "sType": 4,
+          "sValue": 2.0
+        },
+        {
+          "sType": 5,
+          "sValue": 0.05
+        },
+        {
+          "sType": 6,
+          "sValue": 1.5
+        }
+      ],
+      "StatResourceDatas": [
+        {
+          "sType": 0,
+          "rType": 0,
+          "rValue": -1.0
+        }
+      ]
+    },
+    {
+      "InteractionSetId": "dev_possess_villager",
+      "templateID": 11,
+      "creatureType": 0,
+      "prefabName": "DEV_PossessTester",
+      "hurtboxLayoutKey": null,
+      "StatDatas": [
+        {
+          "sType": 0,
+          "sValue": 100.0
+        },
+        {
+          "sType": 1,
+          "sValue": 10.0
+        },
+        {
+          "sType": 2,
+          "sValue": 888.0
+        },
+        {
+          "sType": 3,
+          "sValue": 0.0
+        },
+        {
+          "sType": 4,
+          "sValue": 1.0
+        },
+        {
+          "sType": 5,
+          "sValue": 0.2
+        },
+        {
+          "sType": 6,
+          "sValue": 1.5
+        }
+      ],
+      "StatResourceDatas": [
+        {
+          "sType": 0,
+          "rType": 0,
+          "rValue": -1.0
+        }
+      ]
+    }
+  ]
+}

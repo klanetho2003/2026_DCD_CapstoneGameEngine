@@ -1,0 +1,66 @@
+{
+  "id": "villager_temp",
+  "interactions": [
+    {
+      "id": "greet_marker",
+      "trigger": "Tick",
+      "mode": "Latched",
+      "maxActivations": 0,
+      "cooldown": 1.0,
+      "conditions": [
+        {
+          "type": "Distance",
+          "range": 2.5
+        }
+      ],
+      "effects": [
+        {
+          "type": "ShowMarker",
+          "prefabKey": "DEV_TempAlert",
+          "offsetX": 0.0,
+          "offsetY": 1.5
+        }
+      ]
+    },
+    {
+      "id": "talk",
+      "trigger": "InputInteract",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.5,
+      "conditions": [
+        {
+          "type": "Distance",
+          "range": 2.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "PrintLog",
+          "text": "안녕하세요. 오늘도 평화롭네요."
+        }
+      ]
+    },
+    {
+      "id": "farewell",
+      "trigger": "Zone",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "Not",
+          "inner": {
+            "type": "InZone"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "type": "PrintLog",
+          "text": "조심히 가세요."
+        }
+      ]
+    }
+  ]
+}
