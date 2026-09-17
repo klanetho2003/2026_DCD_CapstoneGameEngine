@@ -1,0 +1,17 @@
+templateID,creatureType,prefabName,InteractionSetId,StatDatas.sType,StatDatas.sValue,StatResourceDatas.sType,StatResourceDatas.rType,StatResourceDatas.rValue,hurtboxLayoutKey,SkillIDs,skillSlotLayoutKey
+10,Villager,DEV_TempVillager,,MaxHp,6,MaxHp,CurrentHp,-1,DEV_temp_hurtbox,0,DEV_SlotLayout_temp
+,,,,MaxMp,10,,,,,1,
+,,,,Atk,10,,,,,,
+,,,,Def,0,,,,,,
+,,,,MoveSpeed,2,,,,,,
+,,,,CritRate,0.05,,,,,,
+,,,,CritDamage,1.5,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+11,Villager,DEV_PossessTester,dev_possess_villager,MaxHp,100,MaxHp,CurrentHp,-1,DEV_temp_hurtbox,,
+,,,,MaxMp,10,,,,,,
+,,,,Atk,888,,,,,,
+,,,,Def,0,,,,,,
+,,,,MoveSpeed,1,,,,,,
+,,,,CritRate,0.2,,,,,,
+,,,,CritDamage,1.5,,,,,,

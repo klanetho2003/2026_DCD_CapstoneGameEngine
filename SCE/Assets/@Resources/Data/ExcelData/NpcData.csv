@@ -1,0 +1,2 @@
+templateID,creatureType,prefabName,InteractionSetId,StatDatas.sType,StatDatas.sValue,StatResourceDatas.sType,StatResourceDatas.rType,StatResourceDatas.rValue
+300,NPC,DEV_TeleportBaseCamp,villager_temp,,,,,

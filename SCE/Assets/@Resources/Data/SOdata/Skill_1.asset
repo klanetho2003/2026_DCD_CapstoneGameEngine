@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ced6a0047179e045a54cbffb8f18b1f, type: 3}
+  m_Name: Skill_1
+  m_EditorClassIdentifier: Assembly-CSharp::UserSkillDefinitionSO
+  SkillID: 1
+  SkillNameID: "1\uBC88 Skill"
+  InValidTags: 1
+  CooldownTime: 0
+  ManaCost: 0
+  CastingEffects: {fileID: 0}
+  AnimationStateName: 3
+  Phases:
+  - {fileID: 11400000, guid: 9b6dd0886f9679d40b3c70822e4783b0, type: 2}
+  - {fileID: 11400000, guid: 3fe5678065b25894e8044d26896685a3, type: 2}
+  HitEffects:
+  - {fileID: 11400000, guid: 1a712cc9ad605b1479632c2756e89096, type: 2}
+  IsCanCancelThisSkill: 0
+  IsCanCancelOtherSkill: 0
+  AllowAimTrackingWhileRunning: 0

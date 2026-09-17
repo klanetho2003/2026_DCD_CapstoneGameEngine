@@ -1,2 +1,0 @@
-templateID,creatureType,prefabName,hurtboxLayoutKey,StatDatas.statType,StatDatas.value,StatResourceDatas.sType,StatResourceDatas.rType,StatResourceDatas.rValue,InteractionSetId
-300,NPC,DEV_TeleportBaseCamp,,,,,,,villager_temp

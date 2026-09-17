@@ -1,0 +1,12 @@
+﻿{
+  "Datas": [
+    {
+      "templateID": 300,
+      "creatureType": 2,
+      "prefabName": "DEV_TeleportBaseCamp",
+      "InteractionSetId": "villager_temp",
+      "StatDatas": [],
+      "StatResourceDatas": []
+    }
+  ]
+}
