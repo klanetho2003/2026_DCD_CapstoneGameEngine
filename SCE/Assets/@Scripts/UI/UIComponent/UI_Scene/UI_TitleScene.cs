@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
@@ -81,6 +82,10 @@ public class UI_TitleScene : UI_Scene
         _isCompeleteLoad = true;
 
         GetText(Texts.TitleText).text = _titleText;
+
+        var ui = Managers.UI.ShowBaseUI<UI_Dialogue>();
+        ui.StartTempTextSequence(new List<string> { "안녕하 나는 김성호야.", "반갑고", "잘 지내보자" });
+
     }
 
     private void OnClickBackGround()

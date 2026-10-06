@@ -111,26 +111,6 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
                     ""interactions"": ""Hold"",
                     ""initialStateCheck"": false,
                     ""priority"": 0
-                },
-                {
-                    ""name"": ""Skill_A"",
-                    ""type"": ""Button"",
-                    ""id"": ""a37c0b4e-999f-4b1f-8800-17e64d40bcfc"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false,
-                    ""priority"": 0
-                },
-                {
-                    ""name"": ""Skill_B"",
-                    ""type"": ""Button"",
-                    ""id"": ""d1f04178-30ac-4622-8530-f1c86d45d134"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false,
-                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -285,28 +265,6 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": ""Gamepad"",
                     ""action"": ""Interact"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""2520ee94-8e87-4c5c-831e-19422e2ddfcb"",
-                    ""path"": ""<Keyboard>/q"",
-                    ""interactions"": ""Tap"",
-                    ""processors"": """",
-                    ""groups"": "";Keyboard&Mouse"",
-                    ""action"": ""Skill_A"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""14984b50-2e4f-4a7c-a426-fc73af8f6b55"",
-                    ""path"": ""<Keyboard>/e"",
-                    ""interactions"": ""Tap"",
-                    ""processors"": """",
-                    ""groups"": "";Keyboard&Mouse"",
-                    ""action"": ""Skill_B"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -637,13 +595,231 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
             ]
         },
         {
-            ""name"": ""MAnone"",
+            ""name"": ""MAcombat"",
             ""id"": ""1e5455f6-3c6f-400f-8f83-efccede1dae2"",
-            ""actions"": [],
-            ""bindings"": []
+            ""actions"": [
+                {
+                    ""name"": ""Movement"",
+                    ""type"": ""Value"",
+                    ""id"": ""0375653e-1ace-4f28-b526-4990d3ee2ca2"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Interact"",
+                    ""type"": ""Button"",
+                    ""id"": ""018c485a-db5b-40d6-969e-497f5fb8b1dc"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": ""Hold"",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Skill_A"",
+                    ""type"": ""Button"",
+                    ""id"": ""a4670000-cfa3-4825-be0f-dd9155571073"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Skill_B"",
+                    ""type"": ""Button"",
+                    ""id"": ""0b0cee5c-b21e-461c-8c7f-fe39c503f2c0"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""7131480c-2c77-4085-b6d0-0b682bdcae38"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": ""Tap"",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Skill_B"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9c3b6c98-43fa-4e34-bf5e-d359d9ed35f1"",
+                    ""path"": ""<Gamepad>/leftStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""WASD"",
+                    ""id"": ""7787bfa5-82a2-4481-99d2-24d82a007ef9"",
+                    ""path"": ""SOCDVector2"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Movement"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""Up"",
+                    ""id"": ""21062843-6316-4364-94a9-6c294cd06882"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""Down"",
+                    ""id"": ""5c9f3cd6-269d-4b7d-bf40-3f24e50a2717"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""Left"",
+                    ""id"": ""0ced5d20-e80b-4323-83ab-c822206dfddc"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""Right"",
+                    ""id"": ""f9973f6a-a363-4f1e-bcb4-e51f6d488a20"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""4c2083f8-bd9e-422c-b181-3a0d99a544b6"",
+                    ""path"": ""<Keyboard>/leftArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""90c48446-2246-4c43-a896-eb457eabd521"",
+                    ""path"": ""<Keyboard>/rightArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""2bace4e4-8f6b-4cd3-bd71-93447395627e"",
+                    ""path"": ""<Keyboard>/downArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""ad2650e0-afc6-4966-b375-350eb2337b61"",
+                    ""path"": ""<Keyboard>/upArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""aef71920-b3cc-47e3-8a96-71136af34478"",
+                    ""path"": ""<XRController>/{Primary2DAxis}"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""XR"",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ce06ccd5-a14b-4543-b169-d3efb45a5686"",
+                    ""path"": ""<Joystick>/stick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Joystick"",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""cb5e17a7-f4de-4146-a476-5469226bbc44"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": ""Tap"",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Skill_A"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""42206cf7-ad0a-4c58-b3b8-162cc06dc913"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": ""Tap"",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7abd83da-81d2-4da6-a291-4c644537cfd0"",
+                    ""path"": ""<Gamepad>/buttonNorth"",
+                    ""interactions"": ""Tap"",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         },
         {
-            ""name"": ""MAcombat"",
+            ""name"": ""MAnone"",
             ""id"": ""e08a96e9-0cd5-4c49-abb5-86bfef0a786f"",
             ""actions"": [],
             ""bindings"": []
@@ -716,25 +892,27 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
         m_MAmovement = asset.FindActionMap("MAmovement", throwIfNotFound: true);
         m_MAmovement_Movement = m_MAmovement.FindAction("Movement", throwIfNotFound: true);
         m_MAmovement_Interact = m_MAmovement.FindAction("Interact", throwIfNotFound: true);
-        m_MAmovement_Skill_A = m_MAmovement.FindAction("Skill_A", throwIfNotFound: true);
-        m_MAmovement_Skill_B = m_MAmovement.FindAction("Skill_B", throwIfNotFound: true);
         // MAui
         m_MAui = asset.FindActionMap("MAui", throwIfNotFound: true);
         m_MAui_Navigate = m_MAui.FindAction("Navigate", throwIfNotFound: true);
         m_MAui_Submit = m_MAui.FindAction("Submit", throwIfNotFound: true);
         m_MAui_Cancel = m_MAui.FindAction("Cancel", throwIfNotFound: true);
-        // MAnone
-        m_MAnone = asset.FindActionMap("MAnone", throwIfNotFound: true);
         // MAcombat
         m_MAcombat = asset.FindActionMap("MAcombat", throwIfNotFound: true);
+        m_MAcombat_Movement = m_MAcombat.FindAction("Movement", throwIfNotFound: true);
+        m_MAcombat_Interact = m_MAcombat.FindAction("Interact", throwIfNotFound: true);
+        m_MAcombat_Skill_A = m_MAcombat.FindAction("Skill_A", throwIfNotFound: true);
+        m_MAcombat_Skill_B = m_MAcombat.FindAction("Skill_B", throwIfNotFound: true);
+        // MAnone
+        m_MAnone = asset.FindActionMap("MAnone", throwIfNotFound: true);
     }
 
     ~@ManagerActionAsset()
     {
         UnityEngine.Debug.Assert(!m_MAmovement.enabled, "This will cause a leak and performance issues, ManagerActionAsset.MAmovement.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_MAui.enabled, "This will cause a leak and performance issues, ManagerActionAsset.MAui.Disable() has not been called.");
-        UnityEngine.Debug.Assert(!m_MAnone.enabled, "This will cause a leak and performance issues, ManagerActionAsset.MAnone.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_MAcombat.enabled, "This will cause a leak and performance issues, ManagerActionAsset.MAcombat.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_MAnone.enabled, "This will cause a leak and performance issues, ManagerActionAsset.MAnone.Disable() has not been called.");
     }
 
     /// <summary>
@@ -812,8 +990,6 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
     private List<IMAmovementActions> m_MAmovementActionsCallbackInterfaces = new List<IMAmovementActions>();
     private readonly InputAction m_MAmovement_Movement;
     private readonly InputAction m_MAmovement_Interact;
-    private readonly InputAction m_MAmovement_Skill_A;
-    private readonly InputAction m_MAmovement_Skill_B;
     /// <summary>
     /// Provides access to input actions defined in input action map "MAmovement".
     /// </summary>
@@ -833,14 +1009,6 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "MAmovement/Interact".
         /// </summary>
         public InputAction @Interact => m_Wrapper.m_MAmovement_Interact;
-        /// <summary>
-        /// Provides access to the underlying input action "MAmovement/Skill_A".
-        /// </summary>
-        public InputAction @Skill_A => m_Wrapper.m_MAmovement_Skill_A;
-        /// <summary>
-        /// Provides access to the underlying input action "MAmovement/Skill_B".
-        /// </summary>
-        public InputAction @Skill_B => m_Wrapper.m_MAmovement_Skill_B;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -873,12 +1041,6 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
             @Interact.started += instance.OnInteract;
             @Interact.performed += instance.OnInteract;
             @Interact.canceled += instance.OnInteract;
-            @Skill_A.started += instance.OnSkill_A;
-            @Skill_A.performed += instance.OnSkill_A;
-            @Skill_A.canceled += instance.OnSkill_A;
-            @Skill_B.started += instance.OnSkill_B;
-            @Skill_B.performed += instance.OnSkill_B;
-            @Skill_B.canceled += instance.OnSkill_B;
         }
 
         /// <summary>
@@ -896,12 +1058,6 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
             @Interact.started -= instance.OnInteract;
             @Interact.performed -= instance.OnInteract;
             @Interact.canceled -= instance.OnInteract;
-            @Skill_A.started -= instance.OnSkill_A;
-            @Skill_A.performed -= instance.OnSkill_A;
-            @Skill_A.canceled -= instance.OnSkill_A;
-            @Skill_B.started -= instance.OnSkill_B;
-            @Skill_B.performed -= instance.OnSkill_B;
-            @Skill_B.canceled -= instance.OnSkill_B;
         }
 
         /// <summary>
@@ -1054,6 +1210,135 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
     /// </summary>
     public MAuiActions @MAui => new MAuiActions(this);
 
+    // MAcombat
+    private readonly InputActionMap m_MAcombat;
+    private List<IMAcombatActions> m_MAcombatActionsCallbackInterfaces = new List<IMAcombatActions>();
+    private readonly InputAction m_MAcombat_Movement;
+    private readonly InputAction m_MAcombat_Interact;
+    private readonly InputAction m_MAcombat_Skill_A;
+    private readonly InputAction m_MAcombat_Skill_B;
+    /// <summary>
+    /// Provides access to input actions defined in input action map "MAcombat".
+    /// </summary>
+    public struct MAcombatActions
+    {
+        private @ManagerActionAsset m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public MAcombatActions(@ManagerActionAsset wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "MAcombat/Movement".
+        /// </summary>
+        public InputAction @Movement => m_Wrapper.m_MAcombat_Movement;
+        /// <summary>
+        /// Provides access to the underlying input action "MAcombat/Interact".
+        /// </summary>
+        public InputAction @Interact => m_Wrapper.m_MAcombat_Interact;
+        /// <summary>
+        /// Provides access to the underlying input action "MAcombat/Skill_A".
+        /// </summary>
+        public InputAction @Skill_A => m_Wrapper.m_MAcombat_Skill_A;
+        /// <summary>
+        /// Provides access to the underlying input action "MAcombat/Skill_B".
+        /// </summary>
+        public InputAction @Skill_B => m_Wrapper.m_MAcombat_Skill_B;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_MAcombat; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="MAcombatActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(MAcombatActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="MAcombatActions" />
+        public void AddCallbacks(IMAcombatActions instance)
+        {
+            if (instance == null || m_Wrapper.m_MAcombatActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_MAcombatActionsCallbackInterfaces.Add(instance);
+            @Movement.started += instance.OnMovement;
+            @Movement.performed += instance.OnMovement;
+            @Movement.canceled += instance.OnMovement;
+            @Interact.started += instance.OnInteract;
+            @Interact.performed += instance.OnInteract;
+            @Interact.canceled += instance.OnInteract;
+            @Skill_A.started += instance.OnSkill_A;
+            @Skill_A.performed += instance.OnSkill_A;
+            @Skill_A.canceled += instance.OnSkill_A;
+            @Skill_B.started += instance.OnSkill_B;
+            @Skill_B.performed += instance.OnSkill_B;
+            @Skill_B.canceled += instance.OnSkill_B;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="MAcombatActions" />
+        private void UnregisterCallbacks(IMAcombatActions instance)
+        {
+            @Movement.started -= instance.OnMovement;
+            @Movement.performed -= instance.OnMovement;
+            @Movement.canceled -= instance.OnMovement;
+            @Interact.started -= instance.OnInteract;
+            @Interact.performed -= instance.OnInteract;
+            @Interact.canceled -= instance.OnInteract;
+            @Skill_A.started -= instance.OnSkill_A;
+            @Skill_A.performed -= instance.OnSkill_A;
+            @Skill_A.canceled -= instance.OnSkill_A;
+            @Skill_B.started -= instance.OnSkill_B;
+            @Skill_B.performed -= instance.OnSkill_B;
+            @Skill_B.canceled -= instance.OnSkill_B;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="MAcombatActions.UnregisterCallbacks(IMAcombatActions)" />.
+        /// </summary>
+        /// <seealso cref="MAcombatActions.UnregisterCallbacks(IMAcombatActions)" />
+        public void RemoveCallbacks(IMAcombatActions instance)
+        {
+            if (m_Wrapper.m_MAcombatActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="MAcombatActions.AddCallbacks(IMAcombatActions)" />
+        /// <seealso cref="MAcombatActions.RemoveCallbacks(IMAcombatActions)" />
+        /// <seealso cref="MAcombatActions.UnregisterCallbacks(IMAcombatActions)" />
+        public void SetCallbacks(IMAcombatActions instance)
+        {
+            foreach (var item in m_Wrapper.m_MAcombatActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_MAcombatActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="MAcombatActions" /> instance referencing this action map.
+    /// </summary>
+    public MAcombatActions @MAcombat => new MAcombatActions(this);
+
     // MAnone
     private readonly InputActionMap m_MAnone;
     private List<IMAnoneActions> m_MAnoneActionsCallbackInterfaces = new List<IMAnoneActions>();
@@ -1138,91 +1423,6 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
     /// Provides a new <see cref="MAnoneActions" /> instance referencing this action map.
     /// </summary>
     public MAnoneActions @MAnone => new MAnoneActions(this);
-
-    // MAcombat
-    private readonly InputActionMap m_MAcombat;
-    private List<IMAcombatActions> m_MAcombatActionsCallbackInterfaces = new List<IMAcombatActions>();
-    /// <summary>
-    /// Provides access to input actions defined in input action map "MAcombat".
-    /// </summary>
-    public struct MAcombatActions
-    {
-        private @ManagerActionAsset m_Wrapper;
-
-        /// <summary>
-        /// Construct a new instance of the input action map wrapper class.
-        /// </summary>
-        public MAcombatActions(@ManagerActionAsset wrapper) { m_Wrapper = wrapper; }
-        /// <summary>
-        /// Provides access to the underlying input action map instance.
-        /// </summary>
-        public InputActionMap Get() { return m_Wrapper.m_MAcombat; }
-        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
-        public void Enable() { Get().Enable(); }
-        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
-        public void Disable() { Get().Disable(); }
-        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
-        public bool enabled => Get().enabled;
-        /// <summary>
-        /// Implicitly converts an <see ref="MAcombatActions" /> to an <see ref="InputActionMap" /> instance.
-        /// </summary>
-        public static implicit operator InputActionMap(MAcombatActions set) { return set.Get(); }
-        /// <summary>
-        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
-        /// </summary>
-        /// <param name="instance">Callback instance.</param>
-        /// <remarks>
-        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
-        /// </remarks>
-        /// <seealso cref="MAcombatActions" />
-        public void AddCallbacks(IMAcombatActions instance)
-        {
-            if (instance == null || m_Wrapper.m_MAcombatActionsCallbackInterfaces.Contains(instance)) return;
-            m_Wrapper.m_MAcombatActionsCallbackInterfaces.Add(instance);
-        }
-
-        /// <summary>
-        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
-        /// </summary>
-        /// <remarks>
-        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
-        /// </remarks>
-        /// <seealso cref="MAcombatActions" />
-        private void UnregisterCallbacks(IMAcombatActions instance)
-        {
-        }
-
-        /// <summary>
-        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="MAcombatActions.UnregisterCallbacks(IMAcombatActions)" />.
-        /// </summary>
-        /// <seealso cref="MAcombatActions.UnregisterCallbacks(IMAcombatActions)" />
-        public void RemoveCallbacks(IMAcombatActions instance)
-        {
-            if (m_Wrapper.m_MAcombatActionsCallbackInterfaces.Remove(instance))
-                UnregisterCallbacks(instance);
-        }
-
-        /// <summary>
-        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
-        /// </summary>
-        /// <remarks>
-        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
-        /// </remarks>
-        /// <seealso cref="MAcombatActions.AddCallbacks(IMAcombatActions)" />
-        /// <seealso cref="MAcombatActions.RemoveCallbacks(IMAcombatActions)" />
-        /// <seealso cref="MAcombatActions.UnregisterCallbacks(IMAcombatActions)" />
-        public void SetCallbacks(IMAcombatActions instance)
-        {
-            foreach (var item in m_Wrapper.m_MAcombatActionsCallbackInterfaces)
-                UnregisterCallbacks(item);
-            m_Wrapper.m_MAcombatActionsCallbackInterfaces.Clear();
-            AddCallbacks(instance);
-        }
-    }
-    /// <summary>
-    /// Provides a new <see cref="MAcombatActions" /> instance referencing this action map.
-    /// </summary>
-    public MAcombatActions @MAcombat => new MAcombatActions(this);
     private int m_KeyboardMouseSchemeIndex = -1;
     /// <summary>
     /// Provides access to the input control scheme.
@@ -1309,20 +1509,6 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnInteract(InputAction.CallbackContext context);
-        /// <summary>
-        /// Method invoked when associated input action "Skill_A" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnSkill_A(InputAction.CallbackContext context);
-        /// <summary>
-        /// Method invoked when associated input action "Skill_B" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnSkill_B(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "MAui" which allows adding and removing callbacks.
@@ -1354,19 +1540,47 @@ public partial class @ManagerActionAsset: IInputActionCollection2, IDisposable
         void OnCancel(InputAction.CallbackContext context);
     }
     /// <summary>
-    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "MAnone" which allows adding and removing callbacks.
-    /// </summary>
-    /// <seealso cref="MAnoneActions.AddCallbacks(IMAnoneActions)" />
-    /// <seealso cref="MAnoneActions.RemoveCallbacks(IMAnoneActions)" />
-    public interface IMAnoneActions
-    {
-    }
-    /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "MAcombat" which allows adding and removing callbacks.
     /// </summary>
     /// <seealso cref="MAcombatActions.AddCallbacks(IMAcombatActions)" />
     /// <seealso cref="MAcombatActions.RemoveCallbacks(IMAcombatActions)" />
     public interface IMAcombatActions
+    {
+        /// <summary>
+        /// Method invoked when associated input action "Movement" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnMovement(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Interact" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnInteract(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Skill_A" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSkill_A(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Skill_B" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSkill_B(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "MAnone" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="MAnoneActions.AddCallbacks(IMAnoneActions)" />
+    /// <seealso cref="MAnoneActions.RemoveCallbacks(IMAnoneActions)" />
+    public interface IMAnoneActions
     {
     }
 }

@@ -1,0 +1,40 @@
+{
+  "id": "villager_mare",
+  "interactions": [
+    {
+      "id": "merchant_mare",
+      "trigger": "SpawnRequest",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "StateValue",
+          "key": "nola.death",
+          "op": "Equal",
+          "value": 1
+        }
+      ],
+      "effects": [
+        {
+          "type": "SwapCreatureData",
+          "dataId": 201
+        }
+      ]
+    },
+    {
+      "id": "interact_mare",
+      "trigger": "InputInteract",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [],
+      "effects": [
+        {
+          "type": "PrintLog",
+          "text": "안녕, 오늘 날씨가 좋네."
+        }
+      ]
+    }
+  ]
+}

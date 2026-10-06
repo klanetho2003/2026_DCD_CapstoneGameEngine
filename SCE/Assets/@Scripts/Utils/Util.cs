@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using UnityEngine;
+using static Define;
 
 public class Util
 {
@@ -103,5 +104,31 @@ public class Util
         if (component == null) component = go.AddComponent<T>();
 
         return component;
+    }
+
+    public static bool Evaluate(int current, EComparison comparison, int value)
+    {
+        switch (comparison)
+        {
+            case EComparison.Less: return current < value;
+            case EComparison.LessOrEqual: return current <= value;
+            case EComparison.Greater: return current > value;
+            case EComparison.GreaterOrEqual: return current >= value;
+            case EComparison.Equal: return current == value;
+            default: return false;
+        }
+    }
+
+    public static bool Evaluate(float current, EComparison comparison, float value)
+    {
+        switch (comparison)
+        {
+            case EComparison.Less: return current < value;
+            case EComparison.LessOrEqual: return current <= value;
+            case EComparison.Greater: return current > value;
+            case EComparison.GreaterOrEqual: return current >= value;
+            case EComparison.Equal: return current == value;
+            default: return false;
+        }
     }
 }

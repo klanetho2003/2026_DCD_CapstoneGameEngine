@@ -1,0 +1,189 @@
+{
+  "id": "core",
+  "keys": [
+    {
+      "key": "kill.slime",
+      "default": 0,
+      "reset": "None",
+      "desc": "슬라임 처치 누적"
+    },
+    {
+      "key": "ach.slime.kill.10",
+      "default": 0,
+      "reset": "None",
+      "desc": "업적: 슬라임 10마리"
+    },
+    {
+      "key": "quest.a.done",
+      "default": 0,
+      "reset": "None",
+      "desc": "퀘스트 A 완료 — 스폰 교체 조건 예시"
+    },
+    {
+      "key": "daily.shop.visit",
+      "default": 0,
+      "reset": "EveryDay",
+      "desc": "오늘 상점 방문 횟수"
+    },
+    {
+      "key": "daily.festival.show",
+      "default": 0,
+      "reset": "EveryDay",
+      "desc": "오늘 축제 공연 여부 — 규칙이 켜도 초기화가 지우지 않는지 확인용"
+    },
+    {
+      "key": "weekly.bounty.done",
+      "default": 0,
+      "reset": "EveryNDays",
+      "interval": 7,
+      "desc": "주간 현상금 — 8, 15, 22일차 진입 시 초기화"
+    },
+    {
+      "key": "kill.boss.golem",
+      "default": 0,
+      "reset": "None",
+      "desc": "골렘 처치 여부 (업적·대화 분기)"
+    },
+    {
+      "key": "nola.death",
+      "default": 0,
+      "reset": "None",
+      "desc": "노라 사망 기록"
+    },
+    {
+      "key": "mare.death",
+      "default": 0,
+      "reset": "None",
+      "desc": "마레 사망 기록"
+    },
+    {
+      "key": "elian.death",
+      "default": 0,
+      "reset": "None",
+      "desc": "엘리안 사망 기록"
+    }
+  ],
+  "rules": [
+    {
+      "event": "CreatureDied",
+      "ruleKey": 0,
+      "desc": "슬라임 처치 카운트",
+      "ops": [
+        {
+          "key": "kill.slime",
+          "op": "Add",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "event": "CreatureDied",
+      "ruleKey": 0,
+      "desc": "업적 — 앞 규칙이 올린 값을 본다",
+      "require": [
+        {
+          "key": "kill.slime",
+          "cmp": "GreaterOrEqual",
+          "value": 10
+        }
+      ],
+      "ops": [
+        {
+          "key": "ach.slime.kill.10",
+          "op": "Max",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "event": "Signal",
+      "ruleKey": 100,
+      "desc": "상점 방문 신호",
+      "ops": [
+        {
+          "key": "quest.a.done",
+          "op": "Max",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "event": "DayAdvanced",
+      "ruleKey": 5,
+      "desc": "5일차 축제 공연",
+      "ops": [
+        {
+          "key": "daily.festival.show",
+          "op": "Set",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "event": "DayAdvanced",
+      "desc": "3일차 이후 매일 — require로 일차 범위 표현",
+      "require": [
+        {
+          "key": "sys.day",
+          "cmp": "GreaterOrEqual",
+          "value": 3
+        }
+      ],
+      "ops": [
+        {
+          "key": "daily.shop.visit",
+          "op": "Set",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "event": "CreatureDied",
+      "ruleKey": 3001,
+      "desc": "골렘 처치 — 되돌아가지 않는 플래그",
+      "ops": [
+        {
+          "key": "kill.boss.golem",
+          "op": "Max",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "event": "CreatureDied",
+      "ruleKey": 100,
+      "desc": "Nola (templateID 100) 사망 기록",
+      "ops": [
+        {
+          "key": "nola.death",
+          "op": "Max",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "event": "CreatureDied",
+      "ruleKey": 200,
+      "desc": "Mare(templateID 200) 사망 기록",
+      "ops": [
+        {
+          "key": "mare.death",
+          "op": "Max",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "event": "CreatureDied",
+      "ruleKey": 300,
+      "desc": "Elian(templateID 300) 사망 기록",
+      "ops": [
+        {
+          "key": "elian.death",
+          "op": "Max",
+          "value": 1
+        }
+      ]
+    }
+  ]
+}

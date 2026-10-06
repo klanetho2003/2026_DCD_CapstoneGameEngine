@@ -82,16 +82,19 @@ public class SkillBook : MonoBehaviour
     }
 
     /// <summary>
-    /// 스킬 시전 시도. Player의 입력 핸들러나 Monster의 BT가 호출.
+    /// 스킬 시전 시도. Player의 입력 핸들러나 Monster의 BT가 호출. 단일 진업점
     /// </summary>
     public bool TryUseSkill(int skillID)
     {
-        if (_skillDic.TryGetValue(skillID, out var skill) == false)
-            return false;
-        if (skill.TryUse() == false)
+        if (CurrentRunningSkill != null && CurrentRunningSkill.TryCancel() == false)
             return false;
 
-        // Cooldown 시작 — Active 리스트에 등록
+        if (_skillDic.TryGetValue(skillID, out var skill) == false)
+            return false;
+        if (skill.TryCasting() == false)
+            return false;
+
+        // Cooldown 시작 — Active 리스트에 등록 // 이거도 부품화 시킬까
         if (_activeCooldowns.Contains(skill) == false)
             _activeCooldowns.Add(skill);
 

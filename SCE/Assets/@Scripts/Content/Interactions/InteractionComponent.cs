@@ -86,6 +86,11 @@ public sealed class InteractionComponent : InitBase
     /// <summary>InteractionManager가 Tick / InputInteract 디스패치 시 호출</summary>
     public void OnTrigger(ETriggerType trigger, CreatureBase instigator, float time)
     {
+        // 이 트리거의 상호작용이 없거나, Clear로 정리된 컴포넌트(TriggerMask == 0)면 평가하지 않는다.
+        // 디스패치 중 디스폰된 NPC가 같은 순회에서 평가되는 것을 막는다.
+        if ((TriggerMask & (1 << (int)trigger)) == 0)
+            return;
+
         // 빙의된 Villager 자신은 촉발 주체가 될 수 없다.
         // early return이 아니라 instigator를 null로 바꿔 평가를 계속하는 이유:
         // 켜져 있던 Latched 효과가 조건 실패로 정상 Deactivate 되어야 하기 때문.
@@ -95,21 +100,6 @@ public sealed class InteractionComponent : InitBase
         InteractionContext ctx = new InteractionContext(this, _owner, instigator, trigger, time);
         EvaluateAll(trigger, in ctx);
     }
-
-    /*/// <summary>NPC.OnTriggerEnter2D에서 호출</summary>
-    public void OnZoneEnter(CreatureBase creature)
-    {
-        _zoneOccupant = creature;
-        OnTrigger(ETriggerType.Zone, creature, Time.time); // 진입 후 상태로 평가 → InZone == true
-    }
-
-    /// <summary>NPC.OnTriggerExit에서 호출</summary>
-    public void OnZoneExit(CreatureBase creature)
-    {
-        if (_zoneOccupant == creature)
-            _zoneOccupant = null;
-        OnTrigger(ETriggerType.Zone, creature, Time.time); // 이탈 후 상태로 평가 → InZone == false
-    }*/
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -130,6 +120,17 @@ public sealed class InteractionComponent : InitBase
         if (_zoneOccupant == target)
             _zoneOccupant = null;
         OnTrigger(ETriggerType.Zone, target, Time.time); // 이탈 후 상태로 평가 → InZone == false
+    }
+
+    /// <summary>
+    /// 스폰 경로가 SetInfo(파생 클래스 포함) 완료 직후 호출. Spawned 트리거를 같은 프레임에 평가한다.
+    /// SetInfo 안에서 평가하지 않는 이유: 파생 클래스의 초기화(애니메이션&상태 머신)가 아직 끝나지 않았기 때문.
+    /// 
+    /// OnTrigger의 비트 확인 덕분에 Spawned 상호작용이 없는 NPC는 즉시 빠져나갑니다.
+    /// </summary>
+    public void NotifySpawned()
+    {
+        OnTrigger(ETriggerType.Spawned, Managers.Object.PossessedTarget, Time.time);
     }
     #endregion
 
@@ -165,9 +166,9 @@ public sealed class InteractionComponent : InitBase
 #if UNITY_EDITOR
         bool conditionsPass = InteractionDiagnostics.IsWatching(this)
             ? EvaluateConditionsDiagnosed(def.Conditions, in ctx, index)
-            : AllConditions(def.Conditions, in ctx);
+            : InteractionEvaluator.AllConditions(def.Conditions, in ctx);
 #else
-        bool conditionsPass = AllConditions(def.Conditions, in ctx);
+        bool conditionsPass = InteractionEvaluator.AllConditions(def.Conditions, in ctx);
 #endif
 
         // 여기서부터 실행처리 시작
@@ -201,16 +202,6 @@ public sealed class InteractionComponent : InitBase
         if (def.MaxActivations > 0 && rt.ActivationCount >= def.MaxActivations)
             return false;
 
-        return true;
-    }
-
-    private static bool AllConditions(InteractionCondition[] conditions, in InteractionContext ctx)
-    {
-        for (int i = 0; i < conditions.Length; i++)
-        {
-            if (conditions[i].Evaluate(in ctx) == false)
-                return false; // early-out — 배열 순서가 곧 평가 순서
-        }
         return true;
     }
 

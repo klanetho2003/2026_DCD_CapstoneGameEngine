@@ -1,0 +1,92 @@
+{
+  "Name": "DevMapData",
+  "Grid": {
+    "OriginX": -9.0,
+    "OriginY": -4.0,
+    "CellSize": 1.0,
+    "Width": 18,
+    "Height": 8
+  },
+  "CollisionRows": [
+    "WWWWWWWWWWWWWWWWWW",
+    "W0000000000000000W",
+    "W0000000000000000W",
+    "W0000000000000000W",
+    "W0000000000000000W",
+    "W0000000000000000W",
+    "W0000000000000000W",
+    "WWWWWWWWWWWWWWWWWW"
+  ],
+  "Stages": [
+    {
+      "Key": 1,
+      "Settings": {
+        "ZoneType": "Village",
+        "DisplayName": "temp_11111"
+      },
+      "HasPlayerSpawn": true,
+      "PlayerSpawnInfo": {
+        "ObjectType": "Villager",
+        "DataId": 10,
+        "Cell": {
+          "x": 1,
+          "y": 6,
+          "magnitude": 6.08276272,
+          "sqrMagnitude": 37
+        }
+      },
+      "AlwaysSpawn": [
+        {
+          "ObjectType": "Villager",
+          "DataId": 100,
+          "CellX": 3,
+          "CellY": 1
+        },
+        {
+          "ObjectType": "Villager",
+          "DataId": 200,
+          "CellX": 5,
+          "CellY": 1
+        }
+      ],
+      "Waves": []
+    },
+    {
+      "Key": 30,
+      "Settings": {
+        "ZoneType": "Battlefield",
+        "DisplayName": "tmpe_23123"
+      },
+      "HasPlayerSpawn": false,
+      "PlayerSpawnInfo": {
+        "ObjectType": "Villager",
+        "DataId": 0,
+        "Cell": {
+          "x": 0,
+          "y": 0,
+          "magnitude": 0.0,
+          "sqrMagnitude": 0
+        }
+      },
+      "AlwaysSpawn": [],
+      "Waves": [
+        []
+      ]
+    }
+  ],
+  "MapObjects": [],
+  "StageRegionRows": [
+    "..................",
+    ".111111....UUUUUU.",
+    ".111111....U....U.",
+    ".111111....U....U.",
+    ".111111....U....U.",
+    ".1111......UU...U.",
+    ".1111......UU.UUU.",
+    ".................."
+  ],
+  "StageRegionLegend": {
+    "1": 1,
+    "U": 30
+  }
+}

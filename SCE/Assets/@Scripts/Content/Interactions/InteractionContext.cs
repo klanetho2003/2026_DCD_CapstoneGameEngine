@@ -11,13 +11,21 @@ public readonly struct InteractionContext
     public readonly ETriggerType Trigger;
     public readonly float Time;                  // 쿨다운 기준 시각 (Time.time)
 
-    public InteractionContext(InteractionComponent source, CreatureBase owner, CreatureBase instigator, ETriggerType trigger, float time)
+    /// <summary>상태 조건이 읽는 저장소. 전역 조회 대신 명시적으로 전달 — 테스트 가능, 스폰 요청 단계(Step 7)와 공유.</summary>
+    public GameStateManager State { get { return Managers.GameState; } }
+
+    /// <summary>스폰 요청 단계에서만 값이 있다. 그 외에는 null.</summary>
+    public readonly SpawnRequest SpawnRequest;
+
+    public InteractionContext(InteractionComponent source, CreatureBase owner, CreatureBase instigator,
+    ETriggerType trigger, float time, SpawnRequest spawnRequest = null)
     {
         Source = source;
         Owner = owner;
         Instigator = instigator;
         Trigger = trigger;
         Time = time;
+        SpawnRequest = spawnRequest;
     }
 
     /// <summary>ETargetRef를 실제 대상으로 해석</summary>

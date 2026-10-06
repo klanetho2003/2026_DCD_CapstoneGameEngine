@@ -11,9 +11,15 @@ public class Managers : MonoBehaviour
     #region Contents
     private InteractionManager _interaction = new InteractionManager();
     private CameraManager _camera = new CameraManager();
+    private MapManager _map = new MapManager();
+    private StageManager _stage = new StageManager();
+    private GameStateManager _gameState = new GameStateManager();
 
     public static InteractionManager Interaction { get { return Instance?._interaction; } }
     public static CameraManager Camera { get { return Instance?._camera; } }
+    public static MapManager Map { get { return Instance?._map; } }
+    public static StageManager Stage { get { return Instance?._stage; } }
+    public static GameStateManager GameState { get { return Instance?._gameState; } }
     #endregion
 
     #region Core
@@ -42,6 +48,7 @@ public class Managers : MonoBehaviour
     private void Update()
     {
         s_instance._interaction.OnUpdate();
+        s_instance._stage.OnUpdate();
     }
 
     private static void Init()
@@ -65,6 +72,10 @@ public class Managers : MonoBehaviour
             s_instance._input.Init();
             s_instance._obj.Init();
             s_instance._interaction.Init();
+
+            GameEventBus.SetRuleSink(s_instance._gameState);
+            s_instance._gameState.Init();
+
             // s_instance._skillInputHandler.Init();
         }
     }

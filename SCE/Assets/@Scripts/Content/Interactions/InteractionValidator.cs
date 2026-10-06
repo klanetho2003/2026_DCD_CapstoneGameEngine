@@ -78,6 +78,24 @@ public static class InteractionValidator
                 warnings.Add($"{where}: Fire + Tick + 쿨다운 0 + 무제한 — 조건이 참인 동안 매 프레임 실행됨");
             }
 
+            if (def.Trigger == ETriggerType.StateChanged)
+            {
+                bool readsState = false;
+                for (int c = 0; c < def.Conditions.Length; c++)
+                {
+                    if (def.Conditions[c] != null && def.Conditions[c].ReadsGameState)
+                    {
+                        readsState = true;
+                        break;
+                    }
+                }
+                if (readsState == false)
+                    warnings.Add($"{where}: StateChanged인데 상태 조건 없음 — 관계없는 상태가 바뀌어도 평가됨");
+
+                if (def.Mode == EActivationMode.Fire && def.MaxActivations == 0 && def.Cooldown <= 0f)
+                    warnings.Add($"{where}: StateChanged + Fire + 무제한 — 조건이 참인 동안 상태가 바뀔 때마다 반복 실행. MaxActivations 1 또는 Latched 권장");
+            }
+
             // 비용 순서: 비싼 조건이 싼 조건보다 앞이면 경고
             ENodeCost maxSoFar = ENodeCost.Cheap;
             for (int c = 0; c < def.Conditions.Length; c++)
@@ -93,6 +111,39 @@ public static class InteractionValidator
                 if (cond.Cost > maxSoFar)
                     maxSoFar = cond.Cost;
             }
+
+            // ── 스폰 단계 규칙
+            bool isSpawnRequest = def.Trigger == ETriggerType.SpawnRequest;
+
+            for (int e = 0; e < def.EffectPrototypes.Length; e++)
+            {
+                InteractionEffect fx = def.EffectPrototypes[e];
+                if (fx == null) continue;
+
+                bool spawnPhaseEffect = fx.Phase == EEffectPhase.SpawnRequest;
+                if (isSpawnRequest && spawnPhaseEffect == false)
+                    errors.Add($"{where}: SpawnRequest에는 스폰 요청 효과만 — {fx.GetType().Name}은 스폰된 인스턴스가 필요");
+                else if (isSpawnRequest == false && spawnPhaseEffect)
+                    errors.Add($"{where}: {fx.GetType().Name}은 SpawnRequest 트리거 전용");
+            }
+
+            if (isSpawnRequest)
+            {
+                for (int c = 0; c < def.Conditions.Length; c++)
+                {
+                    InteractionCondition cond = def.Conditions[c];
+                    if (cond != null && cond.IsContextFree == false)
+                        errors.Add($"{where}: SpawnRequest 조건은 상태 조건만 — {cond.GetType().Name}은 스폰 전에 평가할 수 없음");
+                }
+
+                if (def.Mode != EActivationMode.Fire)
+                    errors.Add($"{where}: SpawnRequest는 Fire만 허용");
+                if (def.MaxActivations != 0 || def.Cooldown > 0f)
+                    warnings.Add($"{where}: SpawnRequest에서는 MaxActivations·Cooldown이 적용되지 않음 (NPC별 런타임 상태 없음)");
+            }
+
+            if (def.Trigger == ETriggerType.Spawned && def.Mode == EActivationMode.Latched)
+                warnings.Add($"{where}: Spawned는 스폰 시 1회 평가 — Latched는 디스폰 때만 해제됨");
         }
 
         return errors.Count == errorStart;

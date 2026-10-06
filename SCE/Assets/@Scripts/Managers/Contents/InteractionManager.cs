@@ -23,6 +23,21 @@ public class InteractionManager
     private bool _isDispatching;
     private readonly List<InteractionComponent> _pendingUnregister = new();
 
+    /// <summary>이 매니저가 목록으로 디스패치하는 트리거. 나머지(Zone, SpawnRequest, Spawned)는 개별 경로로 호출된다.</summary>
+    private const int DispatchedTriggerMask =
+        (1 << (int)ETriggerType.Tick) |
+        (1 << (int)ETriggerType.InputInteract) |
+        (1 << (int)ETriggerType.StateChanged);
+
+    #region StateChanged
+    private bool _hasStateVersion; // 첫 비교 전 — sentinel 값 대신 플래그
+    private int _lastStateVersion;
+
+    // 새로 등록된 StateChanged 컴포넌트의 초기 평가 대기열. 처리 중 등록분이 섞이지 않도록 두 개를 교체해 쓴다
+    private List<InteractionComponent> _pendingStateInit = new();
+    private List<InteractionComponent> _pendingStateInitSwap = new();
+    #endregion
+
     public void Init()
     {
         for (int i = 0; i < _byTrigger.Length; i++)
@@ -30,16 +45,24 @@ public class InteractionManager
     }
 
     #region 정의
-    /// <summary>JSON 텍스트 1개 = Set 1개. 프로젝트의 TextAsset 로딩 경로에서 호출.</summary>
+    /// <summary>JSON 텍스트 1개 = Set 1개. 상태 정의(GameState.LoadDefinitions)가 먼저 로드되어 있어야 한다.</summary>
     public bool LoadSet(string json)
     {
-        InteractionSetDefinition set = InteractionLoader.Parse(json);
+        var state = Managers.GameState;
+        if (state == null || state.IsLoaded == false)
+        {
+            LogPrinter.LogError("[InteractionManager] 상태 정의 로드 전 — GameState.LoadDefinitions를 먼저 호출할 것");
+            return false;
+        }
+
+        InteractionSetDefinition set = InteractionLoader.Parse(json, state.Registry);
         return set != null && AddSet(set);
     }
 
     public bool AddSet(InteractionSetDefinition set)
     {
-        if (set == null) return false;
+        if (set == null)
+            return false;
         if (_sets.ContainsKey(set.Id))
         {
             LogPrinter.LogError($"[InteractionManager] Set Id 중복 >> {set.Id}");
@@ -58,7 +81,7 @@ public class InteractionManager
     #region 등록
     public void Register(InteractionComponent component)
     {
-        int mask = component.TriggerMask;
+        int mask = component.TriggerMask & DispatchedTriggerMask;
         for (int t = 0; t < _byTrigger.Length; t++) // 모든 트리거 타입(ETriggerType)을 순회
         {
             // 1. 이 컴포넌트가 t번째 트리거를 가지고 있는지 비트 AND(&) 연산으로 확인
@@ -70,6 +93,10 @@ public class InteractionManager
             if (list.Contains(component) == false) // 재SetInfo 방어
                 list.Add(component);
         }
+
+        // 상태가 더 바뀌지 않아도 현재 상태로 1회 평가되도록 — 다음 프레임 (SetInfo 도중 효과 실행 방지)
+        if ((mask & (1 << (int)ETriggerType.StateChanged)) != 0 && _pendingStateInit.Contains(component) == false)
+            _pendingStateInit.Add(component);
     }
 
     public void Unregister(InteractionComponent component)
@@ -79,8 +106,10 @@ public class InteractionManager
             _pendingUnregister.Add(component);
             return;
         }
+
         for (int t = 0; t < _byTrigger.Length; t++)
             _byTrigger[t].Remove(component); // 디스폰은 드묾 → O(N) 허용
+        _pendingStateInit.Remove(component);
     }
     #endregion
 
@@ -88,7 +117,9 @@ public class InteractionManager
     /// <summary>매 프레임. Managers의 Update 구동 지점에서 호출.</summary>
     public void OnUpdate()
     {
-        Dispatch(ETriggerType.Tick, Managers.Object.PossessedTarget);
+        CreatureBase instigator = Managers.Object.PossessedTarget;
+        DispatchStateChanged(instigator);
+        Dispatch(ETriggerType.Tick, instigator);
     }
 
     /// <summary>MovementHandler.OnInteractInput에서 호출</summary>
@@ -97,9 +128,43 @@ public class InteractionManager
         Dispatch(ETriggerType.InputInteract, instigator);
     }
 
+    /// <summary>
+    /// 상태가 바뀌었으면 전체 1회, 아니면 새로 등록된 컴포넌트만 1회.
+    /// 효과가 신호를 발생시켜 상태가 바뀌어도 이번 프레임에 다시 디스패치하지 않는다 — 다음 프레임 1회로 합쳐진다.
+    /// </summary>
+    private void DispatchStateChanged(CreatureBase instigator)
+    {
+        var state = Managers.GameState;
+        if (state == null || state.IsLoaded == false)
+            return;
+
+        int version = state.ChangeVersion;
+        if (_hasStateVersion == false || version != _lastStateVersion)
+        {
+            _hasStateVersion = true;
+            _lastStateVersion = version;
+            _pendingStateInit.Clear(); // 전체 디스패치가 신규 등록분도 포함한다
+            Dispatch(ETriggerType.StateChanged, instigator);
+            return;
+        }
+
+        // 변경 없음 — 비용은 정수 비교 1회
+        if (_pendingStateInit.Count == 0)
+            return;
+
+        // 상태는 그대로지만 새로 등록된 NPC가 있으면 그 NPC만 1회 평가
+        (_pendingStateInit, _pendingStateInitSwap) = (_pendingStateInitSwap, _pendingStateInit);
+        DispatchList(_pendingStateInitSwap, ETriggerType.StateChanged, instigator);
+        _pendingStateInitSwap.Clear();
+    }
+
     private void Dispatch(ETriggerType trigger, CreatureBase instigator)
     {
-        List<InteractionComponent> list = _byTrigger[(int)trigger];
+        DispatchList(_byTrigger[(int)trigger], trigger, instigator);
+    }
+
+    private void DispatchList(List<InteractionComponent> list, ETriggerType trigger, CreatureBase instigator)
+    {
         if (list.Count == 0)
             return;
 
@@ -121,12 +186,15 @@ public class InteractionManager
     }
     #endregion
 
-    /// <summary>씬 전환 시. 정의는 유지, 등록만 비운다 (정의는 씬과 무관한 데이터).</summary>
+    /// <summary>씬 전환 시. 정의는 유지, 등록만 비운다.</summary>
     public void Clear()
     {
         for (int t = 0; t < _byTrigger.Length; t++)
             _byTrigger[t]?.Clear();
         _pendingUnregister.Clear();
+        _pendingStateInit.Clear();
+        _pendingStateInitSwap.Clear();
         _isDispatching = false;
+        _hasStateVersion = false; // 다음 씬 첫 프레임에 전체 평가
     }
 }

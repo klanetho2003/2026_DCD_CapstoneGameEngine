@@ -62,21 +62,6 @@ public class SkillInstance
     }
 
     /// <summary>
-    /// To Do. UserAim
-    /// </summary>
-    public bool AllowsAimTracking
-    {
-        get
-        {
-            if (IsCasting)
-                return Definition.CastingEffects != null && Definition.CastingEffects.AllowAimTracking;
-            if (Definition is UserSkillDefinitionSO playerDef)
-                return playerDef.AllowAimTrackingWhileRunning;
-            return false;
-        }
-    }
-
-    /// <summary>
     /// 매 프레임 호출 (SkillBook이 위임). Cooldown 감소.
     /// </summary>
     public void Tick(float deltaTime)
@@ -91,10 +76,13 @@ public class SkillInstance
         OnCooldownChanged?.Invoke(RemainingCooldown);
     }
 
-    public bool TryBeginCasting()
+    public bool TryCasting()
     {
-        if (Definition.CastingEffects == null)
-            return false;
+        var castingPhases = Definition.CastingPhases;
+
+        if (castingPhases != null && castingPhases.Count == 0)
+            return TryUse(); // Casting이 없으면 실 사용부로 이전
+
         if (CanUse() == false)
             return false;
         if (Owner.HasTag(Definition.InValidTags))
@@ -106,35 +94,24 @@ public class SkillInstance
         Owner.AddTag(ECreatureTag.UsingSkill);
         Owner.SkillBook.RegisterRunningSkill(this); // 스킬 등록
 
-        // casting Effect 일괄 적용
-        var casting = Definition.CastingEffects;
-        if (casting.CastingEffects != null)
-        {
-            var context = new SkillExecutionContext { Caster = Owner, Skill = this };
-            for (int i = 0; i < casting.CastingEffects.Count; i++)
-                casting.CastingEffects[i]?.Apply(in context);
-        }
-
-        if (Definition.AnimationStateName != EUserbleAnimState.None
-            && Owner.CreatureAnim != null
-            && Owner.CreatureAnim.AnimationHash.TryGetValue((int)Definition.AnimationStateName, out var hash))
-            Owner.CreatureAnim.PlayState(hash);
+        // CastingPhases가 있을 때만 시퀀스 구동.
+        // 비어 있으면 외부 TryUse 호출을 기다린다.
+        Owner.SkillBook.PhaseRunner.Begin(this, castingPhases);
 
         return true;
     }
 
     /// <summary>
     /// Skill Book을 통해서 시전. 직접 호출 금지. Effect 일괄 적용
-    /// </summary>
-    public bool TryUse()
+    /// </summary> 
+    private bool TryUse()
     {
         bool fromCasting = IsCasting;
 
         if (fromCasting)
         {
             IsCasting = false;
-            if (Definition.AnimationStateName != EUserbleAnimState.None)
-                Owner.CreatureAnim?.ClearAnim();
+            Owner.CreatureAnim?.ClearAnim(); // 초기화
         }
         else
         {
@@ -163,12 +140,6 @@ public class SkillInstance
             Skill = this,
         };
 
-        // Animation 재생
-        if (Definition.AnimationStateName != EUserbleAnimState.None
-            && Owner.CreatureAnim != null
-            && Owner.CreatureAnim.AnimationHash.TryGetValue((int)Definition.AnimationStateName, out var hash))
-            Owner.CreatureAnim.PlayState(hash);
-
         // 특정 Target Damage & Effect
         // ApplyTargetedEffects(context);
 
@@ -176,7 +147,7 @@ public class SkillInstance
         RemainingCooldown = Definition.CooldownTime;
         OnCooldownChanged?.Invoke(RemainingCooldown);
 
-        Owner.SkillBook.PhaseRunner.Begin(this, Definition.Phases);
+        Owner.SkillBook.PhaseRunner.Begin(this, Definition.UsePhases);
 
         LogPrinter.Log($"[Skill] {Owner.gameObject.name} >>> SkillID {Definition.SkillID} ({Definition.SkillNameID}) 시전");
 
@@ -216,6 +187,23 @@ public class SkillInstance
         return true;
     }
 
+    /// <summary>
+    /// PhaseRunner가 시퀀스를 자연 완료했을 때 호출. 중단(캔슬/사망)은 이 경로로 오지 않는다.
+    /// casting 시퀀스였다면 TryUse로, TryUse 시퀀스였다면 스킬 종료 단계로 이동한다.
+    /// </summary>
+    public void OnPhaseSequenceComplete()
+    {
+        if (IsCasting == false)
+        {
+            OnEndSkill();
+            return;
+        }
+
+        // casting 완료 >> 본 시전. TryUse 내부에서 fromCasting 경로를 탄다.
+        if (TryUse() == false)
+            OnEndSkill();   // 방어. TryUse가 IsCasting을 먼저 false로 만들므로 재진입 없음
+    }
+
     public void OnEndSkill(Action additionalFunc = null)
     {
         if (IsRunning == false)
@@ -227,7 +215,7 @@ public class SkillInstance
         Owner.SkillBook?.PhaseRunner.StopIfRunning(this);
 
         // Hitbox
-        Owner.CurrentActiveHitbox?.Deactivate();
+        Owner.ActivaedHitboxGroup?.SetActive(false);
         Owner.ClearActiveHitbox();
         // Hurtbox
         Owner.CreatureAnim?.ClearAnim();
@@ -243,10 +231,21 @@ public class SkillInstance
 
     /// <summary>
     /// Animation Event "OnAnimationEnd"의 스킬 수신점.
+    /// 시퀀스가 이 스킬에 관해 실행 중이면 신호만 전달하고, 종료 여부는 phase가 판단한다.
     /// </summary>
     public void HandleAnimationEnd()
     {
-        Owner.SkillBook.PhaseRunner.OnAnimationEnd(); // 신호만, 종료 아님
+        var runner = Owner.SkillBook.PhaseRunner;
+
+        if (runner.IsActive && runner.RunningSkill == this)
+        {
+            // phase에 animation 끝났다고만 알려주고
+            // 실질적인 종료는 phase 부품 중 하나인 WaitForAnimationEndPhase에서 정료
+            runner.OnAnimationEnd();
+            return;
+        }
+
+        // fall back (phase가 없는 skill인 경우 여기에서 종료 처리)
         OnEndSkill();
     }
 

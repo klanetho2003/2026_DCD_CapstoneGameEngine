@@ -119,7 +119,7 @@ public class ObjectManager
         if (creature == null || creature.gameObject.IsValid() == false)
             return;
 
-        // NPC가 Possession 대상이었으면 
+        // Villager가 Possession 대상이었으면 
         if (creature is Villager v && v.IsPossessed)
             Managers.Input.Release(v.StateMachine);
 
@@ -145,6 +145,7 @@ public class ObjectManager
         next?.OnPossessed();
 
         next.UserAim.SetInfo(next);
+        Managers.Camera.SetFollowTarget(next.transform);
     }
     #endregion
 }

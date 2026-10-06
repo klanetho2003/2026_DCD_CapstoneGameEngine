@@ -21,14 +21,32 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 726466a9e8be63949956685dac344e6f
+    m_Address: DEV_Elian
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 843eee783b2ebab4eb0003a4741c1bcf
+    m_Address: DEV_Mare_201
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 906b822111d0f4f4e898f0ad62ca007c
     m_Address: DEV_TempAlert
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a105081e2fd33c648a59ca705cc19b12
+    m_Address: DEV_NPC_merchant_2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d5997df859eb27546968f82f1ccbdc6b
-    m_Address: DEV_PossessTester
+    m_Address: DEV_Nola
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -39,8 +57,26 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f1e6dfee4f478b246be2861b9fd14fc4
+    m_Address: DEV_Mare_200
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2054bbe1b7deb743b7509b24dde0848
+    m_Address: DEV_NPC_merchant_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f5bd9fabe4f7d364dacb67b877482383
     m_Address: DEV_TempMonster
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe0f024cbbd4abe44bf6ac95670afcb3
+    m_Address: DEV_NPC_Test
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad

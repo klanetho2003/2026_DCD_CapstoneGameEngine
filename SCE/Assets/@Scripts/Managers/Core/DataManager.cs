@@ -32,12 +32,31 @@ public class DataManager
             CreatureDataDic[pair.Key] = pair.Value;
         #endregion
 
+        // Game State
+        TextAsset stateCoreJson = Managers.Resource.Load<TextAsset>("state_core");
+        Managers.GameState.LoadDefinitions(new[] { stateCoreJson.text /* 여러 파일 가능 */ });
+
         // Interaction
         TextAsset textAsset_1 = Managers.Resource.Load<TextAsset>("villager_temp");
         Managers.Interaction.LoadSet(textAsset_1.text);
 
         TextAsset textAsset_2 = Managers.Resource.Load<TextAsset>("dev_possess_villager");
         Managers.Interaction.LoadSet(textAsset_2.text);
+
+        TextAsset textAsset_3 = Managers.Resource.Load<TextAsset>("villager_day");
+        Managers.Interaction.LoadSet(textAsset_3.text);
+
+        TextAsset textAsset_4 = Managers.Resource.Load<TextAsset>("merchant");
+        Managers.Interaction.LoadSet(textAsset_4.text);
+
+        TextAsset textAsset_5 = Managers.Resource.Load<TextAsset>("villager_mare");
+        Managers.Interaction.LoadSet(textAsset_5.text);
+
+        TextAsset textAsset_6 = Managers.Resource.Load<TextAsset>("villager_merchant_mare");
+        Managers.Interaction.LoadSet(textAsset_6.text);
+
+        TextAsset textAsset_7 = Managers.Resource.Load<TextAsset>("villager_nola");
+        Managers.Interaction.LoadSet(textAsset_7.text);
     }
 
     private Loader LoadJson<Loader, Key, Value>(string path) where Loader : ILoader<Key, Value>

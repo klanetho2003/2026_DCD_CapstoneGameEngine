@@ -1,0 +1,71 @@
+{
+  "id": "villager_day",
+  "interactions": [
+    {
+      "id": "day3_marker",
+      "trigger": "StateChanged",
+      "mode": "Latched",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "Day",
+          "op": "Equal",
+          "value": 3
+        }
+      ],
+      "effects": [
+        {
+          "type": "ShowMarker",
+          "prefabKey": "DEV_TempAlert",
+          "offsetX": 0.0,
+          "offsetY": 1.5
+        }
+      ]
+    },
+    {
+      "id": "shop_talk",
+      "trigger": "InputInteract",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.5,
+      "conditions": [
+        {
+          "type": "Distance",
+          "range": 2.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "PrintLog",
+          "text": "어서 오세요"
+        },
+        {
+          "type": "RaiseSignal",
+          "signalId": 100
+        }
+      ]
+    },
+    {
+      "id": "after_quest",
+      "trigger": "StateChanged",
+      "mode": "Fire",
+      "maxActivations": 1,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "StateValue",
+          "key": "quest.a.done",
+          "op": "Equal",
+          "value": 1
+        }
+      ],
+      "effects": [
+        {
+          "type": "PlayAnimation",
+          "trigger": "Happy"
+        }
+      ]
+    }
+  ]
+}

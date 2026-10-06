@@ -1,5 +1,6 @@
 using UnityEngine;
 using static Define;
+using static UnityEngine.UI.GridLayoutGroup;
 
 /// <summary>
 /// Input 처리부
@@ -12,6 +13,19 @@ using static Define;
 /// </summary>
 public abstract class BaseInputHandler
 {
+    private static Vector2 _inputDir = Vector2.down;
+    public Vector2 InputDirection
+    {
+        get { return _inputDir; }
+        protected set
+        {
+            if (MathUtil.Equals(value, Vector2.zero))
+                return;
+
+            _inputDir = value;
+        }
+    }
+
     /// <summary>Registry 등록 키. 반드시 자기 자신을 가리킬 것.</summary>
     public abstract EUserInputState StateType { get; }
 
@@ -49,7 +63,48 @@ public class MovementHandler : BaseInputHandler
 
     public override void OnMoveInput(Villager owner, Vector2 direction)
     {
+        InputDirection = direction;
         owner.Move(direction); // isometric 변환은 Movement 컴포넌트 책임. 여기서는 원본 Vector2를 그대로 넘긴다.
+
+        if (owner.HasTag(ECreatureTag.UsingSkill) == false)
+            owner.Anim.RefreshLookAnim(direction);
+    }
+
+    public override void OnInteractInput(Villager owner)
+    {
+        Managers.Interaction.RaiseInput(owner); // 어느 NPC와 상호작용할지는 각 NPC의 조건이 결정
+    }
+}
+#endregion
+
+#region Combat
+/// <summary>
+/// 피격 중 입력 무시.
+/// RequiredContext를 None으로 두는 이유: Movement 맵을 켜둔 채 입력만 버리면, 키를 누른 채 피격이 끝났을 때
+/// 값 변화가 없어 performed가 다시 오지 않아 Villager가 멈춰 있게 된다.
+/// None으로 전환하면 복귀 시 맵이 다시 Enable되고, Input System의 initial state check가
+/// 현재 눌린 값으로 performed를 발생시킨다
+/// </summary>
+public class CombatHandler : BaseInputHandler
+{
+    public override EUserInputState StateType { get { return EUserInputState.Combat; } }
+    public override EActionMap RequiredContext { get { return EActionMap.Combat; } }
+
+    public override void UpdateState(Villager owner)
+    {
+        owner.Anim.UpdateLocomotion();
+    }
+    public override void Exit(Villager owner)
+    {
+        owner.Move(Vector2.zero);
+    }
+
+    public override void OnMoveInput(Villager owner, Vector2 direction)
+    {
+        InputDirection = direction;
+        owner.Move(direction); // isometric 변환은 Movement 컴포넌트 책임. 여기서는 원본 Vector2를 그대로 넘긴다.
+        if (owner.HasTag(ECreatureTag.UsingSkill) == false)
+            owner.Anim.RefreshLookAnim(direction);
     }
 
     public override void OnInteractInput(Villager owner)
@@ -66,7 +121,7 @@ public class MovementHandler : BaseInputHandler
          * blendtree 통해서 적절한 animation 재생
          * PlayState(HashAttack);*/
 
-        
+
 
         if (invoker.Anim is not VillagerAnim vAnim)
             return;
@@ -82,7 +137,7 @@ public class MovementHandler : BaseInputHandler
 }
 #endregion
 
-#region Damaged
+#region None
 /// <summary>
 /// 피격 중 입력 무시.
 /// RequiredContext를 None으로 두는 이유: Movement 맵을 켜둔 채 입력만 버리면, 키를 누른 채 피격이 끝났을 때
@@ -92,7 +147,7 @@ public class MovementHandler : BaseInputHandler
 /// </summary>
 public class DamagedHandler : BaseInputHandler
 {
-    public override EUserInputState StateType { get { return EUserInputState.Damaged; } }
+    public override EUserInputState StateType { get { return EUserInputState.None; } }
     public override EActionMap RequiredContext { get { return EActionMap.None; } }
 
     public override void OnAnimationEnd(Villager owner)

@@ -1,2 +1,4 @@
 templateID,creatureType,prefabName,InteractionSetId,StatDatas.sType,StatDatas.sValue,StatResourceDatas.sType,StatResourceDatas.rType,StatResourceDatas.rValue
-300,NPC,DEV_TeleportBaseCamp,villager_temp,,,,,
+5000,NPC,DEV_NPC_Test,villager_day,,,,,
+5101,NPC,DEV_NPC_merchant_1,merchant,,,,,
+5102,NPC,DEV_NPC_merchant_2,,,,,,

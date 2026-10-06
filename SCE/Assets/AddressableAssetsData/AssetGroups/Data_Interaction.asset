@@ -15,14 +15,44 @@ MonoBehaviour:
   m_GroupName: Data_Interaction
   m_GUID: 8e6b39ffae870004fa9394133a9e7623
   m_SerializeEntries:
+  - m_GUID: 2c8d8333bbd929a4d861146139d747e8
+    m_Address: villager_day
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 481c07da3f4373e44a8ee244d7d486e9
+    m_Address: villager_nola
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ba82537649699d448ff06798e8badea
+    m_Address: merchant
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6bc15f0996f589c438279ba8fa91b337
     m_Address: villager_temp
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6d5a4f308a827ef42ba15fc14fff12ee
+    m_Address: villager_merchant_mare
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e30d458354e50504fb8ae6b835389d33
     m_Address: dev_possess_villager
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fafb34330b62dcc4792f9ade29e8360f
+    m_Address: villager_mare
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad

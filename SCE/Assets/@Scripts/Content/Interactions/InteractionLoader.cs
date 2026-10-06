@@ -28,7 +28,7 @@ public static class InteractionLoader
     private static readonly List<string> s_warnings = new List<string>();
 
     /// <summary>파싱 > 정규화(null인 곳 밀기) > Check.</summary>
-    public static InteractionSetDefinition Parse(string json)
+    public static InteractionSetDefinition Parse(string json, StateKeyRegistry stateKeys)
     {
         InteractionSetDefinition set;
         try
@@ -57,6 +57,15 @@ public static class InteractionLoader
             return null;
         }
 
+        s_errors.Clear();
+        if (InteractionNodeLoadHooks.Run(set, stateKeys, s_errors) == false)
+        {
+            for (int i = 0; i < s_errors.Count; i++)
+                LogPrinter.LogError($"[InteractionLoader] 에러 >> {s_errors[i]}");
+            return null;
+        }
+
+        set.RecomputeTriggerMask();
         return set;
     }
 

@@ -14,19 +14,19 @@ public class GameScene : BaseScene
             return;
         }
 
-        var player = Managers.Object.Spawn<Villager>(10); // TempVillager
-        Managers.Object.SetPossession(player);  // Set Possess
+        Managers.Map.LoadMap("DevMapData");
+        Managers.Stage.Begin();
 
-        var testNPC = Managers.Object.Spawn<Villager>(11, Vector2.one); // test npc
-        var mosnter = Managers.Object.Spawn<MonsterBase>(0); // test monster
-
-        var handle = Managers.UI.ShowPopupUI<UI_FocusGroup>();
+        // Managers.UI.ShowPopupUI<UI_DayTransition>();
+        /*var handle = Managers.UI.ShowPopupUI<UI_FocusGroup>();
         handle.SetInfo();
         handle.OnClosed();
-        Managers.UI.ClosePopupUI();
+        Managers.UI.ClosePopupUI();*/
 
-        /*var handle = Managers.UI.ShowSceneUI<UI_GameScene>();
-        handle.SetInfo();*/
+        /*for (int i = 0; i < 11; i++)
+        {
+            var mosnter = Managers.Object.Spawn<MonsterBase>(0, new Vector2(i+5, 0)); // test monster
+        }*/
     }
 
     public override void Clear()

@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8755d1d21d9d58943b03671c30a1f46b, type: 3}
+  m_Name: DEV_Tile_Mare_200
+  m_EditorClassIdentifier: 
+  m_Sprite: {fileID: -917902819, guid: 437d681416d9bf54cb66b7927a1e286d, type: 3}
+  m_Color: {r: 1, g: 0, b: 0.8549018, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 1
+  m_ColliderType: 1
+  ObjectType: 0
+  TileType: 0
+  DataId: 200
+  DisplayName: "\uAC1C\uBC1C\uD560 \uB54C \uC4F0\uB294 \uCE5C\uAD6C"

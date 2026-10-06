@@ -16,10 +16,12 @@ public static class VectorUtil
 
     public static Vector2 SnapTo8Direction(Vector2 dir)
     {
-        if (dir.sqrMagnitude < 0.0001f) return Vector2.zero;
+        if (dir.sqrMagnitude < 0.0001f)
+            return Vector2.zero;
 
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        if (angle < 0f) angle += 360f;
+        if (angle < 0f)
+            angle += 360f;
 
         int index = Mathf.RoundToInt(angle / 45f) % 8;
         return _snap8Directions[index];

@@ -5,7 +5,7 @@ using static UnityEngine.UI.GridLayoutGroup;
 /// <summary>
 /// Villager의 행동 상태 머신이자 입력 수신자.
 /// </summary>
-public class VillagerStateMachine : InitBase, IMovementInputReceiver
+public class VillagerStateMachine : InitBase, IMovementInputReceiver, ICombatInputReceiver
 {
     private Villager _owner;
 
@@ -51,8 +51,20 @@ public class VillagerStateMachine : InitBase, IMovementInputReceiver
     {
         CurrentInputHandler?.OnInteractInput(_owner);
     }
+    #endregion
 
-    void IMovementInputReceiver.OnSkillInput(ESkillSlot slot)
+    #region IComabtInputReceiver — InputManager가 빙의 중일 때만 호출한다
+    void ICombatInputReceiver.OnMoveInput(Vector2 direction)
+    {
+        CurrentInputHandler?.OnMoveInput(_owner, direction);
+    }
+
+    void ICombatInputReceiver.OnInteractInput()
+    {
+        CurrentInputHandler?.OnInteractInput(_owner);
+    }
+
+    void ICombatInputReceiver.OnSkillInput(ESkillSlot slot)
     {   
         CurrentInputHandler?.OnSkillEventInvoke(_owner.Anim, slot);
     }

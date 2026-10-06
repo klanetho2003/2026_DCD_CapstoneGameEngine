@@ -11,6 +11,7 @@ public static class InputHandlerRegistry
 
         // 새 input 방법 추가 시 여기에 한 줄
         Register(table, new MovementHandler());
+        Register(table, new CombatHandler());
         Register(table, new DamagedHandler());
 
         for (int i = 0; i < table.Length; i++)

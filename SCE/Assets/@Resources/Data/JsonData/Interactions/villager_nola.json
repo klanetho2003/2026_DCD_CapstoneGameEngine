@@ -1,0 +1,22 @@
+{
+  "id": "villager_nola",
+  "interactions": [
+    {
+      "id": "interaction_nola",
+      "trigger": "InputInteract",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "InZone"
+        }
+      ],
+      "effects": [
+        {
+          "type": "Kill_Villager"
+        }
+      ]
+    }
+  ]
+}

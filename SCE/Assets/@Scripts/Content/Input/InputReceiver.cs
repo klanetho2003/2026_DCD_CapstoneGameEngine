@@ -19,6 +19,17 @@ public interface IMovementInputReceiver : IInputReceiver
     /// <param name="direction">performed: 현재 입력 값 / canceled: Vector2.zero (정지 신호)</param>
     void OnMoveInput(Vector2 direction);
     void OnInteractInput();
+}
+
+/// <summary>
+/// MAcombat 맵의 입력 수신. 값은 해석하지 않고 전달한다.
+/// 새 ActionMap을 추가할 때는 별도로 인터페이스를 만든다.
+/// </summary>
+public interface ICombatInputReceiver : IInputReceiver
+{
+    /// <param name="direction">performed: 현재 입력 값 / canceled: Vector2.zero (정지 신호)</param>
+    void OnMoveInput(Vector2 direction);
+    void OnInteractInput();
     void OnSkillInput(ESkillSlot slot);
 }
 

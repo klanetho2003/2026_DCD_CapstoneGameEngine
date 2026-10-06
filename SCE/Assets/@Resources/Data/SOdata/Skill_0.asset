@@ -17,13 +17,12 @@ MonoBehaviour:
   InValidTags: 1
   CooldownTime: 3
   ManaCost: 0
-  CastingEffects: {fileID: 0}
-  AnimationStateName: 3
-  Phases:
+  _castingPhases: []
+  _usePhases:
+  - {fileID: 11400000, guid: 1d2988de2d1927943a0033a3e930c344, type: 2}
   - {fileID: 11400000, guid: 9024f626bde90d44088dddfc73345d9f, type: 2}
   - {fileID: 11400000, guid: 3fe5678065b25894e8044d26896685a3, type: 2}
   HitEffects:
   - {fileID: 11400000, guid: 1a712cc9ad605b1479632c2756e89096, type: 2}
-  IsCanCancelThisSkill: 0
+  IsCanCancelThisSkill: 1
   IsCanCancelOtherSkill: 0
-  AllowAimTrackingWhileRunning: 0

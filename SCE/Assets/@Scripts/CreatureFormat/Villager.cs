@@ -16,7 +16,7 @@ public class Villager : CombatCreature, IMovable
 
     public bool IsPossessed { get { return Managers.Object.PossessedTarget == this; } }
 
-    public override Vector2 LookDirection => throw new NotImplementedException();
+    public override Vector2 LookDirection => (Anim != null) ? Anim.FrontDirection: Vector2.right;
 
     // skill
     public SkillSlots SkillSlots { get; private set; }
@@ -103,13 +103,14 @@ public class Villager : CombatCreature, IMovable
 
     protected override void OnAfterDamageApplied(DamageInfo damageInfo, float finalDamage)
     {
-        StateMachine.SetState(EUserInputState.Damaged);
+        //StateMachine.SetState(EUserInputState.Damaged);
     }
 
     protected override void OnDie()
     {
-        // To Do. 사망 연출. 빙의 중이었다면 빙의 해제가 선행 필요
         LogPrinter.Log($"[Villager] {Data.prefabName} Died");
+
+        Managers.Object.Despawn(this); // To Do. 사망 연출. 빙의 중이었다면 빙의 해제가 선행 필요
     }
     #endregion
 

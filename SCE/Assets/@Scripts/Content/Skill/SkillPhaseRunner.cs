@@ -29,7 +29,7 @@ public class SkillPhaseRunner
     }
     #endregion
 
-    /// <summary>Phases 보유 스킬이면, SkillInstance.TryUse에서 호출.</summary>
+    /// <summary>UsePhases 보유 스킬이면, SkillInstance.TryUse에서 호출.</summary>
     public void Begin(SkillInstance skill, IReadOnlyList<SkillPhaseSO> phases)
     {
         // 방어
@@ -72,12 +72,12 @@ public class SkillPhaseRunner
 
             var finished = RunningSkill;
             Deactivate();
-            finished.OnEndSkill();
+            finished.OnPhaseSequenceComplete(); // 현재 casting인지, skill사용 중인지 판단은 skill로 위임
             return;
         }
     }
 
-    /// <summary>CombatCreature.InterruptRunningSkill >> SkillInstance.HandleAnimationEnd에 위임.</summary>
+    /// <summary>CombatCreature.InterruptRunningSkill >> SkillInstance.HandleAnimationEnd에서 사용.</summary>
     public void OnAnimationEnd()
     {
         if (IsActive == false)
@@ -91,8 +91,10 @@ public class SkillPhaseRunner
     /// </summary>
     public void StopIfRunning(SkillInstance skill)
     {
-        if (IsActive == false) return;
-        if (RunningSkill != skill) return;
+        if (IsActive == false)
+            return;
+        if (RunningSkill != skill)
+            return;
 
         _phases[_index].OnInterrupt(_ctx);
         Deactivate();

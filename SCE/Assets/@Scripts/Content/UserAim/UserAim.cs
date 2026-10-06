@@ -1,5 +1,6 @@
 using Unity.Cinemachine;
 using UnityEngine;
+using static Define;
 using static LogPrinter;
 
 /// <summary>
@@ -29,12 +30,12 @@ public class UserAim : InitBase
     private IAimInputProvider _aimProvider;
 
     private Vector2 _lookDir = Vector2.down;
-    public Vector2 LookDirection { get { return _lookDir; } }
+    public Vector2 PointerDirection { get { return _lookDir; } }
 
     /// <summary>
     /// _aimMarker의 월드 위치. 조준점 UI, AI, 무기 시스템 등 외부에서 조회.
     /// </summary>
-    public Vector3 AimWorldPosition { get { return _aimMarker != null ? _aimMarker.position : transform.position; } }
+    public Vector2 AimWorldPosition { get { return _aimMarker != null ? _aimMarker.position : transform.position; } }
 
     public override bool Init()
     {
@@ -59,6 +60,11 @@ public class UserAim : InitBase
         }
 
         EnsureAimMarker();
+    }
+
+    private void Update()
+    {
+        RefreshLookAim();
     }
 
     /// <summary>
@@ -90,7 +96,7 @@ public class UserAim : InitBase
         _aimMarker = aimGO.transform;
     }
 
-    private void Update()
+    public void RefreshLookAim()
     {
         if (_owner == null || _owner.IsDead)
             return;
@@ -104,6 +110,9 @@ public class UserAim : InitBase
 
         // Aim 위치 >> LookDirection
         UpdateLookDirection();
+
+        // animattor 값도 refresh
+        //_owner.Anim.RefreshLookAnim(PointerDirection);
     }
 
     /// <summary>
@@ -125,8 +134,10 @@ public class UserAim : InitBase
         if (dirFromPlayer.sqrMagnitude < DEAD_ZONE_RADIUS_SQ)
             return;
 
-        _lookDir = SNAP_TO_8_DIRECTION
+        _lookDir = dirFromPlayer;
+
+        /*_lookDir = SNAP_TO_8_DIRECTION
             ? VectorUtil.SnapTo8Direction(dirFromPlayer)
-            : dirFromPlayer.normalized;
+            : dirFromPlayer.normalized;*/
     }
 }

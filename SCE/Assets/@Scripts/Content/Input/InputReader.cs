@@ -68,6 +68,59 @@ public class MovementInputReader : IInputControlContext, IMAmovementActions
 
         _receiver?.OnInteractInput();
     }
+    #endregion
+}
+#endregion
+
+#region Combat Context
+/// <summary>수신자가 없는 컨텍스트. 빙의 대상이 없을 때의 기본 상태.</summary>
+public class ComabtInputReader : IInputControlContext, IMAcombatActions
+{
+    public EActionMap ActionMapType { get { return EActionMap.Combat; } }
+
+    private ManagerActionAsset _asset;
+    private ICombatInputReceiver _receiver;
+
+    public void Initialize(ManagerActionAsset asset)
+    {
+        _asset = asset;
+        _asset.MAcombat.SetCallbacks(this); // 등록
+    }
+
+    public void Enable(IInputReceiver receiver)
+    {
+        _receiver = receiver as ICombatInputReceiver;
+        if (receiver != null && _receiver == null)
+            LogPrinter.LogError($"[MovementInputReader] 수신자가 ICombatInputReceiver를 구현하지 않음 >> {receiver.GetType().Name}");
+
+        _asset.MAcombat.Enable();
+    }
+
+    public void Disable()
+    {
+        _asset.MAcombat.Disable(); // 진행 중인 액션이 있으면 canceled 콜백이 발생할 수 있기에 map을 먼저 끈다
+        _receiver = null;
+    }
+
+    #region Action Routing (해석하지 않고 전달)
+    public void OnMovement(InputAction.CallbackContext context)
+    {
+        // performed: 값 변화마다 / canceled: 기본값(0) 복귀 시 >> ReadValue가 zero를 반환.
+        if (context.phase == InputActionPhase.Started)
+            return;
+
+        _receiver?.OnMoveInput(context.ReadValue<Vector2>());
+    }
+
+    public void OnInteract(InputAction.CallbackContext context)
+    {
+        if (context.performed == false)
+            return;
+
+        LogPrinter.Log("<color=Cyan>[InputReader] OnInteract</color>");
+
+        _receiver?.OnInteractInput();
+    }
 
     public void OnSkill_A(InputAction.CallbackContext context)
     {
@@ -85,32 +138,6 @@ public class MovementInputReader : IInputControlContext, IMAmovementActions
         _receiver?.OnSkillInput(ESkillSlot.SlotB);
     }
     #endregion
-}
-#endregion
-
-#region None Context
-/// <summary>수신자가 없는 컨텍스트. 빙의 대상이 없을 때의 기본 상태.</summary>
-public class NoneInputReader : IInputControlContext, IMAnoneActions
-{
-    public EActionMap ActionMapType { get { return EActionMap.None; } }
-
-    private ManagerActionAsset _asset;
-
-    public void Initialize(ManagerActionAsset asset)
-    {
-        _asset = asset;
-        _asset.MAnone.SetCallbacks(this);
-    }
-
-    public void Enable(IInputReceiver receiver)
-    {
-        _asset.MAnone.Enable(); // 수신자를 사용하지 않음
-    }
-
-    public void Disable()
-    {
-        _asset.MAnone.Disable();
-    }
 }
 #endregion
 
@@ -180,5 +207,31 @@ public class UIInputReader : IInputControlContext, IMAuiActions
             Managers.Input.PopOverlay(_receiver);
     }
     #endregion
+}
+#endregion
+
+#region None Context
+/// <summary>수신자가 없는 컨텍스트. 빙의 대상이 없을 때의 기본 상태.</summary>
+public class NoneInputReader : IInputControlContext, IMAnoneActions
+{
+    public EActionMap ActionMapType { get { return EActionMap.None; } }
+
+    private ManagerActionAsset _asset;
+
+    public void Initialize(ManagerActionAsset asset)
+    {
+        _asset = asset;
+        _asset.MAnone.SetCallbacks(this);
+    }
+
+    public void Enable(IInputReceiver receiver)
+    {
+        _asset.MAnone.Enable(); // 수신자를 사용하지 않음
+    }
+
+    public void Disable()
+    {
+        _asset.MAnone.Disable();
+    }
 }
 #endregion

@@ -69,6 +69,7 @@ public class InputManager
         RegisterContext(new NoneInputReader());
         RegisterContext(new MovementInputReader());
         RegisterContext(new UIInputReader());
+        RegisterContext(new ComabtInputReader());
 
         for (int i = 0; i < _contexts.Length; i++)
         {

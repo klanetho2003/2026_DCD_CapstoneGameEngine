@@ -1,0 +1,19 @@
+{
+  "id": "villager_merchant_mare",
+  "interactions": [
+    {
+      "id": "interact_merchant_mare",
+      "trigger": "InputInteract",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [],
+      "effects": [
+        {
+          "type": "PrintLog",
+          "text": "노라가 죽었어.. 상점은 내가 이어 받았어"
+        }
+      ]
+    }
+  ]
+}

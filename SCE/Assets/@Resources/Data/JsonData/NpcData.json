@@ -1,10 +1,26 @@
 ﻿{
   "Datas": [
     {
-      "templateID": 300,
+      "templateID": 5000,
       "creatureType": 2,
-      "prefabName": "DEV_TeleportBaseCamp",
-      "InteractionSetId": "villager_temp",
+      "prefabName": "DEV_NPC_Test",
+      "InteractionSetId": "villager_day",
+      "StatDatas": [],
+      "StatResourceDatas": []
+    },
+    {
+      "templateID": 5101,
+      "creatureType": 2,
+      "prefabName": "DEV_NPC_merchant_1",
+      "InteractionSetId": "merchant",
+      "StatDatas": [],
+      "StatResourceDatas": []
+    },
+    {
+      "templateID": 5102,
+      "creatureType": 2,
+      "prefabName": "DEV_NPC_merchant_2",
+      "InteractionSetId": null,
       "StatDatas": [],
       "StatResourceDatas": []
     }

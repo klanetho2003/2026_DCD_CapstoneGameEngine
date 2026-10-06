@@ -1,6 +1,4 @@
 using Data;
-using System.Collections.Generic;
-using UnityEditor.ShaderKeywordFilter;
 using UnityEngine;
 using static Define;
 using static LogPrinter;
@@ -9,6 +7,8 @@ public abstract class CreatureBase : InitBase, IStatModifierController
 {
     private CreatureData _creatureData;
     public T GetCreatureData<T>() where T : CreatureData { return _creatureData as T; }
+    public int TemplateId { get { return _creatureData != null ? _creatureData.templateID : 0; } } // RuleKey로도 쓰인다.
+
     public EObjectType CreatureType { get { return _creatureData.creatureType; } }
     protected CreatureStatDefine _creatureStat;
     protected CreatureStatResource _creatureResource;
@@ -17,6 +17,24 @@ public abstract class CreatureBase : InitBase, IStatModifierController
 
     public abstract Vector2 LookDirection { get; }
     public abstract BaseCreatureAnim CreatureAnim { get; }
+
+    #region Game Event
+    /// <summary>
+    /// 개체 발생 이벤트의 공통 정책(멀티플레이 권한 등)은 CanRaiseGameEvents에 둔다.
+    /// </summary>
+    public void RaiseGameEvent<T>(in T evt) where T : struct, IGameEvent
+    {
+        if (CanRaiseGameEvents == false)
+            return;
+
+        GameEventBus.Raise(in evt);
+    }
+
+    /// <summary>
+    /// 멀티플레이에서 원격 복제본이면 false로 재정의할 자리 — 같은 사건이 클라이언트마다 중복 집계되지 않도록.
+    /// </summary>
+    protected virtual bool CanRaiseGameEvents { get { return true; } }
+    #endregion
 
     #region Tags
     public ECreatureTag CurrentTags { get; private set; }
@@ -41,9 +59,16 @@ public abstract class CreatureBase : InitBase, IStatModifierController
     {
         _creatureData = Managers.Data.CreatureDataDic[objectID];
 
+        SetLayer(ELayer.Creature);
+
         InitStat();
 
         SetupInteraction();
+    }
+
+    private void SetLayer(ELayer layer)
+    {
+        this.gameObject.layer = (int)layer;
     }
 
     public virtual void InitStat()

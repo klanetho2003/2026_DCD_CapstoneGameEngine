@@ -82,14 +82,21 @@ public abstract class BaseCreatureAnim : InitBase
     }
 
     /// <summary>Animator 상태 진입.</summary>
-    public void PlayState(int stateHash)
+    public void PlayState(int stateHash, bool isForceRestart = false)
     {
-        _animator.Play(stateHash);
+        if (isForceRestart)
+        {
+            _animator.Play(stateHash, layer: -1/*첫번째 layer만 사용*/, normalizedTime: 0f);
+        }
+        else
+        {
+            _animator.Play(stateHash);
+        }
     }
 
     /// <summary>Empty로 초기화.</summary>
     public void ClearAnim()
     {
-        PlayState(_hashEmpty);
+        PlayState(_hashEmpty, isForceRestart: true);
     }
 }

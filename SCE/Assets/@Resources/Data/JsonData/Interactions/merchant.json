@@ -1,0 +1,67 @@
+{
+  "id": "merchant",
+  "interactions": [
+    {
+      "id": "variant_after_quest",
+      "trigger": "SpawnRequest",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "StateValue",
+          "key": "quest.a.done",
+          "op": "Equal",
+          "value": 1
+        }
+      ],
+      "effects": [
+        {
+          "type": "SwapCreatureData",
+          "dataId": 5102
+        }
+      ]
+    },
+    {
+      "id": "variant_festival",
+      "trigger": "SpawnRequest",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "StateValue",
+          "key": "daily.festival.show",
+          "op": "Equal",
+          "value": 1
+        }
+      ],
+      "effects": [
+        {
+          "type": "SwapCreatureData",
+          "dataId": 5103
+        }
+      ]
+    },
+    {
+      "id": "greet_on_spawn",
+      "trigger": "Spawned",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "Day",
+          "op": "GreaterOrEqual",
+          "value": 2
+        }
+      ],
+      "effects": [
+        {
+          "type": "PlayAnimation",
+          "trigger": "Wave"
+        }
+      ]
+    }
+  ]
+}

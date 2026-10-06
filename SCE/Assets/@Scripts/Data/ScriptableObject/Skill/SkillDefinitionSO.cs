@@ -27,21 +27,20 @@ public abstract class SkillDefinitionSO : ScriptableObject
     [Header("Values")]
     public float CooldownTime = 0f;
     public float ManaCost = 0f; // ToDo EStatType.Mana 도입 후 활용
-    
 
     [Header("Casting")]
-    [Tooltip("null = 즉발. 지정 시 홀드로 캐스팅 개시")]
-    public SkillCastingSO CastingEffects;
+    [Tooltip("비어 있으면 시퀀스를 돌리지 않고 외부 TryUse 호출을 기다린다")]
+    [SerializeField] private List<SkillPhaseSO> _castingPhases = new();
+    public IReadOnlyList<SkillPhaseSO> CastingPhases => _castingPhases;
 
-    [Header("Animation")]
-    [Tooltip("Animator의 State 이름. 비우면 애니메이션 재생 안 함.")]
-    public EUserbleAnimState AnimationStateName;
 
-    [Header("Phases (다단계 타임라인)")]
+    [Header("Use")]
+
     [Tooltip("비어있으면 단일 동작 스킬 — Animation Event가 종료를 담당. " +
          "1개 이상이면 Runner가 순차 실행하고 마지막 phase 완료가 곧 스킬 종료 " +
          "(이때 Animation Event는 WaitForAnimationEndPhase를 깨우는 신호).")]
-    public List<SkillPhaseSO> Phases = new();
+    [SerializeField] private List<SkillPhaseSO> _usePhases = new();
+    public IReadOnlyList<SkillPhaseSO> UsePhases => _usePhases;
 
     // HurtboxLayout을 바꿔야 하는 경우 animation event로 넣건, phase로 넣자
 

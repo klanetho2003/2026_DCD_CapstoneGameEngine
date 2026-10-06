@@ -60,7 +60,7 @@ public sealed class InteractionCardView : VisualElement
         row.style.flexDirection = FlexDirection.Row;
         row.style.alignItems = Align.Center;
 
-        var id = new TextField { bindingPath = _path + ".Id" };
+        var id = new TextField { bindingPath = _path + ".Id", isDelayed = true };
         id.style.flexGrow = 1;
         id.style.minWidth = 120;
         row.Add(id);
@@ -85,11 +85,11 @@ public sealed class InteractionCardView : VisualElement
         var row = new VisualElement();
         row.style.flexDirection = FlexDirection.Row;
 
-        var cooldown = new FloatField("Cooldown") { bindingPath = _path + ".Cooldown", tooltip = "재활성까지 대기 초. 0 = 없음" };
+        var cooldown = new FloatField("Cooldown") { bindingPath = _path + ".Cooldown", isDelayed = true, tooltip = "재활성까지 대기 초. 0 = 없음" };
         cooldown.style.width = 200;
         row.Add(cooldown);
 
-        var max = new IntegerField("Max") { bindingPath = _path + ".MaxActivations", tooltip = "최대 활성 횟수. 0 = 무제한" };
+        var max = new IntegerField("Max") { bindingPath = _path + ".MaxActivations", isDelayed = true, tooltip = "최대 활성 횟수. 0 = 무제한" };
         max.style.width = 160;
         row.Add(max);
         return row;
@@ -164,11 +164,14 @@ public sealed class InteractionCardView : VisualElement
     private void ShowAddPicker(Button activator, string arrayPath, bool isCondition)
     {
         Rect rect = GUIUtility.GUIToScreenRect(activator.worldBound);
-        InteractionNodePickerWindow.Open(rect, isCondition, info =>
+        InteractionNodePicker.Show(rect, isCondition, null, key =>
         {
+            if (panel == null) // 팝업이 떠 있는 사이 카드가 다시 만들어졌으면(Set 변경·Undo) 무시
+                return;
+
             object instance = isCondition
-                ? (InteractionNodeRegistry.TryCreateCondition(info.Key, out InteractionCondition c) ? c : null)
-                : (object)(InteractionNodeRegistry.TryCreateEffect(info.Key, out InteractionEffect e) ? e : null);
+                ? (InteractionNodeRegistry.TryCreateCondition(key, out InteractionCondition c) ? c : null)
+                : (object)(InteractionNodeRegistry.TryCreateEffect(key, out InteractionEffect e) ? e : null);
 
             if (instance != null)
                 AddNode(arrayPath, instance);

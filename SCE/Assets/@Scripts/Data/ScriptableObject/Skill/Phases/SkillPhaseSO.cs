@@ -63,6 +63,8 @@ public class SkillPhaseContext
         RunCleanups();  // 방어
         Caster = caster;
         Skill = skill;
-        PhaseElapsed = 0f; AnimationEndReceived = false; PhaseData = null;
+        PhaseElapsed = 0f;
+        AnimationEndReceived = false;
+        PhaseData = null;
     }
 }

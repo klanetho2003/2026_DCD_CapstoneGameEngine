@@ -30,7 +30,7 @@ public class VillagerAnim : BaseCreatureAnim, IAnimationEventInvoker
     private readonly int _hashMoveY = Animator.StringToHash("MoveY");
 
     // 바라보는 방향
-    private Vector2 _lastLook = new Vector2(-999, -999);
+    public Vector2 FrontDirection { get; private set; } = new Vector2(-999, -999);
     private Vector2 _lastMove = new Vector2(-999, -999);
 
     /// <summary>
@@ -42,9 +42,8 @@ public class VillagerAnim : BaseCreatureAnim, IAnimationEventInvoker
         if (_owner.HasTag(ECreatureTag.ForceMoving | ECreatureTag.UsingSkill))
             return;
 
-        //Vector2 lookDir = _villager.Aim.LookDirection;
-        Vector2 moveDir = GetOwnerAsVillger.Movement.CacheMoveDirection;
-
+        var villager = GetOwnerAsVillger;
+        Vector2 moveDir = villager.Movement.CacheMoveDirection;
         if (moveDir == Vector2.zero)
         {
             _animationHash.TryGetValue((int)EUserbleAnimState.Idle, out var hash);
@@ -56,19 +55,25 @@ public class VillagerAnim : BaseCreatureAnim, IAnimationEventInvoker
             PlayState(hash);
         }
 
-        /*if (lookDir != _lastLook)
-        {
-            _animator.SetFloat(_hashLookX, lookDir.x);
-            _animator.SetFloat(_hashLookY, lookDir.y);
-            _lastLook = lookDir;
-            _spriteRenderer.flipX = (lookDir.x < 0);
-        }*/
-
         if (moveDir != _lastMove)
         {
             _animator.SetFloat(_hashMoveX, moveDir.x);
             _animator.SetFloat(_hashMoveY, moveDir.y);
             _lastMove = moveDir;
+        }
+    }
+
+    public void RefreshLookAnim(Vector2 lookDir)
+    {
+        if (VectorUtil.Equals(lookDir, Vector2.zero))
+            return;
+
+        if (lookDir != FrontDirection)
+        {
+            _animator.SetFloat(_hashLookX, lookDir.x);
+            _animator.SetFloat(_hashLookY, lookDir.y);
+            FrontDirection = lookDir;
+            _spriteRenderer.flipX = (lookDir.x > 0);
         }
     }
 
@@ -97,18 +102,18 @@ public class VillagerAnim : BaseCreatureAnim, IAnimationEventInvoker
         if (GetOwnerAsVillger == null)
             return;
 
-        if (GetOwnerAsVillger.CurrentActiveHitbox == null)
+        if (GetOwnerAsVillger.ActivaedHitboxGroup == null)
         {
             LogPrinter.LogWarning(this, $"[{gameObject.name}] OnAttackHitboxOn — CurrentActiveHitbox 없음 (Skill 시전 안 됨?)");
             return;
         }
 
-        GetOwnerAsVillger.CurrentActiveHitbox.Activate();
+        GetOwnerAsVillger.ActivaedHitboxGroup.SetActive(true);
     }
 
     void IAnimationEventInvoker.OnAttackHitboxOff()
     {
-        GetOwnerAsVillger?.CurrentActiveHitbox?.Deactivate();
+        GetOwnerAsVillger?.ActivaedHitboxGroup?.SetActive(false);
     }
 
     void IAnimationEventInvoker.OnHurtboxLayoutRevert()
