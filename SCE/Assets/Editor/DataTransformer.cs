@@ -79,7 +79,7 @@ public class DataTransformer : EditorWindow
     [MenuItem("Tools/ParseExcel %#K")]
     public static void ParseExcelDataToJson()
     {
-        ParseExcelDataToJson<VillagerDataLoader, VillagerData>("Villager");
+        ParseExcelDataToJson<VillagerDataLoader, VillagerData>("Player");
         ParseExcelDataToJson<MonsterDataLoader, MonsterData>("Monster");
         ParseExcelDataToJson<NPCDataLoader, NPCData>("Npc");
 

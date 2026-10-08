@@ -5,6 +5,14 @@ using static Define;
 
 namespace Data
 {
+    /// <summary>한 라운드의 스폰 데이터. 라운드 루트(RoundAuthoring) 아래 Tilemap_Wave_N이 변환된 것.</summary>
+    [Serializable]
+    public class RoundData
+    {
+        public ERound Round;
+        public List<List<SpawnData>> Waves = new(); // [i] = 이 라운드의 i번 웨이브
+    }
+
     /// <summary>
     /// 전장 맵 구조. BattleMapExporter가 생성, MapManager가 소비.
     /// </summary>
@@ -78,5 +86,8 @@ namespace Data
 
         public List<SpawnData> AlwaysSpawn = new();     // NPC 등 상시
         public List<List<SpawnData>> Waves = new();     // [i] = i번 웨이브
+
+        /// <summary>A → B → C 순서. 비어 있으면 라운드를 쓰지 않는 구역 (기존 맵 — JSON에 없으면 초기값 유지).</summary>
+        public List<RoundData> Rounds = new();
     }
 }

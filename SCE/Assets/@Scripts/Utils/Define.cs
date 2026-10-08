@@ -71,6 +71,22 @@ public static class Define
     }
     #endregion
 
+    public enum ERound
+    {
+        A = 0,
+        B = 1,
+        C = 2,
+    }
+
+    public const int ROUND_COUNT = 3;
+
+    // ── 맵 저작 이름 규약 — MapExporter(읽기)와 MapView(런타임 숨김)가 공유 ──
+    public const string MAP_TILEMAP_COLLISION = "Tilemap_Collision";
+    public const string MAP_TILEMAP_TERRAIN = "Tilemap_Terrain";
+    public const string MAP_TILEMAP_STAGE_OBJECT = "Tilemap_Stage_Object"; // 스폰 마커
+    public const string MAP_TILEMAP_MAP_OBJECT = "Tilemap_Map_Object";     // 스폰 마커
+    public const string MAP_TILEMAP_WAVE_PREFIX = "Tilemap_Wave_";         // 스폰 마커
+
     /// <summary>
     /// 모든 Creature가 가질 수 있는 행동/상태 태그. Flag로 다중 동시 보유 가능.
     /// 

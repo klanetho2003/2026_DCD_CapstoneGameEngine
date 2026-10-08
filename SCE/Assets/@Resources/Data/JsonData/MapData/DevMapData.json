@@ -35,58 +35,71 @@
           "sqrMagnitude": 37
         }
       },
-      "AlwaysSpawn": [
+      "AlwaysSpawn": [],
+      "Waves": [],
+      "Rounds": [
         {
-          "ObjectType": "Villager",
-          "DataId": 100,
-          "CellX": 3,
-          "CellY": 1
+          "Round": "A",
+          "Waves": [
+            [
+              {
+                "ObjectType": "Monster",
+                "DataId": 100,
+                "CellX": 6,
+                "CellY": 4
+              }
+            ],
+            [
+              {
+                "ObjectType": "Monster",
+                "DataId": 200,
+                "CellX": 6,
+                "CellY": 3
+              }
+            ]
+          ]
         },
         {
-          "ObjectType": "Villager",
-          "DataId": 200,
-          "CellX": 5,
-          "CellY": 1
+          "Round": "B",
+          "Waves": [
+            [
+              {
+                "ObjectType": "Monster",
+                "DataId": 201,
+                "CellX": 6,
+                "CellY": 2
+              }
+            ]
+          ]
+        },
+        {
+          "Round": "C",
+          "Waves": [
+            [
+              {
+                "ObjectType": "Monster",
+                "DataId": 300,
+                "CellX": 6,
+                "CellY": 1
+              }
+            ]
+          ]
         }
-      ],
-      "Waves": []
-    },
-    {
-      "Key": 30,
-      "Settings": {
-        "ZoneType": "Battlefield",
-        "DisplayName": "tmpe_23123"
-      },
-      "HasPlayerSpawn": false,
-      "PlayerSpawnInfo": {
-        "ObjectType": "Villager",
-        "DataId": 0,
-        "Cell": {
-          "x": 0,
-          "y": 0,
-          "magnitude": 0.0,
-          "sqrMagnitude": 0
-        }
-      },
-      "AlwaysSpawn": [],
-      "Waves": [
-        []
       ]
     }
   ],
   "MapObjects": [],
   "StageRegionRows": [
     "..................",
-    ".111111....UUUUUU.",
-    ".111111....U....U.",
-    ".111111....U....U.",
-    ".111111....U....U.",
-    ".1111......UU...U.",
-    ".1111......UU.UUU.",
+    ".111111...........",
+    ".111111...........",
+    ".111111...........",
+    ".111111...........",
+    ".1111.............",
+    ".1111.............",
     ".................."
   ],
   "StageRegionLegend": {
-    "1": 1,
-    "U": 30
+    "1": 1
   }
 }

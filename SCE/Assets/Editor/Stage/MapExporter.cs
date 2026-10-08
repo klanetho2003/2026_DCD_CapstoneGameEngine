@@ -19,16 +19,19 @@ using static Define;
 /// - 맵 루트의 직계 자식 중 StageAuthoring이 붙은 오브젝트 = 스테이지 (이름 무관)
 /// - 스테이지의 Tilemap_Terrain에 칠한 셀 = 그 스테이지의 영역
 /// - 에러가 1건이라도 있으면 JSON을 기록하지 않는다. Export는 씬을 수정하지 않는다
+/// 
+/// - 스테이지(구역) 루트의 직계 자식 중 RoundAuthoring이 붙은 오브젝트 = 라운드 (이름 무관)
+/// - 라운드 루트의 직계 자식 Tilemap_Wave_N = 그 라운드의 웨이브. 라운드를 쓰는 구역은 A·B·C가 모두 있어야 한다
 /// </summary>
 public static class MapExporter
 {
     private const string OUTPUT_DIR = "Assets/@Resources/Data/JsonData/MapData";
 
-    private const string COLLISION_TILEMAP = "Tilemap_Collision";
-    private const string OBJECT_STAGE = "Tilemap_Stage_Object";
-    private const string OBJECT_MAP = "Tilemap_Map_Object";
-    private const string TERRAIN_TILEMAP = "Tilemap_Terrain";
-    private const string WAVE_TILEMAP_PREFIX = "Tilemap_Wave_";
+    private const string COLLISION_TILEMAP = MAP_TILEMAP_COLLISION;
+    private const string OBJECT_STAGE = MAP_TILEMAP_STAGE_OBJECT;
+    private const string OBJECT_MAP = MAP_TILEMAP_MAP_OBJECT;
+    private const string TERRAIN_TILEMAP = MAP_TILEMAP_TERRAIN;
+    private const string WAVE_TILEMAP_PREFIX = MAP_TILEMAP_WAVE_PREFIX;
     private const string LEGACY_STAGE_PREFIX = "Stage_"; // 마이그레이션 누락 탐지용으로만 사용
 
     public static string GetExportPath(string mapName)
@@ -88,6 +91,11 @@ public static class MapExporter
         if (Mathf.Approximately(grid.cellSize.x, grid.cellSize.y) == false)
             report.Warning($"비정방 셀 ({grid.cellSize}). CellSize는 x 기준으로 기록됨.");
 
+        // 런타임은 Stage Prefab을 원점·무회전으로 스폰한다. Export 때 위치가 다르면 구운 좌표와 어긋난다
+        Transform rootTransform = mapRoot.transform;
+        if (rootTransform.position != Vector3.zero || rootTransform.rotation != Quaternion.identity || rootTransform.lossyScale != Vector3.one)
+            report.Warning($"맵 루트 Transform이 원점·무회전·스케일 1이 아님 (Position {rootTransform.position}) — Stage Prefab으로 스폰하면 Export 좌표와 어긋남");
+
         var collisionTm = Util.FindChild<Tilemap>(mapRoot, COLLISION_TILEMAP, true);
         if (collisionTm == null)
         {
@@ -125,6 +133,7 @@ public static class MapExporter
         List<SpawnData> mapObjects = CollectMapObjects(mapRoot, bounds, rows, report);
 
         SortedList<int, StageAuthoring> stageRoots = CollectStageRoots(mapRoot, report);
+        ValidateRoundPlacement(mapRoot, report);
         int[] regionCells = BuildStageRegion(stageRoots, grid, bounds, spec, report, overlapCells: null);
         List<StageData> stages = ExportStages(stageRoots, bounds, rows, report);
         ValidateSpawnsInRegion(stages, stageRoots, regionCells, spec.Width, report);
@@ -160,7 +169,11 @@ public static class MapExporter
         string json = JsonConvert.SerializeObject(mapData, Formatting.Indented, new StringEnumConverter());
         File.WriteAllText(path, json);
 
-        LogPrinter.Log($"<color=Cyan>[MapExport] {mapData.Name}: {spec.Width}x{spec.Height}, Stages={stages.Count}, " +
+        int roundCount = 0;
+        for (int i = 0; i < stages.Count; i++)
+            roundCount += stages[i].Rounds.Count;
+
+        LogPrinter.Log($"<color=Cyan>[MapExport] {mapData.Name}: {spec.Width}x{spec.Height}, Stages={stages.Count}, Rounds={roundCount}, " +
             $"MapObjects={mapObjects.Count}, Warnings={report.WarningCount}, Size={json.Length / 1024f:F1}KB >> {path}</color>");
     }
 
@@ -358,7 +371,7 @@ public static class MapExporter
         return cells;
     }
 
-    /// <summary>스테이지 계층을 StageData로 export. 영역 판정은 BuildStageRegion 담당.</summary>
+    /// <summary>스테이지(구역) 계층을 StageData로 export. 영역 판정은 BuildStageRegion 담당.</summary>
     private static List<StageData> ExportStages(SortedList<int, StageAuthoring> stageRoots, BoundsInt cb, List<string> rows, ExportReport report)
     {
         var stages = new List<StageData>(stageRoots.Count);
@@ -375,41 +388,161 @@ public static class MapExporter
 
             var objectTm = root.Find(OBJECT_STAGE)?.GetComponent<Tilemap>();
             if (objectTm != null)
-                ParseSpawnTilemap(objectTm, cb, rows, stage, waveIndex: -1, root.name, report);
-            if (stage.HasPlayerSpawn == false)
-                report.Warning($"'{root.name}': SpawnPoint 타일 없음 — 재시작 checkpoint 불가");
+                ParseSpawnTilemap(objectTm, cb, rows, stage, waveTarget: null, root.name, report);
 
-            var waveTms = new SortedList<int, Tilemap>();
-            foreach (Transform child in root)
+            // 구역 직속 웨이브(기존 규약)와 라운드(신규) — 웨이브 수집 경로는 CollectWaves 하나
+            CollectWaves(root, cb, rows, stage, stage.Waves, root.name, report);
+            bool usesRounds = CollectRounds(root, cb, rows, stage, report);
+
+            // SpawnPoint 판정은 모든 타일맵을 읽은 뒤 — 최종 상태 기준
+            if (stage.HasPlayerSpawn == false)
             {
-                if (child.name.StartsWith(WAVE_TILEMAP_PREFIX) == false) continue;
-                if (int.TryParse(child.name.Substring(WAVE_TILEMAP_PREFIX.Length), out int w) == false) continue;
-                if (waveTms.ContainsKey(w))
-                {
-                    report.Error($"'{root.name}': '{child.name}' 웨이브 번호 {w} 중복");
-                    continue;
-                }
-                var tm = child.GetComponent<Tilemap>();
-                if (tm != null) waveTms.Add(w, tm);
-            }
-            foreach (var wavePair in waveTms)
-            {
-                stage.Waves.Add(new List<SpawnData>());
-                ParseSpawnTilemap(wavePair.Value, cb, rows, stage, waveIndex: stage.Waves.Count - 1, root.name, report);
+                if (usesRounds)
+                    report.Error($"'{root.name}': 라운드를 쓰는 구역에 SpawnPoint 타일 없음 — Stage 진입 시 플레이어를 스폰할 수 없음");
+                else
+                    report.Warning($"'{root.name}': SpawnPoint 타일 없음 — 재시작 checkpoint 불가");
             }
 
             // 구역 설정과 배치의 불일치 — 동작은 하지만 의도와 다를 가능성이 높다
-            if (stage.Settings.ZoneType == EZoneType.Village && stage.Waves.Count > 0)
-                report.Warning($"'{root.name}': 마을 구역에 웨이브 {stage.Waves.Count}개 — 의도 확인");
+            if (stage.Settings.ZoneType == EZoneType.Village && (stage.Waves.Count > 0 || usesRounds))
+                report.Warning($"'{root.name}': 마을 구역에 웨이브 {stage.Waves.Count}개 / 라운드 {stage.Rounds.Count}개 — 의도 확인");
 
             stages.Add(stage);
         }
         return stages;
     }
 
-    private static void ParseSpawnTilemap(Tilemap tm, BoundsInt cb, List<string> rows,
-        StageData stage, int waveIndex, string stageName, ExportReport report)
+    /// <summary>
+    /// parent의 직계 자식 Tilemap_Wave_N을 번호 순으로 읽어 waves에 추가한다.
+    /// 구역 직속 웨이브와 라운드 웨이브가 공유하는 유일한 수집 경로.
+    /// </summary>
+    private static void CollectWaves(Transform parent, BoundsInt cb, List<string> rows, StageData stage,
+        List<List<SpawnData>> waves, string ownerLabel, ExportReport report)
     {
+        var waveTms = new SortedList<int, Tilemap>();
+        foreach (Transform child in parent)
+        {
+            if (child.name.StartsWith(WAVE_TILEMAP_PREFIX) == false) continue;
+            if (int.TryParse(child.name.Substring(WAVE_TILEMAP_PREFIX.Length), out int w) == false)
+            {
+                // 기존에는 경고 없이 제외 — 이름 오타가 조용히 누락됐다
+                report.Warning($"'{ownerLabel}': '{child.name}' — {WAVE_TILEMAP_PREFIX} 뒤가 숫자가 아님, 웨이브에서 제외");
+                continue;
+            }
+            if (waveTms.ContainsKey(w))
+            {
+                report.Error($"'{ownerLabel}': '{child.name}' 웨이브 번호 {w} 중복");
+                continue;
+            }
+
+            var tm = child.GetComponent<Tilemap>();
+            if (tm != null) waveTms.Add(w, tm);
+        }
+
+        foreach (var wavePair in waveTms)
+        {
+            var wave = new List<SpawnData>();
+            waves.Add(wave);
+            ParseSpawnTilemap(wavePair.Value, cb, rows, stage, wave, ownerLabel, report);
+        }
+    }
+
+    /// <summary>
+    /// 구역 루트의 직계 자식 중 RoundAuthoring이 붙은 오브젝트를 라운드로 수집한다 (이름 무관).
+    /// 하나도 없으면 라운드를 쓰지 않는 구역으로 보고 통과. 하나라도 있으면 A·B·C가 정확히 하나씩 있어야 한다.
+    /// </summary>
+    /// <returns>이 구역이 라운드를 쓰는가</returns>
+    private static bool CollectRounds(Transform stageRoot, BoundsInt cb, List<string> rows, StageData stage, ExportReport report)
+    {
+        var roundRoots = new RoundAuthoring[ROUND_COUNT]; // 인덱스 = (int)ERound
+        bool usesRounds = false;
+
+        foreach (Transform child in stageRoot)
+        {
+            var authoring = child.GetComponent<RoundAuthoring>();
+            if (authoring == null)
+                continue;
+            usesRounds = true;
+
+            int index = (int)authoring.Round;
+            if ((uint)index >= (uint)roundRoots.Length) // enum 수정 후 남은 직렬화 값 방어
+            {
+                report.Error($"'{stageRoot.name}/{child.name}': Round 값 {index}이(가) 범위 밖 — Inspector에서 다시 지정");
+                continue;
+            }
+            if (roundRoots[index] != null)
+            {
+                report.Error($"'{stageRoot.name}': Round {authoring.Round} 중복 — '{roundRoots[index].name}' ↔ '{child.name}'");
+                continue;
+            }
+            roundRoots[index] = authoring;
+        }
+
+        if (usesRounds == false)
+            return false;
+
+        for (int i = 0; i < roundRoots.Length; i++)
+        {
+            ERound round = (ERound)i;
+            RoundAuthoring authoring = roundRoots[i];
+            if (authoring == null)
+            {
+                report.Error($"'{stageRoot.name}': Round {round} 없음 — 라운드를 쓰는 구역은 A·B·C가 모두 있어야 함");
+                continue;
+            }
+
+            string label = $"{stageRoot.name}/{authoring.name}";
+            var data = new RoundData { Round = round };
+            CollectWaves(authoring.transform, cb, rows, stage, data.Waves, label, report);
+
+            if (data.Waves.Count == 0)
+                report.Warning($"'{label}': 웨이브 0개 — 이 라운드는 몬스터 없이 시간만 흐름");
+
+            stage.Rounds.Add(data); // A → B → C 순서로 기록
+        }
+
+        if (stage.Waves.Count > 0)
+            report.Warning($"'{stageRoot.name}': 라운드를 쓰는 구역에 구역 직속 웨이브 {stage.Waves.Count}개 — 라운드 진행에서는 쓰이지 않음. 라운드 루트 아래로 옮길 것");
+
+        return true;
+    }
+
+    /// <summary>
+    /// 라운드 루트의 배치와 그 아래 타일맵 이름을 검사한다.
+    /// - 구역 루트의 직계 자식이 아니면 조용히 누락되므로 에러
+    /// - 맵·구역 단위로 이름으로 찾는 타일맵과 이름이 겹치면 엉뚱한 타일맵이 읽히므로 에러
+    /// </summary>
+    private static void ValidateRoundPlacement(GameObject mapRoot, ExportReport report)
+    {
+        RoundAuthoring[] rounds = mapRoot.GetComponentsInChildren<RoundAuthoring>(includeInactive: true);
+        for (int i = 0; i < rounds.Length; i++)
+        {
+            Transform parent = rounds[i].transform.parent;
+            bool underStageRoot = parent != null
+                && parent.parent == mapRoot.transform
+                && parent.GetComponent<StageAuthoring>() != null;
+
+            if (underStageRoot == false)
+                report.Error($"'{rounds[i].name}' — {nameof(RoundAuthoring)}은 {nameof(StageAuthoring)}이 붙은 구역 루트의 직계 자식이어야 함 (현재 부모: '{(parent != null ? parent.name : "없음")}')");
+
+            // 라운드 루트 아래에는 "이 라운드에서만 보이는" 타일맵을 자유롭게 둘 수 있다 — 예약된 이름만 제외
+            Tilemap[] tilemaps = rounds[i].GetComponentsInChildren<Tilemap>(includeInactive: true);
+            for (int t = 0; t < tilemaps.Length; t++)
+            {
+                string tilemapName = tilemaps[t].name;
+                if (tilemapName == COLLISION_TILEMAP || tilemapName == TERRAIN_TILEMAP || tilemapName == OBJECT_STAGE || tilemapName == OBJECT_MAP)
+                    report.Error($"'{rounds[i].name}/{tilemapName}' — 라운드 루트 아래에서 쓸 수 없는 이름 (맵·구역 단위 타일맵과 겹침). 다른 이름으로 변경");
+            }
+        }
+    }
+
+    /// <param name="waveTarget">null이면 상시 오브젝트 타일맵(AlwaysSpawn + SpawnPoint), 아니면 이 웨이브 목록에 기록</param>
+    private static void ParseSpawnTilemap(Tilemap tm, BoundsInt cb, List<string> rows,
+        StageData stage, List<SpawnData> waveTarget, string ownerLabel, ExportReport report)
+    {
+        bool isWave = waveTarget != null;
+        WarnIfOffsetFromGrid(tm, ownerLabel, report);
+
         foreach (var pos in tm.cellBounds.allPositionsWithin)
         {
             if (tm.GetTile(pos) is CustomTile tile == false) continue;
@@ -418,14 +551,14 @@ public static class MapExporter
             int cy = pos.y - cb.yMin;
             if ((uint)cx >= (uint)cb.size.x || (uint)cy >= (uint)cb.size.y)
             {
-                report.Warning($"'{stageName}': 타일이 전장 밖 ({cx},{cy}) — 제외");
+                report.Warning($"'{ownerLabel}': 타일이 전장 밖 ({cx},{cy}) — 제외");
                 continue;
             }
 
             if (tile.TileType == ETileType.SpawnPoint)
             {
                 if (stage.HasPlayerSpawn)
-                    report.Warning($"'{stageName}': SpawnPoint 중복 — 마지막 사용");
+                    report.Warning($"'{ownerLabel}': SpawnPoint 중복 — 마지막 사용");
 
                 stage.HasPlayerSpawn = true;
                 stage.PlayerSpawnInfo = new SpawnInfo(
@@ -439,24 +572,41 @@ public static class MapExporter
 
             if (tile.ObjectType == EObjectType.Villager || tile.ObjectType == EObjectType.Monster || tile.ObjectType == EObjectType.NPC)
             {
-                if (waveIndex >= 0 && tile.ObjectType != EObjectType.Monster)
+                if (isWave && tile.ObjectType != EObjectType.Monster)
                 {
-                    report.Error($"'{stageName}': 웨이브 타일맵에 {tile.ObjectType}(DataId={tile.DataId}) ({cx},{cy}) — 웨이브에는 Monster만. NPC는 {OBJECT_STAGE}에 배치");
+                    report.Error($"'{ownerLabel}': 웨이브 타일맵에 {tile.ObjectType}(DataId={tile.DataId}) ({cx},{cy}) — 웨이브에는 Monster만. NPC는 {OBJECT_STAGE}에 배치");
                     continue;
                 }
 
                 if (rows[cy][cx] == MAP_TOOL_WALL)
-                    report.Warning($"'{stageName}': 스폰 셀({cx},{cy})이 Wall — DataId={tile.DataId}, 런타임 스폰 실패 예정. 배치 확인.");
+                    report.Warning($"'{ownerLabel}': 스폰 셀({cx},{cy})이 Wall — DataId={tile.DataId}, 런타임 스폰 실패 예정. 배치 확인.");
 
                 var spawn = new SpawnData
                 { ObjectType = tile.ObjectType, DataId = tile.DataId, CellX = cx, CellY = cy };
 
-                if (waveIndex >= 0)
-                    stage.Waves[waveIndex].Add(spawn);
+                if (isWave)
+                    waveTarget.Add(spawn);
                 else
                     stage.AlwaysSpawn.Add(spawn);
             }
         }
+    }
+
+    /// <summary>
+    /// Export는 셀 좌표만 읽는다. 타일맵(또는 그 부모)의 Transform이 Grid와 어긋나 있으면
+    /// Scene에서 보이는 위치와 Export된 좌표가 달라지므로 알린다. 계층이 한 단 깊어진 만큼 실수 여지가 커졌다.
+    /// </summary>
+    private static void WarnIfOffsetFromGrid(Tilemap tm, string ownerLabel, ExportReport report)
+    {
+        GridLayout grid = tm.layoutGrid;
+        if (grid == null)
+            return;
+
+        var probe = new Vector3Int(1, 1, 0); // 원점만 비교하면 회전·스케일 차이를 놓친다
+        Vector3 originDelta = tm.CellToWorld(Vector3Int.zero) - grid.CellToWorld(Vector3Int.zero);
+        Vector3 probeDelta = tm.CellToWorld(probe) - grid.CellToWorld(probe);
+        if (originDelta.sqrMagnitude > 1e-6f || probeDelta.sqrMagnitude > 1e-6f)
+            report.Warning($"'{ownerLabel}': '{tm.name}'의 Transform이 Grid와 어긋남 — Scene에서 보이는 위치와 Export 좌표가 다름. 부모까지 Position 0 · Rotation 0 · Scale 1로 맞출 것");
     }
 
     /// <summary>모든 스폰 셀이 자기 스테이지 영역 안인지 검증.</summary>
@@ -467,8 +617,6 @@ public static class MapExporter
         {
             StageData stage = stages[s];
 
-            
-
             if (stage.HasPlayerSpawn)
                 CheckSpawnOwner(stage, stageRoots, stage.PlayerSpawnInfo.Cell.x, stage.PlayerSpawnInfo.Cell.y, "SpawnPoint", cells, width, report);
 
@@ -478,12 +626,21 @@ public static class MapExporter
                 CheckSpawnOwner(stage, stageRoots, spawn.CellX, spawn.CellY, $"AlwaysSpawn(DataId={spawn.DataId})", cells, width, report);
             }
 
-            for (int w = 0; w < stage.Waves.Count; w++)
-            {
-                List<SpawnData> wave = stage.Waves[w];
-                for (int i = 0; i < wave.Count; i++)
-                    CheckSpawnOwner(stage, stageRoots, wave[i].CellX, wave[i].CellY, $"Waves[{w}](DataId={wave[i].DataId})", cells, width, report);
-            }
+            CheckWavesOwner(stage, stageRoots, stage.Waves, "Waves", cells, width, report);
+
+            for (int r = 0; r < stage.Rounds.Count; r++)
+                CheckWavesOwner(stage, stageRoots, stage.Rounds[r].Waves, $"Round {stage.Rounds[r].Round} Waves", cells, width, report);
+        }
+    }
+
+    private static void CheckWavesOwner(StageData stage, SortedList<int, StageAuthoring> stageRoots,
+        List<List<SpawnData>> waves, string label, int[] cells, int width, ExportReport report)
+    {
+        for (int w = 0; w < waves.Count; w++)
+        {
+            List<SpawnData> wave = waves[w];
+            for (int i = 0; i < wave.Count; i++)
+                CheckSpawnOwner(stage, stageRoots, wave[i].CellX, wave[i].CellY, $"{label}[{w}](DataId={wave[i].DataId})", cells, width, report);
         }
     }
 

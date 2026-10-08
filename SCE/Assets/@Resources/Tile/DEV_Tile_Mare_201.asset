@@ -34,7 +34,7 @@ MonoBehaviour:
   m_InstancedGameObject: {fileID: 0}
   m_Flags: 1
   m_ColliderType: 1
-  ObjectType: 0
+  ObjectType: 1
   TileType: 0
   DataId: 201
   DisplayName: "\uAC1C\uBC1C\uD560 \uB54C \uC4F0\uB294 \uCE5C\uAD6C"

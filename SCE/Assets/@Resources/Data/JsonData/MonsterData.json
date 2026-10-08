@@ -2,7 +2,9 @@
   "Datas": [
     {
       "hurtboxLayoutKey": "DEV_temp_hurtbox",
-      "SkillIDs": [],
+      "SkillIDs": [
+        999
+      ],
       "templateID": 0,
       "creatureType": 1,
       "prefabName": "DEV_TempMonster",
@@ -35,6 +37,186 @@
         {
           "sType": 6,
           "sValue": 1.0
+        }
+      ],
+      "StatResourceDatas": [
+        {
+          "sType": 0,
+          "rType": 0,
+          "rValue": -1.0
+        }
+      ]
+    },
+    {
+      "hurtboxLayoutKey": "DEV_temp_hurtbox",
+      "SkillIDs": [],
+      "templateID": 100,
+      "creatureType": 1,
+      "prefabName": "DEV_Nola",
+      "InteractionSetId": null,
+      "StatDatas": [
+        {
+          "sType": 0,
+          "sValue": 100.0
+        },
+        {
+          "sType": 1,
+          "sValue": 10.0
+        },
+        {
+          "sType": 2,
+          "sValue": 888.0
+        },
+        {
+          "sType": 3,
+          "sValue": 0.0
+        },
+        {
+          "sType": 4,
+          "sValue": 1.0
+        },
+        {
+          "sType": 5,
+          "sValue": 0.2
+        },
+        {
+          "sType": 6,
+          "sValue": 1.5
+        }
+      ],
+      "StatResourceDatas": [
+        {
+          "sType": 0,
+          "rType": 0,
+          "rValue": -1.0
+        }
+      ]
+    },
+    {
+      "hurtboxLayoutKey": "DEV_temp_hurtbox",
+      "SkillIDs": [],
+      "templateID": 200,
+      "creatureType": 1,
+      "prefabName": "DEV_Mare_200",
+      "InteractionSetId": null,
+      "StatDatas": [
+        {
+          "sType": 0,
+          "sValue": 100.0
+        },
+        {
+          "sType": 1,
+          "sValue": 10.0
+        },
+        {
+          "sType": 2,
+          "sValue": 888.0
+        },
+        {
+          "sType": 3,
+          "sValue": 0.0
+        },
+        {
+          "sType": 4,
+          "sValue": 1.0
+        },
+        {
+          "sType": 5,
+          "sValue": 0.2
+        },
+        {
+          "sType": 6,
+          "sValue": 1.5
+        }
+      ],
+      "StatResourceDatas": [
+        {
+          "sType": 0,
+          "rType": 0,
+          "rValue": -1.0
+        }
+      ]
+    },
+    {
+      "hurtboxLayoutKey": "DEV_temp_hurtbox",
+      "SkillIDs": [],
+      "templateID": 201,
+      "creatureType": 1,
+      "prefabName": "DEV_Mare_201",
+      "InteractionSetId": null,
+      "StatDatas": [
+        {
+          "sType": 0,
+          "sValue": 100.0
+        },
+        {
+          "sType": 1,
+          "sValue": 10.0
+        },
+        {
+          "sType": 2,
+          "sValue": 888.0
+        },
+        {
+          "sType": 3,
+          "sValue": 0.0
+        },
+        {
+          "sType": 4,
+          "sValue": 1.0
+        },
+        {
+          "sType": 5,
+          "sValue": 0.2
+        },
+        {
+          "sType": 6,
+          "sValue": 1.5
+        }
+      ],
+      "StatResourceDatas": [
+        {
+          "sType": 0,
+          "rType": 0,
+          "rValue": -1.0
+        }
+      ]
+    },
+    {
+      "hurtboxLayoutKey": "DEV_temp_hurtbox",
+      "SkillIDs": [],
+      "templateID": 300,
+      "creatureType": 1,
+      "prefabName": "DEV_Elian",
+      "InteractionSetId": null,
+      "StatDatas": [
+        {
+          "sType": 0,
+          "sValue": 100.0
+        },
+        {
+          "sType": 1,
+          "sValue": 10.0
+        },
+        {
+          "sType": 2,
+          "sValue": 888.0
+        },
+        {
+          "sType": 3,
+          "sValue": 0.0
+        },
+        {
+          "sType": 4,
+          "sValue": 1.0
+        },
+        {
+          "sType": 5,
+          "sValue": 0.2
+        },
+        {
+          "sType": 6,
+          "sValue": 1.5
         }
       ],
       "StatResourceDatas": [

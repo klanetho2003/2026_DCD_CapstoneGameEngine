@@ -1,0 +1,22 @@
+{
+  "Stages": [
+    {
+      "StageId": 1,
+      "DisplayName": "숲",
+      "MapPrefabKey": "Stage_Forest_Map",
+      "MapDataKey": "Stage_Forest"
+    },
+    {
+      "StageId": 2,
+      "DisplayName": "사막",
+      "MapPrefabKey": "Stage_Desert_Map",
+      "MapDataKey": "Stage_Desert"
+    },
+    {
+      "StageId": 3,
+      "DisplayName": "설원",
+      "MapPrefabKey": "Stage_Snow_Map",
+      "MapDataKey": "Stage_Snow"
+    }
+  ]
+}

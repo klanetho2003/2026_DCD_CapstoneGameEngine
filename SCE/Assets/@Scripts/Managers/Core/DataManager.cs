@@ -20,7 +20,7 @@ public class DataManager
     public void InitData()
     {
         #region Creature Data
-        VillagerDataDic = LoadJson<VillagerDataLoader, int, VillagerData>("VillagerData").MakeDict();
+        VillagerDataDic = LoadJson<VillagerDataLoader, int, VillagerData>("PlayerData").MakeDict();
         MonsterDataDic = LoadJson<MonsterDataLoader, int, MonsterData>("MonsterData").MakeDict();
         NpcDataDic = LoadJson<NPCDataLoader, int, NPCData>("NpcData").MakeDict();
 

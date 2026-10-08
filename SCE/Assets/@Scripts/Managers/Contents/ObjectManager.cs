@@ -43,7 +43,7 @@ public class CreatureFactory
             return null;
         }
 
-        Physics.SyncTransforms();
+        Physics2D.SyncTransforms();
 
         return creature;
     }
@@ -141,9 +141,13 @@ public class ObjectManager
         Villager prev = PossessedTarget;
         PossessedTarget = next;
 
-        prev?.OnUnpossessed();
-        next?.OnPossessed();
+        if (prev != null)
+            prev.OnUnpossessed();
 
+        if (next == null)
+            return; // 빙의 해제만. 조준&카메라는 다음 대상이 정해질 때 옮긴다
+
+        next.OnPossessed();
         next.UserAim.SetInfo(next);
         Managers.Camera.SetFollowTarget(next.transform);
     }

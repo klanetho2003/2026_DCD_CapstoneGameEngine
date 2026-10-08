@@ -15,8 +15,14 @@ MonoBehaviour:
   m_GroupName: Data
   m_GUID: 9020c734ee02d944280c0673a89bec3f
   m_SerializeEntries:
-  - m_GUID: 3e057f2da6561224c9692d1321a63a9f
-    m_Address: VillagerData
+  - m_GUID: 4c708b035583ea94892ec30d8de761ba
+    m_Address: StageCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 51c6bcd460d64b24099a670d9a719b6d
+    m_Address: PlayerData
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad

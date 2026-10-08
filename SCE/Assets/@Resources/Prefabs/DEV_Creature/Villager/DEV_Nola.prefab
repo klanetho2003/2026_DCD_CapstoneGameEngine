@@ -13,12 +13,8 @@ GameObject:
   - component: {fileID: 4759690076813689110}
   - component: {fileID: -7630549985172919752}
   - component: {fileID: 2484194681335007412}
-  - component: {fileID: 8166114250339643056}
-  - component: {fileID: 5609586391450493272}
   - component: {fileID: 6511509471040880422}
-  - component: {fileID: 1273503142195361719}
-  - component: {fileID: 9116925295271380788}
-  - component: {fileID: 3775460392411534691}
+  - component: {fileID: -2228459627158213954}
   m_Layer: 0
   m_Name: DEV_Nola
   m_TagString: Untagged
@@ -187,30 +183,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &8166114250339643056
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1877372259340295307}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b960b4f893f2f049ad4d614a27f2840, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Villager
---- !u!114 &5609586391450493272
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1877372259340295307}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 93eee8bcddf9a4a43a6ce61e1b8423cb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VillagerStateMachine
 --- !u!114 &6511509471040880422
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -223,7 +195,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe3a1a3712a8b264d85171907845a7b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CreatureMovement
---- !u!114 &1273503142195361719
+--- !u!114 &-2228459627158213954
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -232,33 +204,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1877372259340295307}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3ed5fed287d884d4c830f091acaea2c3, type: 3}
+  m_Script: {fileID: 11500000, guid: b10d87dfce74b3a4396d33d317620a1f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VillagerAnim
---- !u!114 &9116925295271380788
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1877372259340295307}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 22ddd74936cc0354390b133da7dbfeac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InteractionComponent
---- !u!114 &3775460392411534691
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1877372259340295307}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba282150bb1379e42aa8ff163f4e0dee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UserAim
+  m_EditorClassIdentifier: Assembly-CSharp::MonsterBase
 --- !u!1 &4532940063053286423
 GameObject:
   m_ObjectHideFlags: 0
