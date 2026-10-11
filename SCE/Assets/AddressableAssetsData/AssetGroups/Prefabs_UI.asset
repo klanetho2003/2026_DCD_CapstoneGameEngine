@@ -21,6 +21,30 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 38b15fc2a3050494ab5c3c36a405d071
+    m_Address: UI_StageSelectItem
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 48f9a592534ec954c86be6b3c0b5f7db
+    m_Address: UI_RoundEndPopup
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 90ea40b4c405a5744b7a56c63f064086
+    m_Address: UI_GameEndPopup
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9809eca1efd4dce439d41d26692ac2ab
+    m_Address: UI_StageSelect
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f6f0c64a83b74104b912d0f934448ef8
     m_Address: UI_DayTransition
     m_ReadOnly: 0

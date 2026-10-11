@@ -142,7 +142,7 @@ public class UIManager
     {
         var popups = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(assembly => assembly.GetTypes())
-            .Where(type => type.IsSubclassOf(typeof(UI_Popup)));
+            .Where(type => type.IsSubclassOf(typeof(UI_Popup)) && type.IsAbstract == false);
 
         foreach (Type type in popups)
         {
@@ -171,6 +171,20 @@ public class UIManager
 
         _popups[name] = popup;
         return popup;
+    }
+
+    /// <summary>지정한 Popup이 맨 위일 때만 닫는다. 다른 Popup을 잘못 닫지 않기 위한 확인.</summary>
+    /// <returns>닫았으면 true</returns>
+    public bool ClosePopupUI(UI_Popup popup)
+    {
+        if (_popupStack.Count == 0 || _popupStack.Peek() != popup)
+        {
+            LogPrinter.LogError($"[UIManager] ClosePopupUI 실패 — '{(popup != null ? popup.name : "null")}'이 맨 위 Popup이 아님");
+            return false;
+        }
+
+        ClosePopupUI();
+        return true;
     }
 
     public void ClosePopupUI()

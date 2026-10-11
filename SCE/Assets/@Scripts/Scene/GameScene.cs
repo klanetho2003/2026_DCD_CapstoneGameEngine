@@ -9,20 +9,9 @@ public class GameScene : BaseScene
 {
 #if UNITY_EDITOR
 
-    private readonly StageCatalog _catalog = new StageCatalog();
-    private int _stageIndex;
 
-    private bool _wasOutside;
+    private readonly StageFlowPresenter _presenter = new StageFlowPresenter();
 
-    // 검증할 Stage의 Addressable 키로 바꿔서 사용
-    private const string MAP_DATA_KEY = "DevMapData";
-    private const string MAP_PREFAB_KEY = "DevMap";
-
-    private const float DEBUG_ROUND_SECONDS = 30f; // 3분을 기다리지 않도록 짧게
-
-    private readonly RoundRunner _roundRunner = new RoundRunner();
-    private StagePlayData _playData;
-    private Villager _player;
 
     private void Start()
     {
@@ -32,9 +21,8 @@ public class GameScene : BaseScene
             return;
         }
 
-        _catalog.Load();
-        Managers.Stage.PhaseChanged += OnPhaseChanged;
-        Managers.Stage.OpenSelect();
+        _presenter.SetInfo();        // 순서: 구독이 먼저
+        Managers.Stage.OpenSelect(); // 그 다음 첫 상태 진입
 
         //_roundRunner.SetInfo(OnRoundEnded);
 
@@ -55,8 +43,7 @@ public class GameScene : BaseScene
 
     private void OnDestroy()
     {
-        if (Managers.Stage != null)
-            Managers.Stage.PhaseChanged -= OnPhaseChanged; // 씬 객체의 구독은 반드시 해제
+        _presenter.Clear();
     }
 
     private void OnPhaseChanged(EStagePhase previous, EStagePhase next)
@@ -68,37 +55,11 @@ public class GameScene : BaseScene
     private void Update()
     {
         Keyboard keyboard = Keyboard.current;
-        if (keyboard == null || _catalog.IsLoaded == false)
+        if (keyboard == null)
             return;
 
-        if (keyboard.tabKey.wasPressedThisFrame)
-        {
-            _stageIndex = (_stageIndex + 1) % _catalog.Stages.Count;
-            LogPrinter.Log($"[StageDebug] 선택: {_catalog.Stages[_stageIndex].DisplayName}");
-        }
-        if (keyboard.f1Key.wasPressedThisFrame) Managers.Stage.RequestEnter(_catalog.Stages[_stageIndex]);
-        if (keyboard.f3Key.wasPressedThisFrame) Managers.Stage.RequestProceed();
         if (keyboard.f7Key.wasPressedThisFrame) Managers.Stage.DebugSkipRound();
         if (keyboard.f8Key.wasPressedThisFrame) Managers.Stage.DebugFailStage();
-
-        // 영역 경계를 넘을 때만 로그
-        if (_player.IsValid() && Managers.Map.Area != null)
-        {
-            bool outside = Managers.Map.IsOutsideArea(Managers.Map.WorldToCell(_player.transform.position));
-            if (outside != _wasOutside)
-            {
-                _wasOutside = outside;
-                LogPrinter.Log(outside ? "[StageDebug] 플레이어가 영역 밖으로 나감" : "[StageDebug] 플레이어가 영역 안으로 들어옴");
-            }
-        }
-    }
-
-
-    
-
-    private void OnRoundEnded()
-    {
-        LogPrinter.Log("[StageDebug] 라운드 종료 통지");
     }
 
     public override void Clear()
@@ -110,12 +71,11 @@ public class GameScene : BaseScene
     private void OnGUI()
     {
         StageManager stage = Managers.Stage;
-        string selected = _catalog.IsLoaded ? _catalog.Stages[_stageIndex].DisplayName : "(목록 없음)";
         GUI.Label(new Rect(10, 10, 600, 24),
-            $"{stage.Phase} | Round {stage.CurrentRound} | 남은 {stage.RoundRemainingSeconds:F1}s | 선택 {selected}");
+            $"{stage.Phase} | Round {stage.CurrentRound} | 남은 {stage.RoundRemainingSeconds:F1}s");
     }
 
-    /// <summary>현재 라운드의 영역을 초록 테두리로 그린다. Gizmos를 켜야 보인다.</summary>
+    /// <summary>현재 라운드의 영역을 초록 테두리로 그린다.</summary>
     private void OnDrawGizmos()
     {
         if (Application.isPlaying == false || Managers.Map.Area == null)
