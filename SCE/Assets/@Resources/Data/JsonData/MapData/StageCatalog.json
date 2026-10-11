@@ -3,8 +3,8 @@
     {
       "StageId": 1,
       "DisplayName": "숲",
-      "MapPrefabKey": "Stage_Forest_Map",
-      "MapDataKey": "Stage_Forest"
+      "MapPrefabKey": "DevMap",
+      "MapDataKey": "DevMapData"
     },
     {
       "StageId": 2,

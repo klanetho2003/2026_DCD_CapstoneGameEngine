@@ -14,6 +14,7 @@ using static Define;
 public sealed class StagePlayData
 {
     private readonly List<SpawnInfo> _persistent = new();
+    private readonly TerrainArea[] _areas = new TerrainArea[ROUND_COUNT]; // 인덱스 = (int)ERound
     private readonly StageSpawnData[] _rounds = new StageSpawnData[ROUND_COUNT]; // 인덱스 = (int)ERound
 
     public string MapName { get; private set; }
@@ -24,11 +25,18 @@ public sealed class StagePlayData
     /// <summary>Stage 수명 동안 존속하는 오브젝트.</summary>
     public IReadOnlyList<SpawnInfo> Persistent { get { return _persistent; } }
 
+    /// <summary>그 라운드의 영역 (그 라운드의 Tilemap_Terrain에 칠한 셀).</summary>
+    public TerrainArea GetArea(ERound round)
+    {
+        return _areas[(int)round];
+    }
+
     /// <summary>그 라운드의 웨이브 목록. WaveRunner가 그대로 소비하도록 기존 StageSpawnData 형식을 쓴다.</summary>
     public StageSpawnData GetRound(ERound round)
     {
         return _rounds[(int)round];
     }
+
 
     private StagePlayData() { } // TryBuild로만 만든다
 
@@ -92,6 +100,19 @@ public sealed class StagePlayData
                 error = $"'{map.Name}': Round {round.Round} 중복";
                 return false;
             }
+            if (TerrainArea.TryBuild(round.Area, map.Grid.Width, map.Grid.Height, out TerrainArea area, out string areaError) == false)
+            {
+                error = $"'{map.Name}': Round {round.Round} 영역 오류 — {areaError}";
+                return false;
+            }
+            // 라운드가 바뀌어 플레이어가 영역 밖에 있으면 SpawnPoint로 옮긴다 — 그 보장이 성립하려면 SpawnPoint가 모든 영역 안이어야 한다
+            if (area.Contains(zone.PlayerSpawnInfo.Cell) == false)
+            {
+                error = $"'{map.Name}': SpawnPoint가 Round {round.Round} 영역 밖";
+                return false;
+            }
+
+            result._areas[index] = area;
             result._rounds[index] = ConvertRound(round);
         }
 

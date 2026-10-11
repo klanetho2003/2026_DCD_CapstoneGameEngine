@@ -5,12 +5,25 @@ using static Define;
 
 namespace Data
 {
+    /// <summary>
+    /// Tilemap_Terrain에 칠한 셀 집합. 칠한 셀을 감싸는 최소 사각형과 그 안의 채움 여부로 기록한다.
+    /// 좌표는 MapData.Grid와 같은 0-base 셀 좌표. 인코딩은 MapExporter, 디코딩은 TerrainArea만 한다.
+    /// </summary>
+    [Serializable]
+    public class TerrainAreaData
+    {
+        public int MinX, MinY;             // 최소 사각형의 왼쪽 아래 셀
+        public List<string> Rows = new();  // [y - MinY][x - MinX], y 오름차순. MAP_AREA_INSIDE = 영역 안. 비어 있으면 영역 없음
+    }
+
     /// <summary>한 라운드의 스폰 데이터. 라운드 루트(RoundAuthoring) 아래 Tilemap_Wave_N이 변환된 것.</summary>
     [Serializable]
     public class RoundData
     {
         public ERound Round;
         public List<List<SpawnData>> Waves = new(); // [i] = 이 라운드의 i번 웨이브
+
+        public TerrainAreaData Area = new(); // 이 라운드의 Tilemap_Terrain이 정의하는 영역
     }
 
     /// <summary>

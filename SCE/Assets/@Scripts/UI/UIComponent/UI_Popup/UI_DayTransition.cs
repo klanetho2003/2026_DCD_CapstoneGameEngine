@@ -24,8 +24,6 @@ public class UI_DayTransition : UI_Popup
     {
         Managers.GameState.Day.AdvanceDay();
 
-        Managers.Stage.Begin(); // 재시작
-
         // Managers.Object.Spawn<NPC>(300, -Vector2.one); // 날이 바뀐 뒤에 spawn되어도 interaction on
     }
 }

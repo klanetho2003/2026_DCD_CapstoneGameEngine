@@ -138,12 +138,35 @@ public static class Define
         Village,
     }
 
+    /// <summary>StageManager의 흐름 상태. 화면에 어떤 UI가 떠야 하는지의 유일한 원본.</summary>
+    public enum EStagePhase
+    {
+        None = 0,      // GameScene 밖, 또는 OpenSelect 이전
+        Selecting,     // Stage 선택 UI
+        Playing,       // 라운드 진행 중
+        RoundResult,   // 라운드 A·B 종료 — 라운드 종료 UI Popup
+        StageResult,   // 라운드 C 종료 또는 실패 — 게임 종료 UI Popup
+    }
+
+    public enum EStageResult
+    {
+        Cleared = 0,
+        Failed,
+    }
+
+    /// <summary>라운드 길이(초). 모든 Stage·모든 라운드가 같다.</summary>
+    public const float ROUND_DURATION_SECONDS = 180f;
+
     public const char MAP_TOOL_NONE = '0';
     public const char MAP_TOOL_WALL = 'W';
     public const char MAP_PLAYER_SPAWNPOINT = 'P';
 
     public const int RESTART_DELAY = 3;
     public const int STAGE_REGION_NONE = -1;
+
+    // 영역(TerrainAreaData.Rows) 문자 규약
+    public const char MAP_AREA_INSIDE = '1';
+    public const char MAP_AREA_OUTSIDE = '0';
 
     #region Creature Battle
 

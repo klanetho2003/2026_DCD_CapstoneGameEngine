@@ -12,8 +12,10 @@ public class MapManager
 
     public ref readonly GridSpec Grid { get { return ref _grid; } }
     private GridSpec _grid;
-    
-    
+
+    private TerrainArea _area; // 현재 라운드의 영역
+    /// <summary>현재 라운드의 영역. 맵이 없거나 라운드가 시작되기 전이면 null.</summary>
+    public TerrainArea Area { get { return _area; } }
 
     private ETileType[,] _playerSpawnPoint;
 
@@ -113,9 +115,22 @@ public class MapManager
         _collisionVersion = 0;*/
     }
 
-    /// <summary>지정한 라운드의 루트만 보이게 한다. 라운드를 시작하는 쪽(StageManager)이 호출.</summary>
-    public void ShowRound(ERound round)
+    /// <summary>
+    /// 라운드 전환의 유일한 경로 — 보이는 것(라운드 루트)과 영역 데이터를 함께 바꾼다.
+    /// 둘을 따로 바꿀 수 있게 열어 두면 한쪽만 바뀐 상태가 생긴다.
+    /// </summary>
+    public void SetRound(ERound round, TerrainArea area)
     {
         _view.ShowRound(round);
+        _area = area;
+    }
+
+    /// <summary>
+    /// 셀이 현재 라운드의 영역 밖인가.
+    /// 영역이 정해지지 않았으면(라운드 시작 전, 기존 방식의 맵) 제한이 없으므로 false.
+    /// </summary>
+    public bool IsOutsideArea(Vector2Int cell)
+    {
+        return _area != null && _area.Contains(cell) == false;
     }
 }

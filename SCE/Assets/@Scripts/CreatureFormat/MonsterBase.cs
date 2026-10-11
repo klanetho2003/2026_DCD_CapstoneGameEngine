@@ -1,8 +1,9 @@
 using Data;
+using System;
 using UnityEngine;
 using static Define;
 
-public class MonsterBase : CombatCreature
+public class MonsterBase : CombatCreature, IMovable
 {
     public MonsterData Data { get; private set; }
 
@@ -10,11 +11,28 @@ public class MonsterBase : CombatCreature
 
     public override BaseCreatureAnim CreatureAnim => throw new System.NotImplementedException(); // todo monster anim
 
+    public CreatureMovement Movement { get; private set; }
+
+    public float MoveSpeed => throw new NotImplementedException();
+
+    public Vector2 CacheMoveDirection { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+    public override bool Init()
+    {
+        if (base.Init() == false)
+            return false;
+
+        Movement = GetComponent<CreatureMovement>();
+
+        return true;
+    }
+
     public override void SetInfo(int objectID)
     {
         base.SetInfo(objectID);
 
         Data = GetCreatureData<MonsterData>();
+        Movement.SetInfo(this);
     }
 
     #region Combat Creature
@@ -36,6 +54,29 @@ public class MonsterBase : CombatCreature
     protected override void OnDie()
     {
         LogPrinter.Log($"[MonsterBase] {Data.prefabName} Died");
+    }
+    #endregion
+
+    #region Movable
+
+    public void Move(Vector2 direction, float speedWeight = 1)
+    {
+        Movement.Move(direction, speedWeight);
+    }
+
+    public void ForceMoveTo(Vector2 destination, float speedWeight = 1, Action onComplete = null)
+    {
+        Movement.ForceMoveTo(destination, speedWeight, onComplete);
+    }
+
+    public void ForceMoveFor(Vector2 direction, float duration, float speedWeight = 1, Action onComplete = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void StopForceMove(Action onComplete = null)
+    {
+        throw new NotImplementedException();
     }
     #endregion
 }

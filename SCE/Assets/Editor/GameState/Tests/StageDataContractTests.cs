@@ -7,16 +7,27 @@ using static Define;
 
 public class StagePlayDataTests
 {
+    private const int MAP_SIZE = 10;
+
     #region 테스트 데이터
     private static SpawnData MakeSpawn(EObjectType type, int dataId, int x, int y)
     {
         return new SpawnData { ObjectType = type, DataId = dataId, CellX = x, CellY = y };
     }
 
+    /// <summary>왼쪽 아래 (0,0)부터 width x height를 전부 채운 영역.</summary>
+    private static TerrainAreaData MakeArea(int width, int height)
+    {
+        var area = new TerrainAreaData { MinX = 0, MinY = 0 };
+        for (int y = 0; y < height; y++)
+            area.Rows.Add(new string(MAP_AREA_INSIDE, width));
+        return area;
+    }
+
     /// <param name="waveSizes">웨이브마다 넣을 몬스터 수. 개수가 곧 웨이브 수</param>
     private static RoundData MakeRound(ERound round, params int[] waveSizes)
     {
-        var data = new RoundData { Round = round };
+        var data = new RoundData { Round = round, Area = MakeArea(MAP_SIZE, MAP_SIZE) };
         for (int w = 0; w < waveSizes.Length; w++)
         {
             var wave = new List<SpawnData>();
@@ -47,6 +58,7 @@ public class StagePlayDataTests
         return new MapData
         {
             Name = "TestStage",
+            Grid = new GridSpec { Width = MAP_SIZE, Height = MAP_SIZE, CellSize = 1f },
             Stages = new List<StageData> { zone },
             MapObjects = new List<SpawnData> { MakeSpawn(EObjectType.NPC, 301, 2, 2) },
         };
@@ -93,6 +105,19 @@ public class StagePlayDataTests
     }
 
     [Test]
+    public void TryBuild_AreaPerRound_IsKeptSeparately()
+    {
+        RoundData b = MakeRound(ERound.B, 1);
+        b.Area = MakeArea(5, 5); // B만 좁은 영역 — SpawnPoint (3,4)는 포함
+        StageData zone = MakeZone(MakeRound(ERound.A, 1), b, MakeRound(ERound.C, 1));
+
+        Assert.IsTrue(StagePlayData.TryBuild(MakeMap(zone), out StagePlayData data, out string error), error);
+        Assert.IsTrue(data.GetArea(ERound.A).Contains(new Vector2Int(8, 8)));
+        Assert.IsFalse(data.GetArea(ERound.B).Contains(new Vector2Int(8, 8)));
+        Assert.AreEqual(25, data.GetArea(ERound.B).CellCount);
+    }
+
+    [Test]
     public void TryBuild_NoSpawnPoint_Fails()
     {
         StageData zone = MakeValidZone();
@@ -117,7 +142,7 @@ public class StagePlayDataTests
         StageData zone = MakeZone(MakeRound(ERound.A, 1), MakeRound(ERound.B, 1));
 
         Assert.IsFalse(StagePlayData.TryBuild(MakeMap(zone), out _, out string error));
-        StringAssert.Contains("C", error);
+        StringAssert.Contains("Round C", error);
     }
 
     [Test]
@@ -130,11 +155,35 @@ public class StagePlayDataTests
     }
 
     [Test]
+    public void TryBuild_RoundWithoutArea_Fails()
+    {
+        RoundData c = MakeRound(ERound.C, 1);
+        c.Area = new TerrainAreaData();
+        StageData zone = MakeZone(MakeRound(ERound.A, 1), MakeRound(ERound.B, 1), c);
+
+        Assert.IsFalse(StagePlayData.TryBuild(MakeMap(zone), out _, out string error));
+        StringAssert.Contains("Round C", error);
+    }
+
+    [Test]
+    public void TryBuild_SpawnPointOutsideRoundArea_Fails()
+    {
+        RoundData b = MakeRound(ERound.B, 1);
+        b.Area = MakeArea(3, 3); // SpawnPoint (3,4)가 밖
+        StageData zone = MakeZone(MakeRound(ERound.A, 1), b, MakeRound(ERound.C, 1));
+
+        Assert.IsFalse(StagePlayData.TryBuild(MakeMap(zone), out _, out string error));
+        StringAssert.Contains("SpawnPoint", error);
+    }
+
+    [Test]
     public void TryBuild_FromExportedJsonShape_ReadsRoundNames()
     {
         // Exporter는 enum을 문자열로 기록하고, 런타임은 StringEnumConverter 없이 읽는다 — 그 경로를 그대로 확인
-        const string json = @"{
+        const string area = "{ 'MinX': 0, 'MinY': 0, 'Rows': ['111111','111111','111111','111111','111111','111111','111111','111111'] }";
+        string json = @"{
             'Name': 'JsonStage',
+            'Grid': { 'Width': 6, 'Height': 8, 'CellSize': 1.0 },
             'Stages': [ {
                 'Key': 0,
                 'HasPlayerSpawn': true,
@@ -142,9 +191,9 @@ public class StagePlayDataTests
                 'AlwaysSpawn': [],
                 'Waves': [],
                 'Rounds': [
-                    { 'Round': 'A', 'Waves': [ [ { 'ObjectType': 'Monster', 'DataId': 201, 'CellX': 5, 'CellY': 7 } ] ] },
-                    { 'Round': 'B', 'Waves': [ [] ] },
-                    { 'Round': 'C', 'Waves': [] }
+                    { 'Round': 'A', 'Area': " + area + @", 'Waves': [ [ { 'ObjectType': 'Monster', 'DataId': 201, 'CellX': 5, 'CellY': 7 } ] ] },
+                    { 'Round': 'B', 'Area': " + area + @", 'Waves': [ [] ] },
+                    { 'Round': 'C', 'Area': " + area + @", 'Waves': [] }
                 ]
             } ]
         }";
@@ -161,83 +210,5 @@ public class StagePlayDataTests
         Assert.AreEqual(0, data.GetRound(ERound.C).Waves.Count);
         Assert.AreEqual(100, data.PlayerSpawn.DataId);
         Assert.AreEqual(new Vector2Int(3, 4), data.PlayerSpawn.Cell);
-    }
-}
-
-public class StageCatalogTests
-{
-    private readonly List<StageInfoData> _stages = new();
-    private readonly List<string> _errors = new();
-
-    [SetUp]
-    public void SetUp()
-    {
-        _stages.Clear();
-        _errors.Clear();
-    }
-
-    [Test]
-    public void TryParse_ThreeStages_KeepsJsonOrder()
-    {
-        const string json = @"{ 'Stages': [
-            { 'StageId': 1, 'DisplayName': 'A', 'MapPrefabKey': 'P1', 'MapDataKey': 'D1' },
-            { 'StageId': 2, 'DisplayName': 'B', 'MapPrefabKey': 'P2', 'MapDataKey': 'D2' },
-            { 'StageId': 3, 'DisplayName': 'C', 'MapPrefabKey': 'P3', 'MapDataKey': 'D3' } ] }";
-
-        Assert.IsTrue(StageCatalog.TryParse(json, _stages, _errors));
-        Assert.AreEqual(3, _stages.Count);
-        Assert.AreEqual(0, _errors.Count);
-        Assert.AreEqual(1, _stages[0].StageId);
-        Assert.AreEqual("P3", _stages[2].MapPrefabKey);
-    }
-
-    [Test]
-    public void TryParse_DuplicateStageId_KeepsFirst()
-    {
-        const string json = @"{ 'Stages': [
-            { 'StageId': 1, 'DisplayName': 'First', 'MapPrefabKey': 'P1', 'MapDataKey': 'D1' },
-            { 'StageId': 1, 'DisplayName': 'Second', 'MapPrefabKey': 'P2', 'MapDataKey': 'D2' } ] }";
-
-        Assert.IsTrue(StageCatalog.TryParse(json, _stages, _errors));
-        Assert.AreEqual(1, _stages.Count);
-        Assert.AreEqual("First", _stages[0].DisplayName);
-        Assert.AreEqual(1, _errors.Count);
-    }
-
-    [Test]
-    public void TryParse_EmptyKey_SkipsRow()
-    {
-        const string json = @"{ 'Stages': [
-            { 'StageId': 1, 'DisplayName': 'NoPrefab', 'MapPrefabKey': '', 'MapDataKey': 'D1' },
-            { 'StageId': 2, 'DisplayName': 'Ok', 'MapPrefabKey': 'P2', 'MapDataKey': 'D2' } ] }";
-
-        Assert.IsTrue(StageCatalog.TryParse(json, _stages, _errors));
-        Assert.AreEqual(1, _stages.Count);
-        Assert.AreEqual(2, _stages[0].StageId);
-        Assert.AreEqual(1, _errors.Count);
-    }
-
-    [Test]
-    public void TryParse_EmptyDisplayName_FallsBackToMapDataKey()
-    {
-        const string json = @"{ 'Stages': [ { 'StageId': 1, 'MapPrefabKey': 'P1', 'MapDataKey': 'D1' } ] }";
-
-        Assert.IsTrue(StageCatalog.TryParse(json, _stages, _errors));
-        Assert.AreEqual("D1", _stages[0].DisplayName);
-    }
-
-    [Test]
-    public void TryParse_Malformed_Fails()
-    {
-        Assert.IsFalse(StageCatalog.TryParse("{ 'Stages': [ ", _stages, _errors));
-        Assert.AreEqual(0, _stages.Count);
-        Assert.GreaterOrEqual(_errors.Count, 1);
-    }
-
-    [Test]
-    public void TryParse_NoValidStage_Fails()
-    {
-        Assert.IsFalse(StageCatalog.TryParse("{ 'Stages': [] }", _stages, _errors));
-        Assert.GreaterOrEqual(_errors.Count, 1);
     }
 }

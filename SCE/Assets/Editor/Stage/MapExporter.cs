@@ -298,11 +298,12 @@ public static class MapExporter
     }
 
     /// <summary>
-    /// 각 스테이지의 Tilemap_Terrain에 칠한 셀을 전장 크기 그리드에 Key로 기록.
+    /// 각 구역의 영역을 전장 크기 그리드에 Key로 기록.
+    /// 라운드를 쓰는 구역의 영역 = 라운드 영역의 합집합. 그 외는 구역의 Tilemap_Terrain.
     /// </summary>
     /// <param name="overlapCells">null이 아니면 겹친 셀을 모은다 — 미리보기 표시용</param>
     private static int[] BuildStageRegion(SortedList<int, StageAuthoring> stageRoots, Grid grid, BoundsInt cb, GridSpec spec,
-        ExportReport report, List<Vector2Int> overlapCells)
+    ExportReport report, List<Vector2Int> overlapCells)
     {
         int width = spec.Width;
         int height = spec.Height;
@@ -310,53 +311,61 @@ public static class MapExporter
         System.Array.Fill(cells, STAGE_REGION_NONE);
 
         var overlaps = new Dictionary<(int First, int Second), int>();
+        var terrains = new List<Tilemap>(ROUND_COUNT); // 구역마다 재사용
 
         foreach (var pair in stageRoots)
         {
             int key = pair.Key;
             GameObject root = pair.Value.gameObject;
 
-            var terrain = Util.FindChild<Tilemap>(root, TERRAIN_TILEMAP, recursive: true);
-            if (terrain == null)
+            CollectZoneTerrains(root, terrains);
+            if (terrains.Count == 0)
             {
                 report.Warning($"'{root.name}': {TERRAIN_TILEMAP} 없음 — 영역 없음 (이동으로 진입 불가)");
-                continue;
-            }
-            if (terrain.layoutGrid != grid)
-            {
-                report.Error($"'{root.name}': {TERRAIN_TILEMAP}이 맵 루트 Grid 소속이 아님 — 셀 좌표 불일치");
                 continue;
             }
 
             int painted = 0;
             int outside = 0;
 
-            foreach (Vector3Int pos in terrain.cellBounds.allPositionsWithin)
+            for (int t = 0; t < terrains.Count; t++)
             {
-                if (terrain.HasTile(pos) == false)
-                    continue;
-
-                int cx = pos.x - cb.xMin;
-                int cy = pos.y - cb.yMin;
-                if ((uint)cx >= (uint)width || (uint)cy >= (uint)height)
+                Tilemap terrain = terrains[t];
+                if (terrain.layoutGrid != grid)
                 {
-                    outside++;
+                    report.Error($"'{root.name}': '{terrain.transform.parent.name}/{TERRAIN_TILEMAP}'이 맵 루트 Grid 소속이 아님 — 셀 좌표 불일치");
                     continue;
                 }
 
-                int index = cy * width + cx;
-                int existing = cells[index];
-                if (existing != STAGE_REGION_NONE)
+                foreach (Vector3Int pos in terrain.cellBounds.allPositionsWithin)
                 {
-                    var overlapKey = (existing, key);
-                    overlaps.TryGetValue(overlapKey, out int overlapCount);
-                    overlaps[overlapKey] = overlapCount + 1;
-                    overlapCells?.Add(new Vector2Int(cx, cy));
-                    continue;
-                }
+                    if (terrain.HasTile(pos) == false)
+                        continue;
 
-                cells[index] = key;
-                painted++;
+                    int cx = pos.x - cb.xMin;
+                    int cy = pos.y - cb.yMin;
+                    if ((uint)cx >= (uint)width || (uint)cy >= (uint)height)
+                    {
+                        outside++;
+                        continue;
+                    }
+
+                    int index = cy * width + cx;
+                    int existing = cells[index];
+                    if (existing == key)
+                        continue; // 같은 구역의 다른 라운드가 이미 칠한 셀 — 겹침이 아니다
+                    if (existing != STAGE_REGION_NONE)
+                    {
+                        var overlapKey = (existing, key);
+                        overlaps.TryGetValue(overlapKey, out int overlapCount);
+                        overlaps[overlapKey] = overlapCount + 1;
+                        overlapCells?.Add(new Vector2Int(cx, cy));
+                        continue;
+                    }
+
+                    cells[index] = key;
+                    painted++;
+                }
             }
 
             if (outside > 0)
@@ -369,6 +378,34 @@ public static class MapExporter
             report.Error($"영역 겹침 — {StageLabel(stageRoots, entry.Key.First)} ↔ {StageLabel(stageRoots, entry.Key.Second)} ({entry.Value}셀). 한 셀은 한 스테이지에만 칠할 것");
 
         return cells;
+    }
+
+    /// <summary>
+    /// 구역의 영역을 정의하는 Tilemap_Terrain 목록.
+    /// - 라운드를 쓰는 구역: 각 라운드 루트의 직계 자식 Tilemap_Terrain
+    /// - 그 외(기존 맵): 구역 아래의 Tilemap_Terrain 1개
+    /// </summary>
+    private static void CollectZoneTerrains(GameObject stageRoot, List<Tilemap> into)
+    {
+        into.Clear();
+
+        bool usesRounds = false;
+        foreach (Transform child in stageRoot.transform)
+        {
+            if (child.GetComponent<RoundAuthoring>() == null)
+                continue;
+            usesRounds = true;
+
+            var terrain = child.Find(TERRAIN_TILEMAP)?.GetComponent<Tilemap>();
+            if (terrain != null)
+                into.Add(terrain);
+        }
+        if (usesRounds)
+            return;
+
+        var legacy = Util.FindChild<Tilemap>(stageRoot, TERRAIN_TILEMAP, recursive: true);
+        if (legacy != null)
+            into.Add(legacy);
     }
 
     /// <summary>스테이지(구역) 계층을 StageData로 export. 영역 판정은 BuildStageRegion 담당.</summary>
@@ -450,6 +487,7 @@ public static class MapExporter
     /// <summary>
     /// 구역 루트의 직계 자식 중 RoundAuthoring이 붙은 오브젝트를 라운드로 수집한다 (이름 무관).
     /// 하나도 없으면 라운드를 쓰지 않는 구역으로 보고 통과. 하나라도 있으면 A·B·C가 정확히 하나씩 있어야 한다.
+    /// 라운드마다: 영역(직계 자식 Tilemap_Terrain) + 웨이브(직계 자식 Tilemap_Wave_N).
     /// </summary>
     /// <returns>이 구역이 라운드를 쓰는가</returns>
     private static bool CollectRounds(Transform stageRoot, BoundsInt cb, List<string> rows, StageData stage, ExportReport report)
@@ -481,6 +519,10 @@ public static class MapExporter
         if (usesRounds == false)
             return false;
 
+        int width = cb.size.x;
+        int height = cb.size.y;
+        var roundMasks = new bool[ROUND_COUNT][]; // 라운드별 영역 — 아래 검증에 쓴다
+
         for (int i = 0; i < roundRoots.Length; i++)
         {
             ERound round = (ERound)i;
@@ -493,31 +535,156 @@ public static class MapExporter
 
             string label = $"{stageRoot.name}/{authoring.name}";
             var data = new RoundData { Round = round };
-            CollectWaves(authoring.transform, cb, rows, stage, data.Waves, label, report);
 
+            // 영역: 라운드 루트의 직계 자식 Tilemap_Terrain에 칠한 셀
+            var terrain = authoring.transform.Find(TERRAIN_TILEMAP)?.GetComponent<Tilemap>();
+            if (terrain == null)
+            {
+                report.Error($"'{label}': {TERRAIN_TILEMAP} 없음 — 라운드의 영역을 정의하는 {TERRAIN_TILEMAP}이 라운드 루트의 직계 자식으로 있어야 함");
+            }
+            else
+            {
+                WarnIfOffsetFromGrid(terrain, label, report);
+                bool[] mask = ReadPaintedCells(terrain, cb, out int painted);
+                if (painted == 0)
+                    report.Error($"'{label}': {TERRAIN_TILEMAP}에 칠한 셀이 없음 — 영역이 비어 있음");
+
+                data.Area = EncodeArea(mask, width, height);
+                roundMasks[i] = mask;
+            }
+
+            CollectWaves(authoring.transform, cb, rows, stage, data.Waves, label, report);
             if (data.Waves.Count == 0)
                 report.Warning($"'{label}': 웨이브 0개 — 이 라운드는 몬스터 없이 시간만 흐름");
+
+            // 이 라운드의 스폰은 이 라운드의 영역 안이어야 한다
+            if (roundMasks[i] != null)
+                CheckWavesInArea(data.Waves, roundMasks[i], width, label, report);
 
             stage.Rounds.Add(data); // A → B → C 순서로 기록
         }
 
+        // SpawnPoint와 상시 오브젝트는 라운드가 바뀌어도 그대로다 — 모든 라운드의 영역과 비교
+        for (int i = 0; i < roundMasks.Length; i++)
+        {
+            bool[] mask = roundMasks[i];
+            if (mask == null)
+                continue;
+            ERound round = (ERound)i;
+
+            if (stage.HasPlayerSpawn)
+            {
+                Vector2Int cell = stage.PlayerSpawnInfo.Cell;
+                if (mask[cell.y * width + cell.x] == false)
+                    report.Error($"'{stageRoot.name}': SpawnPoint 셀({cell.x},{cell.y})이 Round {round} 영역 밖 — SpawnPoint는 세 라운드의 영역에 모두 들어 있어야 함");
+            }
+
+            for (int a = 0; a < stage.AlwaysSpawn.Count; a++)
+            {
+                SpawnData spawn = stage.AlwaysSpawn[a];
+                if (mask[spawn.CellY * width + spawn.CellX] == false)
+                    report.Warning($"'{stageRoot.name}': 상시 오브젝트(DataId={spawn.DataId}) 셀({spawn.CellX},{spawn.CellY})이 Round {round} 영역 밖 — 그 라운드에서는 바닥 없는 곳에 서 있게 됨");
+            }
+        }
+
         if (stage.Waves.Count > 0)
             report.Warning($"'{stageRoot.name}': 라운드를 쓰는 구역에 구역 직속 웨이브 {stage.Waves.Count}개 — 라운드 진행에서는 쓰이지 않음. 라운드 루트 아래로 옮길 것");
+        if (stageRoot.Find(TERRAIN_TILEMAP) != null)
+            report.Warning($"'{stageRoot.name}': 라운드를 쓰는 구역의 구역 직속 {TERRAIN_TILEMAP}은 영역으로 쓰이지 않음 — 각 라운드 루트 아래에 칠할 것. 공통 바닥 그림이면 이름을 바꾸면 이 경고가 사라짐");
 
         return true;
+    }
+
+    /// <summary>타일맵에 칠한 셀을 전장 크기의 격자로 읽는다. 전장 밖 셀은 제외한다 (경고는 BuildStageRegion이 구역 단위로 낸다).</summary>
+    private static bool[] ReadPaintedCells(Tilemap terrain, BoundsInt cb, out int painted)
+    {
+        int width = cb.size.x;
+        int height = cb.size.y;
+        var mask = new bool[width * height];
+        painted = 0;
+
+        foreach (Vector3Int pos in terrain.cellBounds.allPositionsWithin)
+        {
+            if (terrain.HasTile(pos) == false)
+                continue;
+
+            int cx = pos.x - cb.xMin;
+            int cy = pos.y - cb.yMin;
+            if ((uint)cx >= (uint)width || (uint)cy >= (uint)height)
+                continue;
+
+            int index = cy * width + cx;
+            if (mask[index])
+                continue; // 같은 셀에 z가 다른 타일이 있는 경우
+            mask[index] = true;
+            painted++;
+        }
+        return mask;
+    }
+
+    /// <summary>격자 → TerrainAreaData. 칠한 셀을 감싸는 최소 사각형만 기록한다. 인코딩의 유일한 지점.</summary>
+    private static TerrainAreaData EncodeArea(bool[] mask, int width, int height)
+    {
+        int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+        for (int y = 0; y < height; y++)
+        {
+            int row = y * width;
+            for (int x = 0; x < width; x++)
+            {
+                if (mask[row + x] == false) continue;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+            }
+        }
+
+        var area = new TerrainAreaData();
+        if (minX == int.MaxValue)
+            return area; // 칠한 셀 없음 — Rows가 비어 있다
+
+        area.MinX = minX;
+        area.MinY = minY;
+
+        var sb = new StringBuilder(maxX - minX + 1);
+        for (int y = minY; y <= maxY; y++)
+        {
+            sb.Clear();
+            int row = y * width;
+            for (int x = minX; x <= maxX; x++)
+                sb.Append(mask[row + x] ? MAP_AREA_INSIDE : MAP_AREA_OUTSIDE);
+            area.Rows.Add(sb.ToString());
+        }
+        return area;
+    }
+
+    private static void CheckWavesInArea(List<List<SpawnData>> waves, bool[] mask, int width, string label, ExportReport report)
+    {
+        for (int w = 0; w < waves.Count; w++)
+        {
+            List<SpawnData> wave = waves[w];
+            for (int i = 0; i < wave.Count; i++)
+            {
+                SpawnData spawn = wave[i];
+                if (mask[spawn.CellY * width + spawn.CellX] == false)
+                    report.Error($"'{label}': Waves[{w}](DataId={spawn.DataId}) 셀({spawn.CellX},{spawn.CellY})이 이 라운드의 영역 밖");
+            }
+        }
     }
 
     /// <summary>
     /// 라운드 루트의 배치와 그 아래 타일맵 이름을 검사한다.
     /// - 구역 루트의 직계 자식이 아니면 조용히 누락되므로 에러
     /// - 맵·구역 단위로 이름으로 찾는 타일맵과 이름이 겹치면 엉뚱한 타일맵이 읽히므로 에러
+    /// - Tilemap_Terrain이 라운드 루트의 직계 자식이 아니면 영역으로 읽히지 않으므로 경고
     /// </summary>
     private static void ValidateRoundPlacement(GameObject mapRoot, ExportReport report)
     {
         RoundAuthoring[] rounds = mapRoot.GetComponentsInChildren<RoundAuthoring>(includeInactive: true);
         for (int i = 0; i < rounds.Length; i++)
         {
-            Transform parent = rounds[i].transform.parent;
+            Transform roundRoot = rounds[i].transform;
+            Transform parent = roundRoot.parent;
             bool underStageRoot = parent != null
                 && parent.parent == mapRoot.transform
                 && parent.GetComponent<StageAuthoring>() != null;
@@ -525,13 +692,16 @@ public static class MapExporter
             if (underStageRoot == false)
                 report.Error($"'{rounds[i].name}' — {nameof(RoundAuthoring)}은 {nameof(StageAuthoring)}이 붙은 구역 루트의 직계 자식이어야 함 (현재 부모: '{(parent != null ? parent.name : "없음")}')");
 
-            // 라운드 루트 아래에는 "이 라운드에서만 보이는" 타일맵을 자유롭게 둘 수 있다 — 예약된 이름만 제외
             Tilemap[] tilemaps = rounds[i].GetComponentsInChildren<Tilemap>(includeInactive: true);
             for (int t = 0; t < tilemaps.Length; t++)
             {
-                string tilemapName = tilemaps[t].name;
-                if (tilemapName == COLLISION_TILEMAP || tilemapName == TERRAIN_TILEMAP || tilemapName == OBJECT_STAGE || tilemapName == OBJECT_MAP)
+                Tilemap tilemap = tilemaps[t];
+                string tilemapName = tilemap.name;
+
+                if (tilemapName == COLLISION_TILEMAP || tilemapName == OBJECT_STAGE || tilemapName == OBJECT_MAP)
                     report.Error($"'{rounds[i].name}/{tilemapName}' — 라운드 루트 아래에서 쓸 수 없는 이름 (맵·구역 단위 타일맵과 겹침). 다른 이름으로 변경");
+                else if (tilemapName == TERRAIN_TILEMAP && tilemap.transform.parent != roundRoot)
+                    report.Warning($"'{rounds[i].name}': 직계 자식이 아닌 {TERRAIN_TILEMAP} — 영역으로 읽히지 않음. 라운드 루트 바로 아래로 옮길 것");
             }
         }
     }
@@ -609,7 +779,7 @@ public static class MapExporter
             report.Warning($"'{ownerLabel}': '{tm.name}'의 Transform이 Grid와 어긋남 — Scene에서 보이는 위치와 Export 좌표가 다름. 부모까지 Position 0 · Rotation 0 · Scale 1로 맞출 것");
     }
 
-    /// <summary>모든 스폰 셀이 자기 스테이지 영역 안인지 검증.</summary>
+    /// <summary>구역 단위 검증 — SpawnPoint, 상시 오브젝트, 구역 직속 웨이브가 자기 구역 영역 안인지. 라운드 웨이브는 CollectRounds가 라운드 영역으로 검사한다.</summary>
     private static void ValidateSpawnsInRegion(List<StageData> stages, SortedList<int, StageAuthoring> stageRoots,
         int[] cells, int width, ExportReport report)
     {
@@ -627,9 +797,6 @@ public static class MapExporter
             }
 
             CheckWavesOwner(stage, stageRoots, stage.Waves, "Waves", cells, width, report);
-
-            for (int r = 0; r < stage.Rounds.Count; r++)
-                CheckWavesOwner(stage, stageRoots, stage.Rounds[r].Waves, $"Round {stage.Rounds[r].Round} Waves", cells, width, report);
         }
     }
 

@@ -112,6 +112,12 @@ public sealed class RoundRunner
                 continue;
             }
 
+            if (Managers.Map.IsOutsideArea(info.Cell)) // Exporter가 막지만 Export하지 않은 데이터 방어
+            {
+                LogPrinter.LogError($"[{LOG_CONTEXT}] 스폰 셀 {info.Cell}이 현재 라운드의 영역 밖 (DataId={info.DataId}) — 무시");
+                continue;
+            }
+
             if (CreatureSpawnHelper.Spawn(info, LOG_CONTEXT) is CombatCreature combat)
                 _waveSpawns.Add(combat);
         }
