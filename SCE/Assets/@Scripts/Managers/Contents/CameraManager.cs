@@ -7,13 +7,21 @@ using UnityEngine;
 public class CameraManager
 {
     public Camera MainCamera { get { return Camera.main; } }
-    public CinemachineCamera FollowCamera { get; private set; }
+    private CinemachineCamera _followCamera = null;
+    public CinemachineCamera FollowCamera
+    {
+        get { return _followCamera; }
+        private set { _followCamera = value; }
+    
+    }
     private CinemachineImpulseSource _impulseSource;
     private bool _impulseTimeScaleSet;
 
     public void Register(CinemachineCamera cam)
     {
-        FollowCamera = cam;
+        _followCamera = cam;
+        Util.GetOrAddComponent<CinemachineAreaConfiner>(cam.gameObject); // 라운드 영역 경계 — 코드가 붙인다
+
         _impulseSource = cam.GetComponent<CinemachineImpulseSource>();
 
         // 히트스톱(timeScale=0) 중에도 셰이크가 감쇠하도록

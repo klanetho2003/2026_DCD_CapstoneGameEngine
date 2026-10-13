@@ -155,7 +155,7 @@ public static class Define
     }
 
     /// <summary>라운드 길이(초). 모든 Stage·모든 라운드가 같다.</summary>
-    public const float ROUND_DURATION_SECONDS = 10f;
+    public const float ROUND_DURATION_SECONDS = 180f;
 
     public const char MAP_TOOL_NONE = '0';
     public const char MAP_TOOL_WALL = 'W';

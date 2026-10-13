@@ -1,20 +1,29 @@
-using Data;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using static Define;
+#if UNITY_EDITOR
+using UnityEngine.InputSystem;
+#endif
 
+/// <summary>
+/// 게임 Scene. Stage 흐름의 UI 배선만 소유한다 — 진행은 StageManager, 화면 전환은 StageFlowPresenter.
+/// 들어올 때: Presenter 구독 → OpenSelect. 떠날 때(Clear): Presenter 해제 → StageManager 정리.
+/// </summary>
 public class GameScene : BaseScene
 {
-#if UNITY_EDITOR
-
-
     private readonly StageFlowPresenter _presenter = new StageFlowPresenter();
 
+    public override bool Init()
+    {
+        if (base.Init() == false)
+            return false;
+
+        SceneType = EScene.GameScene;
+        return true;
+    }
 
     private void Start()
     {
+        // 데이터 로드 없이 GameScene에서 바로 Play한 경우
         if (Managers.Data.IsDataLoaded == false)
         {
             Managers.Scene.LoadScene(EScene.TitleScene);
@@ -23,35 +32,25 @@ public class GameScene : BaseScene
 
         _presenter.SetInfo();        // 순서: 구독이 먼저
         Managers.Stage.OpenSelect(); // 그 다음 첫 상태 진입
+    }
 
-        //_roundRunner.SetInfo(OnRoundEnded);
-
-        /*Managers.Map.LoadMap("DevMapData");
-        Managers.Stage.Begin();*/
-
-        // Managers.UI.ShowPopupUI<UI_DayTransition>();
-        /*var handle = Managers.UI.ShowPopupUI<UI_FocusGroup>();
-        handle.SetInfo();
-        handle.OnClosed();
-        Managers.UI.ClosePopupUI();*/
-
-        /*for (int i = 0; i < 11; i++)
-        {
-            var mosnter = Managers.Object.Spawn<MonsterBase>(0, new Vector2(i+5, 0)); // test monster
-        }*/
+    /// <summary>
+    /// SceneManagerEx.Clear가 Pool·UI 정리보다 먼저 호출한다.
+    /// 이 순서라야 StageManager가 살아 있는 풀로 디스폰한다.
+    /// </summary>
+    public override void Clear()
+    {
+        _presenter.Clear();     // 구독 해제가 먼저 — 정리 중에 UI 콜백이 오지 않도록
+        Managers.Stage.Clear(); // 진행 중인 Stage 정리 + Phase None — 다음 진입 때 OpenSelect가 통한다
     }
 
     private void OnDestroy()
     {
-        _presenter.Clear();
+        _presenter.Clear(); // 안전망 — 두 번 불려도 안전
     }
 
-    private void OnPhaseChanged(EStagePhase previous, EStagePhase next)
-    {
-        StageManager stage = Managers.Stage;
-        LogPrinter.Log($"[StageDebug] 통지 {previous} → {next} (Round {stage.CurrentRound}, Result {stage.Result}, 몬스터 {Managers.Object.Monsters.Count})");
-    }
-
+#if UNITY_EDITOR
+    #region Debug — Step 7에서 정리
     private void Update()
     {
         Keyboard keyboard = Keyboard.current;
@@ -62,12 +61,6 @@ public class GameScene : BaseScene
         if (keyboard.f8Key.wasPressedThisFrame) Managers.Stage.DebugFailStage();
     }
 
-    public override void Clear()
-    {
-        
-    }
-
-    #region Debug
     private void OnGUI()
     {
         StageManager stage = Managers.Stage;
@@ -75,7 +68,7 @@ public class GameScene : BaseScene
             $"{stage.Phase} | Round {stage.CurrentRound} | 남은 {stage.RoundRemainingSeconds:F1}s");
     }
 
-    /// <summary>현재 라운드의 영역을 초록 테두리로 그린다.</summary>
+    /// <summary>현재 라운드의 영역(초록 셀)과 카메라 경계(노란 사각형)를 그린다.</summary>
     private void OnDrawGizmos()
     {
         if (Application.isPlaying == false || Managers.Map.Area == null)
@@ -96,7 +89,11 @@ public class GameScene : BaseScene
                     Gizmos.DrawWireCube(Managers.Map.CellCenterToWorld(cell), size);
             }
         }
+
+        Rect cameraBounds = area.GetWorldRect(Managers.Map.Grid);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireCube(cameraBounds.center, new Vector3(cameraBounds.width, cameraBounds.height, 0f));
     }
     #endregion
-}
 #endif
+}

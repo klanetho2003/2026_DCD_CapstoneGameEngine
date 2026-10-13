@@ -9,8 +9,8 @@
     {
       "StageId": 2,
       "DisplayName": "2 스테이지",
-      "MapPrefabKey": "Stage_Desert_Map",
-      "MapDataKey": "Stage_Desert"
+      "MapPrefabKey": "2StageMap",
+      "MapDataKey": "2StageMapData"
     },
     {
       "StageId": 3,

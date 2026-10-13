@@ -15,6 +15,12 @@ MonoBehaviour:
   m_GroupName: Data_Map
   m_GUID: 2e9d8468a32a57543a5a4bef6343c756
   m_SerializeEntries:
+  - m_GUID: bb87845958c4cd24780ada104baffc74
+    m_Address: 2StageMapData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d48c7b860b127c44a8e9dae0d64b3d30
     m_Address: DevMapData
     m_ReadOnly: 0
