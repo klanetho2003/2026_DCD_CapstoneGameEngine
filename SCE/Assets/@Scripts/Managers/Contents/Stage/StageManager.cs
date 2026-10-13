@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Data;
 using UnityEngine;
+using Unity.Profiling;
 using static Define;
 
 /// <summary>
@@ -19,6 +20,8 @@ using static Define;
 /// </summary>
 public class StageManager
 {
+    private static readonly ProfilerMarker s_updateMarker = new ProfilerMarker("StageManager.OnUpdate");
+
     private const string LOG_CONTEXT = "Stage"; // 상시 오브젝트 스폰 에러 로그의 출처 표기
     private const ERound LAST_ROUND = (ERound)(ROUND_COUNT - 1);
 
@@ -110,8 +113,15 @@ public class StageManager
     #endregion
 
     #region Update
+
     /// <summary>Managers.Update가 구동. 매 프레임 비용 = 상태 분기 + (Playing일 때) 참조 비교 1회와 RoundRunner.Tick.</summary>
     public void OnUpdate()
+    {
+        using (s_updateMarker.Auto())
+            UpdatePhase();
+    }
+
+    private void UpdatePhase()
     {
         switch (Phase)
         {

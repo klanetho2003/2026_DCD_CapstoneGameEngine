@@ -732,7 +732,7 @@ public static class MapExporter
 
                 stage.HasPlayerSpawn = true;
                 stage.PlayerSpawnInfo = new SpawnInfo(
-                    type: tile.ObjectType,
+                    objectType: tile.ObjectType,
                     dataId: tile.DataId,
                     cell: new Vector2Int(cx, cy)
                     );

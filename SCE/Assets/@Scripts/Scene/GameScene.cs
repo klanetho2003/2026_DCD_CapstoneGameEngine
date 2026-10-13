@@ -1,8 +1,4 @@
-using UnityEngine;
 using static Define;
-#if UNITY_EDITOR
-using UnityEngine.InputSystem;
-#endif
 
 /// <summary>
 /// 게임 Scene. Stage 흐름의 UI 배선만 소유한다 — 진행은 StageManager, 화면 전환은 StageFlowPresenter.
@@ -32,6 +28,10 @@ public class GameScene : BaseScene
 
         _presenter.SetInfo();        // 순서: 구독이 먼저
         Managers.Stage.OpenSelect(); // 그 다음 첫 상태 진입
+
+#if UNITY_EDITOR
+        gameObject.AddComponent<StageDebugTool>(); // 에디터 전용 검증 도구 — 씬에 저장되지 않는다
+#endif
     }
 
     /// <summary>
@@ -48,52 +48,4 @@ public class GameScene : BaseScene
     {
         _presenter.Clear(); // 안전망 — 두 번 불려도 안전
     }
-
-#if UNITY_EDITOR
-    #region Debug — Step 7에서 정리
-    private void Update()
-    {
-        Keyboard keyboard = Keyboard.current;
-        if (keyboard == null)
-            return;
-
-        if (keyboard.f7Key.wasPressedThisFrame) Managers.Stage.DebugSkipRound();
-        if (keyboard.f8Key.wasPressedThisFrame) Managers.Stage.DebugFailStage();
-    }
-
-    private void OnGUI()
-    {
-        StageManager stage = Managers.Stage;
-        GUI.Label(new Rect(10, 10, 600, 24),
-            $"{stage.Phase} | Round {stage.CurrentRound} | 남은 {stage.RoundRemainingSeconds:F1}s");
-    }
-
-    /// <summary>현재 라운드의 영역(초록 셀)과 카메라 경계(노란 사각형)를 그린다.</summary>
-    private void OnDrawGizmos()
-    {
-        if (Application.isPlaying == false || Managers.Map.Area == null)
-            return;
-
-        TerrainArea area = Managers.Map.Area;
-        RectInt bounds = area.Bounds;
-        float cellSize = Managers.Map.Grid.CellSize;
-        Vector3 size = new Vector3(cellSize, cellSize, 0f) * 0.9f;
-
-        Gizmos.color = Color.green;
-        for (int y = bounds.yMin; y < bounds.yMax; y++)
-        {
-            for (int x = bounds.xMin; x < bounds.xMax; x++)
-            {
-                var cell = new Vector2Int(x, y);
-                if (area.Contains(cell))
-                    Gizmos.DrawWireCube(Managers.Map.CellCenterToWorld(cell), size);
-            }
-        }
-
-        Rect cameraBounds = area.GetWorldRect(Managers.Map.Grid);
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireCube(cameraBounds.center, new Vector3(cameraBounds.width, cameraBounds.height, 0f));
-    }
-    #endregion
-#endif
 }

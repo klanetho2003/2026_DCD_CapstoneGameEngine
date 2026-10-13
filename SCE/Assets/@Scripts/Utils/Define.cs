@@ -161,7 +161,6 @@ public static class Define
     public const char MAP_TOOL_WALL = 'W';
     public const char MAP_PLAYER_SPAWNPOINT = 'P';
 
-    public const int RESTART_DELAY = 3;
     public const int STAGE_REGION_NONE = -1;
 
     // 영역(TerrainAreaData.Rows) 문자 규약
