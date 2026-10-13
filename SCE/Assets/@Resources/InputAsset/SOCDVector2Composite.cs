@@ -6,17 +6,25 @@ using UnityEngine.InputSystem.Utilities;
 
 #if UNITY_EDITOR
 using UnityEditor;
+#endif
+
+/// <summary>네 방향 키를 벡터로 합성하고 같은 축의 반대 방향 입력을 상쇄한다.</summary>
+#if UNITY_EDITOR
 [InitializeOnLoad] // 에디터 로드 시 자동 실행 보장
 #endif
 [DisplayStringFormat("{up}/{left}/{down}/{right}")]
 public class SOCDVector2Composite : InputBindingComposite<Vector2>
 {
+    /// <summary>위쪽 방향 버튼에 연결된 입력 바인딩 번호다.</summary>
     [InputControl(layout = "Button")] public int up = 0;
+    /// <summary>아래쪽 방향 버튼에 연결된 입력 바인딩 번호다.</summary>
     [InputControl(layout = "Button")] public int down = 0;
+    /// <summary>왼쪽 방향 버튼에 연결된 입력 바인딩 번호다.</summary>
     [InputControl(layout = "Button")] public int left = 0;
+    /// <summary>오른쪽 방향 버튼에 연결된 입력 바인딩 번호다.</summary>
     [InputControl(layout = "Button")] public int right = 0;
 
-    // 정적 생성자: Unity가 클래스에 처음 접근할 때 실행됨
+    /// <summary>기존 입력 에셋이 사용하는 두 이름으로 방향 합성기를 등록한다.</summary>
     static SOCDVector2Composite()
     {
         // 에러를 뿜고 있는 'SOCD' 이름과, 띄어쓰기 없는 안전한 이름을 모두 등록
@@ -24,34 +32,28 @@ public class SOCDVector2Composite : InputBindingComposite<Vector2>
         InputSystem.RegisterBindingComposite<SOCDVector2Composite>("SOCDVector2");
     }
 
-    // 런타임에 가장 빠른 타이밍(SubsystemRegistration)에 초기화 유도
+    /// <summary>런타임 시작 시 정적 생성자를 실행하여 방향 합성기의 등록을 보장한다.</summary>
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void Init() { }
 
+    /// <summary>각 축의 반대 입력을 상쇄하고 남은 방향을 정규화한 벡터로 반환한다.</summary>
+    /// <param name="context">각 방향 버튼의 현재 입력 상태를 읽을 문맥이다.</param>
     public override Vector2 ReadValue(ref InputBindingCompositeContext context)
     {
+        // 위쪽 방향 버튼이 현재 눌려 있는지 나타낸다.
         bool isUp = context.ReadValueAsButton(up);
+        // 아래쪽 방향 버튼이 현재 눌려 있는지 나타낸다.
         bool isDown = context.ReadValueAsButton(down);
+        // 왼쪽 방향 버튼이 현재 눌려 있는지 나타낸다.
         bool isLeft = context.ReadValueAsButton(left);
+        // 오른쪽 방향 버튼이 현재 눌려 있는지 나타낸다.
         bool isRight = context.ReadValueAsButton(right);
 
-        double upTime = context.GetPressTime(up);
-        double downTime = context.GetPressTime(down);
-        double leftTime = context.GetPressTime(left);
-        double rightTime = context.GetPressTime(right);
+        // 좌우 입력의 차이이며 두 버튼을 함께 누르면 0이 된다.
+        float x = (isRight ? 1f : 0f) - (isLeft ? 1f : 0f);
+        // 상하 입력의 차이이며 두 버튼을 함께 누르면 0이 된다.
+        float y = (isUp ? 1f : 0f) - (isDown ? 1f : 0f);
 
-        Vector2 result = Vector2.zero;
-
-        // X축 (좌/우) 최신 입력 판별
-        if (isLeft && isRight) result.x = leftTime > rightTime ? -1f : 1f;
-        else if (isLeft) result.x = -1f;
-        else if (isRight) result.x = 1f;
-
-        // Y축 (상/하) 최신 입력 판별
-        if (isUp && isDown) result.y = upTime > downTime ? 1f : -1f;
-        else if (isUp) result.y = 1f;
-        else if (isDown) result.y = -1f;
-
-        return result.normalized;
+        return new Vector2(x, y).normalized;
     }
 }

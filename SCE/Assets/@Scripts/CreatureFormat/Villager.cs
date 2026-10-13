@@ -131,7 +131,7 @@ public class Villager : CombatCreature, IMovable
 
     public void ForceMoveTo(Vector2 destination, float speedWeight = 1, Action onComplete = null)
     {
-        throw new NotImplementedException();
+        Movement.ForceMoveTo(destination, speedWeight, onComplete);
     }
     public void StopForceMove(Action onComplete = null)
     {
