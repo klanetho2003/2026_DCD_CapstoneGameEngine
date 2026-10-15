@@ -1,0 +1,24 @@
+{
+  "id": "key",
+  "keys": [
+    {
+      "key": "talk.merchant.count",
+      "default": 0,
+      "reset": "None",
+      "desc": "상인 대화 횟수"
+    }
+  ],
+  "rules": [
+    {
+      "event": "Signal",
+      "ruleKey": 2001,
+      "ops": [
+        {
+          "key": "talk.merchant.count",
+          "op": "Set",
+          "value": 1
+        }
+      ]
+    }
+  ]
+}
