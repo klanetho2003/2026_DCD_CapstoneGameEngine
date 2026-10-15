@@ -119,7 +119,7 @@ public class Villager : CombatCreature, IMovable
 
     public Vector2 CacheMoveDirection { get ; set; }
 
-    public void Move(Vector2 direction, float speedWeight = 1)
+    public void Move(Vector2 direction, float speedWeight = 3)
     {
         Movement.Move(direction, speedWeight);
     }
@@ -131,7 +131,7 @@ public class Villager : CombatCreature, IMovable
 
     public void ForceMoveTo(Vector2 destination, float speedWeight = 1, Action onComplete = null)
     {
-        throw new NotImplementedException();
+        Movement.ForceMoveTo(destination, speedWeight, onComplete);
     }
     public void StopForceMove(Action onComplete = null)
     {
