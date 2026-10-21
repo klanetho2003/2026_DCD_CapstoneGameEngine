@@ -1,5 +1,5 @@
 templateID,creatureType,prefabName,InteractionSetId,StatDatas.sType,StatDatas.sValue,StatResourceDatas.sType,StatResourceDatas.rType,StatResourceDatas.rValue,hurtboxLayoutKey,SkillIDs,skillSlotLayoutKey
-10,Villager,DEV_TempVillager,,MaxHp,6,MaxHp,CurrentHp,-1,DEV_temp_hurtbox,0,DEV_SlotLayout_temp
+10,Villager,DEV_BlackCat,,MaxHp,6,MaxHp,CurrentHp,-1,DEV_temp_hurtbox,0,DEV_SlotLayout_temp
 ,,,,MaxMp,10,,,,,1,
 ,,,,Atk,10,,,,,,
 ,,,,Def,0,,,,,,

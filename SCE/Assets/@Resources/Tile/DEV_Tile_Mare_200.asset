@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8755d1d21d9d58943b03671c30a1f46b, type: 3}
   m_Name: DEV_Tile_Mare_200
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: -917902819, guid: 437d681416d9bf54cb66b7927a1e286d, type: 3}
+  m_Sprite: {fileID: -2173552060559053382, guid: 4b7877cfbe6f2434ebca75f6bba272ee, type: 3}
   m_Color: {r: 1, g: 0, b: 0.8549018, a: 1}
   m_Transform:
     e00: 1

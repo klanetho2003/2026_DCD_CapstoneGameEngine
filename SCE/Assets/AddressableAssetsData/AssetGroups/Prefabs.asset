@@ -15,6 +15,12 @@ MonoBehaviour:
   m_GroupName: Prefabs
   m_GUID: 021cc079675666f4da08fac5dfdbc01b
   m_SerializeEntries:
+  - m_GUID: 574b6048944f089479bd07104b0cc2b9
+    m_Address: DEV_BlackCat
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 650803e618909a54590da2aa037e5d03
     m_Address: 2StageMap
     m_ReadOnly: 0
