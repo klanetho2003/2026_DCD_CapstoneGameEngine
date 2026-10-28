@@ -115,11 +115,18 @@ public class Villager : CombatCreature, IMovable
     #endregion
 
     #region IMovable
+    /// <summary>기존 플레이어 조작의 기본 속도 배율이며 몬스터 속도 비교에도 같은 기준을 사용한다.</summary>
+    public const float DEFAULT_MOVE_SPEED_WEIGHT = 3f;
+    /// <summary>현재 플레이어 캐릭터의 기본 이동 속도 스탯이다.</summary>
     public float MoveSpeed { get { return GetStatValue(EStatType.MoveSpeed).Value; } }
 
+    /// <summary>공통 이동 컴포넌트가 기록하고 애니메이션에서 읽는 실제 이동 방향이다.</summary>
     public Vector2 CacheMoveDirection { get ; set; }
 
-    public void Move(Vector2 direction, float speedWeight = 3)
+    /// <summary>플레이어의 방향과 기존 기본 속도 배율을 공통 이동 컴포넌트에 전달한다.</summary>
+    /// <param name="direction">다음 한 칸 이동에 사용할 방향이며 0이면 입력 유지가 끝난다.</param>
+    /// <param name="speedWeight">기본 이동 속도에 곱할 배율이다.</param>
+    public void Move(Vector2 direction, float speedWeight = DEFAULT_MOVE_SPEED_WEIGHT)
     {
         Movement.Move(direction, speedWeight);
     }

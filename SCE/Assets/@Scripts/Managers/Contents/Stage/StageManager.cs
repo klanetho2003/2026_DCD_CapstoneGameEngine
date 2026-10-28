@@ -338,9 +338,12 @@ public class StageManager
     }
 
     /// <summary>순간 이동의 유일한 경로. 프로젝트의 이동 방식에 맞춰 이 한 곳만 고친다.</summary>
+    /// <param name="villager">기존 이동과 타일 선점을 함께 갱신할 플레이어 캐릭터다.</param>
+    /// <param name="worldPosition">새로 배치할 칸에 포함된 월드 위치다.</param>
     private static void TeleportPossessed(Villager villager, Vector3 worldPosition)
     {
-        villager.transform.position = worldPosition; // 기존 StageManager와 같은 가정: Transform 직접 이동
+        if (villager.Movement == null || !villager.Movement.TryPlaceAt(worldPosition))
+            LogPrinter.LogWarning("[Stage] 플레이어 재배치 실패: 목적지 선점 또는 이동 컴포넌트를 확인하세요.");
     }
     #endregion
 

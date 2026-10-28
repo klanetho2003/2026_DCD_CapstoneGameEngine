@@ -9,11 +9,15 @@ public class MonsterBase : CombatCreature, IMovable
     /// <summary>현재 몬스터의 템플릿에서 읽은 전용 데이터다.</summary>
     public MonsterData Data { get; private set; }
 
-    /// <summary>몬스터의 시선 방향을 제공할 확장 지점이며 아직 구현되지 않았다.</summary>
-    public override Vector2 LookDirection => throw new System.NotImplementedException();
+    /// <summary>정지 중에도 유지되는 행동 제어기의 시선 방향이며 초기 방향은 오른쪽이다.</summary>
+    public override Vector2 LookDirection => MovementController != null
+        ? (Vector2)MovementController.Facing : Vector2.right;
 
-    /// <summary>몬스터의 애니메이션 컴포넌트를 제공할 확장 지점이며 아직 구현되지 않았다.</summary>
-    public override BaseCreatureAnim CreatureAnim => throw new System.NotImplementedException();
+    /// <summary>프리팹에 연결된 몬스터 애니메이션이며 없는 경우 null로 안전하게 처리한다.</summary>
+    public override BaseCreatureAnim CreatureAnim => GetComponent<BaseCreatureAnim>();
+
+    /// <summary>현재 생애의 순찰, 반복 감지, 카운트다운, BFS 이탈을 관리한다.</summary>
+    public MonsterMovementController MovementController { get; private set; }
 
     /// <summary>타일 중앙 사이의 실제 이동을 담당하는 공통 컴포넌트다.</summary>
     public CreatureMovement Movement { get; private set; }
@@ -24,18 +28,22 @@ public class MonsterBase : CombatCreature, IMovable
     /// <summary>공통 이동 컴포넌트가 기록하는 몬스터의 실제 이동 방향이다.</summary>
     public Vector2 CacheMoveDirection { get; set; }
 
-    /// <summary>기본 캐릭터를 초기화하고 이동 컴포넌트를 한 번 찾아 보관한다.</summary>
+    /// <summary>기본 캐릭터와 이동 컴포넌트를 초기화하고 탈출 예고 표시를 연결한다.</summary>
     public override bool Init()
     {
         if (base.Init() == false)
             return false;
 
         Movement = GetComponent<CreatureMovement>();
+        if (Movement == null)
+            Movement = gameObject.AddComponent<CreatureMovement>();
+        if (GetComponent<MonsterEscapeIndicator>() == null)
+            gameObject.AddComponent<MonsterEscapeIndicator>();
 
         return true;
     }
 
-    /// <summary>템플릿으로 몬스터 데이터를 설정하고 이동 컴포넌트의 소유자를 연결한다.</summary>
+    /// <summary>템플릿 데이터와 이동 소유자를 연결하고 새 생애의 오른쪽 순찰을 준비한다.</summary>
     /// <param name="objectID">몬스터를 구성할 템플릿 데이터의 식별자다.</param>
     public override void SetInfo(int objectID)
     {
@@ -43,6 +51,22 @@ public class MonsterBase : CombatCreature, IMovable
 
         Data = GetCreatureData<MonsterData>();
         Movement.SetInfo(this);
+        if (MovementController == null)
+            MovementController = new MonsterMovementController(this);
+        else
+            MovementController.Reset();
+    }
+
+    /// <summary>초기화한 몬스터의 행동과 예고 타이머를 게임 시간에 맞춰 갱신한다.</summary>
+    private void Update()
+    {
+        MovementController?.Tick(Time.deltaTime);
+    }
+
+    /// <summary>풀 반환 시 이전 생애의 순환 기록과 경로, 카운트다운을 비운다.</summary>
+    private void OnDisable()
+    {
+        MovementController?.Reset();
     }
 
     #region Combat Creature
@@ -71,7 +95,10 @@ public class MonsterBase : CombatCreature, IMovable
     /// <summary>몬스터 사망을 기록하며 후속 사망 연출이나 디스폰 처리를 연결할 지점이다.</summary>
     protected override void OnDie()
     {
+        Movement.CancelToCurrentCell();
+        MovementController?.Reset();
         LogPrinter.Log($"[MonsterBase] {Data.prefabName} Died");
+        Managers.Object.Despawn(this);
     }
     #endregion
 

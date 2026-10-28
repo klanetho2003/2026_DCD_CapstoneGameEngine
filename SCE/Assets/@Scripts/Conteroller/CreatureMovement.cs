@@ -38,6 +38,46 @@ public class CreatureMovement : InitBase
     /// <summary>일반 입력에 의한 이동인지 나타내며, 입력 유지 시 연속 이동을 허용한다.</summary>
     private bool _isInputDriven;
 
+    /// <summary>소유자 등록 시 연결한 맵이며 비활성화 중 전역 매니저를 다시 만들지 않도록 보관한다.</summary>
+    private MapManager _map;
+
+    /// <summary>실제 도착을 완료하여 현재 선점하고 있는 타일이다.</summary>
+    private Vector2Int _currentCell;
+
+    /// <summary>이번 한 칸 이동이 향하는 타일이며 출발 시 선점하지 않는다.</summary>
+    private Vector2Int _targetCell;
+
+    /// <summary>현재 맵에 출발 또는 도착 칸을 정상 등록했는지 나타낸다.</summary>
+    public bool HasCell { get; private set; }
+
+    /// <summary>도착 선점이 등록된 현재 칸을 제공한다.</summary>
+    public Vector2Int CurrentCell => _currentCell;
+
+    /// <summary>진행 중인 이동의 목적지 칸을 제공한다.</summary>
+    public Vector2Int TargetCell => _targetCell;
+
+    /// <summary>충돌이나 진입 거절 이후 원래 선점한 칸으로 복귀 중인지 나타낸다.</summary>
+    public bool IsReturning { get; private set; }
+
+    /// <summary>동일 목적지 충돌 시 플레이어에게 우선권을 주기 위한 소유자 분류다.</summary>
+    public bool IsPlayerControlled => _owner is Villager;
+
+    /// <summary>사망 통지 도중에도 죽은 캐릭터의 이전 선점이 새 스폰을 막지 않도록 생존을 확인한다.</summary>
+    public bool CanOccupyCell
+    {
+        get
+        {
+            // creature는 체력 자원이 있는 전투 캐릭터인 경우 생존 여부를 조회할 소유자다.
+            return _owner != null && !(_owner is CombatCreature creature && creature.IsDead);
+        }
+    }
+
+    /// <summary>물리 장애물 때문에 실제 위치가 움직이지 않은 누적 시간이다.</summary>
+    private float _stalledSeconds;
+
+    /// <summary>물리 진행 정체를 감지하기 위한 직전 위치다.</summary>
+    private Vector2 _previousPhysicsPosition;
+
     /// <summary>실제 위치와 속도를 제어하는 캐릭터의 2D 물리 컴포넌트다.</summary>
     public Rigidbody2D RB2D { get; private set; }
 
@@ -46,6 +86,9 @@ public class CreatureMovement : InitBase
 
     /// <summary>소유 캐릭터의 스탯에서 제공하는 기본 이동 속도다.</summary>
     public float MoveSpeed => _owner.MoveSpeed;
+
+    /// <summary>진행 중인 한 칸 또는 다음 일반 입력에 적용하는 실제 월드 이동 속도다.</summary>
+    public float EffectiveMoveSpeed => IsMoving ? _stepSpeed : MoveSpeed * _inputSpeedWeight;
 
     /// <summary>애니메이션에서 사용할 실제 이동 방향이며, 소유자가 없으면 0이다.</summary>
     public Vector2 CacheMoveDirection =>
@@ -65,14 +108,22 @@ public class CreatureMovement : InitBase
     /// <param name="owner">이동 속도와 이동 방향을 공유할 소유 캐릭터다.</param>
     public void SetInfo(IMovable owner)
     {
+        ReleaseClaim();
         ClearMovement();
         _owner = owner;
+        _map = Managers.Map;
+        _inputSpeedWeight = owner is Villager ? Villager.DEFAULT_MOVE_SPEED_WEIGHT : 1f;
 
-        if (RB2D != null && Managers.Map.IsLoaded)
+        if (RB2D != null && _map.IsLoaded)
         {
             // 스폰 위치가 포함된 타일의 정수 좌표다.
-            Vector2Int cell = Managers.Map.WorldToCell(RB2D.position);
-            RB2D.position = Managers.Map.CellCenterToWorld(cell);
+            Vector2Int cell = _map.WorldToCell(RB2D.position);
+            RB2D.position = _map.CellCenterToWorld(cell);
+            _currentCell = cell;
+            _targetCell = cell;
+            HasCell = _map.TryClaimCell(cell, this);
+            if (!HasCell)
+                Debug.LogWarning($"[Movement] 스폰 타일 선점 실패: {cell}", this);
         }
     }
 
@@ -104,43 +155,50 @@ public class CreatureMovement : InitBase
         float speedWeight = 1f,
         Action onComplete = null)
     {
-        if (_owner == null || RB2D == null || !isActiveAndEnabled)
-            return;
+        if (_map != null && _map.IsLoaded)
+            TryMoveToCell(_map.WorldToCell(destination), speedWeight, onComplete);
+    }
 
-        if (IsMoving || !Managers.Map.IsLoaded)
-            return;
-
-        // 이동을 시작하는 현재 타일의 정수 좌표다.
-        Vector2Int currentCell = Managers.Map.WorldToCell(RB2D.position);
-
-        // 요청한 월드 좌표가 포함된 목적지 타일의 정수 좌표다.
-        Vector2Int targetCell = Managers.Map.WorldToCell(destination);
+    /// <summary>인접 타일 이동을 시작할 수 있는지 반환하며 완료 전에는 목적지를 선점하지 않는다.</summary>
+    /// <param name="targetCell">이번에 실제로 도착하려는 인접 타일이다.</param>
+    /// <param name="speedWeight">이번 이동에 적용할 기본 속도 배율이다.</param>
+    /// <param name="onComplete">선점 갱신까지 성공한 실제 도착 후 실행할 콜백이다.</param>
+    public bool TryMoveToCell(Vector2Int targetCell, float speedWeight = 1f, Action onComplete = null)
+    {
+        if (_owner == null || RB2D == null || !isActiveAndEnabled ||
+            !HasCell || IsMoving || _map == null || !_map.IsLoaded)
+            return false;
 
         // 현재 타일과 목적지 타일 사이의 좌표 차이다.
-        Vector2Int difference = targetCell - currentCell;
+        Vector2Int difference = targetCell - _currentCell;
 
         // 대각선과 두 칸 이상의 이동을 거절하기 위한 타일 거리다.
         int cellDistance = Mathf.Abs(difference.x) + Mathf.Abs(difference.y);
 
         if (cellDistance != 1 || !CanEnterCell(targetCell))
-            return;
+            return false;
 
         // 기본 이동 속도에 이번 요청의 배율을 적용한 실제 속도다.
         float speed = MoveSpeed * Mathf.Max(0f, speedWeight);
         if (speed <= 0f)
-            return;
+            return false;
 
         _startPosition = RB2D.position;
-        _destination = Managers.Map.CellCenterToWorld(targetCell);
+        _destination = _map.CellCenterToWorld(targetCell);
+        _targetCell = targetCell;
         _stepSpeed = speed;
-        _duration = Vector2.Distance(_startPosition, _destination) / speed;
+        _duration = Mathf.Max(Time.fixedDeltaTime, Vector2.Distance(_startPosition, _destination) / speed);
         _elapsed = 0f;
         _onComplete = onComplete;
 
         IsMoving = true;
+        IsReturning = false;
         _isInputDriven = false;
+        _stalledSeconds = 0f;
+        _previousPhysicsPosition = RB2D.position;
         RB2D.linearVelocity = Vector2.zero;
         _owner.CacheMoveDirection = (_destination - _startPosition).normalized;
+        return true;
     }
 
     /// <summary>실제 도착을 확인하고 입력 유지에 따른 연속 이동과 보간 속도를 갱신한다.</summary>
@@ -149,11 +207,26 @@ public class CreatureMovement : InitBase
         if (_owner == null || RB2D == null)
             return;
 
-        if (!Managers.Map.IsLoaded)
+        if (_map == null || !_map.IsLoaded)
         {
+            ReleaseClaim();
             ClearMovement();
             return;
         }
+
+        if (!HasCell)
+            return;
+
+        // creature는 전투 캐릭터일 때 사망 여부를 검사할 소유자다.
+        if (_owner is CombatCreature creature && creature.IsDead)
+        {
+            CancelToCurrentCell();
+            return;
+        }
+
+        if (IsMoving && !IsReturning &&
+            (!CanEnterCell(_targetCell) || _map.ShouldYieldDestination(this, _targetCell)))
+            BeginReturn();
 
         if (IsMoving)
         {
@@ -161,6 +234,14 @@ public class CreatureMovement : InitBase
             float distanceSquared = (RB2D.position - _destination).sqrMagnitude;
             if (distanceSquared <= POSITION_EPSILON * POSITION_EPSILON)
                 CompleteStep();
+            else if (!IsReturning)
+            {
+                _stalledSeconds = (RB2D.position - _previousPhysicsPosition).sqrMagnitude <
+                    POSITION_EPSILON * POSITION_EPSILON
+                    ? _stalledSeconds + Time.fixedDeltaTime : 0f;
+                if (_stalledSeconds >= 0.35f)
+                    BeginReturn();
+            }
         }
 
         // 완료 콜백에서 디스폰된 경우에는 추가 이동을 진행하지 않는다.
@@ -191,6 +272,7 @@ public class CreatureMovement : InitBase
         // 실제 현재 위치에서 보간 위치까지 한 물리 주기 동안 이동할 속도다.
         Vector2 velocity = (nextPosition - RB2D.position) / Time.fixedDeltaTime;
         RB2D.linearVelocity = Vector2.ClampMagnitude(velocity, _stepSpeed);
+        _previousPhysicsPosition = RB2D.position;
     }
 
     /// <summary>저장된 입력으로 다음 타일을 계산하고 진입 가능한 경우 한 칸 이동을 시작한다.</summary>
@@ -199,11 +281,11 @@ public class CreatureMovement : InitBase
         if (IsMoving || _inputDirection == Vector2.zero)
             return;
 
-        if (!Managers.Map.IsLoaded)
+        if (!HasCell || _map == null || !_map.IsLoaded)
             return;
 
         // 다음 이동을 출발할 현재 타일의 정수 좌표다.
-        Vector2Int currentCell = Managers.Map.WorldToCell(RB2D.position);
+        Vector2Int currentCell = _currentCell;
 
         // 저장된 4방향 입력을 타일 좌표의 한 칸 차이로 바꾼 값이다.
         Vector2Int offset = new Vector2Int(
@@ -216,7 +298,7 @@ public class CreatureMovement : InitBase
             return;
 
         // 목적지 타일의 중앙에 해당하는 월드 좌표다.
-        Vector2 destination = Managers.Map.CellCenterToWorld(targetCell);
+        Vector2 destination = _map.CellCenterToWorld(targetCell);
         ForceMoveTo(destination, _inputSpeedWeight);
 
         // 일반 입력으로 시작했으므로 도착 후에도 입력 유지 여부를 확인한다.
@@ -226,9 +308,21 @@ public class CreatureMovement : InitBase
     /// <summary>도착 오차를 중앙으로 보정하고 이동을 마친 뒤 완료 콜백을 한 번 실행한다.</summary>
     private void CompleteStep()
     {
+        if (!IsReturning && !_map.TryClaimCell(_targetCell, this))
+        {
+            BeginReturn();
+            return;
+        }
+
+        if (!IsReturning)
+        {
+            _map.ReleaseCell(_currentCell, this);
+            _currentCell = _targetCell;
+        }
         RB2D.position = _destination;
         RB2D.linearVelocity = Vector2.zero;
         IsMoving = false;
+        IsReturning = false;
         _owner.CacheMoveDirection = Vector2.zero;
 
         // 재진입하더라도 같은 완료 콜백을 중복 실행하지 않도록 보관한 값이다.
@@ -241,23 +335,57 @@ public class CreatureMovement : InitBase
     /// <param name="cell">진입 가능 여부를 검사할 타일의 정수 좌표다.</param>
     private bool CanEnterCell(Vector2Int cell)
     {
-        // 타일 크기와 범위, 벽 정보가 저장된 현재 맵 데이터다.
-        var map = Managers.Map.CurrentMap;
-        if (map == null)
-            return false;
+        return _map != null && _map.CanEnterCell(cell, this);
+    }
 
-        if (cell.x < 0 || cell.x >= map.Grid.Width ||
-            cell.y < 0 || cell.y >= map.Grid.Height)
-            return false;
+    /// <summary>실패한 도착 콜백을 버리고 여전히 자신이 선점한 출발 칸으로 부드럽게 복귀한다.</summary>
+    private void BeginReturn()
+    {
+        _onComplete = null;
+        IsReturning = true;
+        _startPosition = RB2D.position;
+        _destination = _map.CellCenterToWorld(_currentCell);
+        _targetCell = _currentCell;
+        _elapsed = 0f;
+        _duration = Mathf.Max(Time.fixedDeltaTime,
+            Vector2.Distance(_startPosition, _destination) / Mathf.Max(0.01f, _stepSpeed));
+        _owner.CacheMoveDirection = (_destination - _startPosition).normalized;
+    }
 
-        if (map.CollisionRows[cell.y][cell.x] == MAP_TOOL_WALL)
-            return false;
+    /// <summary>라운드 정지나 사망 시 진행 중인 이동을 취소하고 선점 중인 칸 중앙에 정렬한다.</summary>
+    public void CancelToCurrentCell()
+    {
+        ClearMovement();
+        if (HasCell && _map != null && _map.IsLoaded && RB2D != null)
+            RB2D.position = _map.CellCenterToWorld(_currentCell);
+    }
 
-        if (Managers.Stage.IsRunning && Managers.Map.IsOutsideArea(cell))
+    /// <summary>외부 위치 변경 시 기존 이동을 취소하고 도착 칸의 선점을 함께 갱신한다.</summary>
+    /// <param name="worldPosition">새로 배치할 위치가 포함된 타일의 월드 좌표다.</param>
+    public bool TryPlaceAt(Vector2 worldPosition)
+    {
+        if (_map == null || !_map.IsLoaded || RB2D == null || _owner == null)
             return false;
-
-        // 박스, 다른 캐릭터, 다른 캐릭터가 선점한 칸의 판정은 후속 작업이다.
+        // 외부 배치 요청을 타일 중앙 좌표로 변환하기 위한 목적지 칸이다.
+        Vector2Int cell = _map.WorldToCell(worldPosition);
+        if (!_map.TryClaimCell(cell, this))
+            return false;
+        if (HasCell && cell != _currentCell)
+            _map.ReleaseCell(_currentCell, this);
+        ClearMovement();
+        _currentCell = cell;
+        _targetCell = cell;
+        HasCell = true;
+        RB2D.position = _map.CellCenterToWorld(cell);
         return true;
+    }
+
+    /// <summary>맵을 다시 조회하지 않고 자신이 등록한 기존 타일 선점만 해제한다.</summary>
+    private void ReleaseClaim()
+    {
+        if (HasCell && _map != null)
+            _map.ReleaseCell(_currentCell, this);
+        HasCell = false;
     }
 
     /// <summary>원본 입력을 상하좌우 중 하나로 제한하며 같은 크기의 대각선 입력은 가로를 우선한다.</summary>
@@ -277,6 +405,7 @@ public class CreatureMovement : InitBase
     private void ClearMovement()
     {
         IsMoving = false;
+        IsReturning = false;
         _isInputDriven = false;
         _inputDirection = Vector2.zero;
         _inputSpeedWeight = 1f;
@@ -295,6 +424,7 @@ public class CreatureMovement : InitBase
     /// <summary>비활성화 또는 풀 반환 시 이전 이동과 콜백을 정리하고 소유자 연결을 해제한다.</summary>
     private void OnDisable()
     {
+        ReleaseClaim();
         ClearMovement();
         _owner = null;
     }
