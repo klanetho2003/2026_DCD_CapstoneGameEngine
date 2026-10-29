@@ -41,6 +41,15 @@ public class StageManager
 
     public float RoundRemainingSeconds { get { return _roundRunner.RemainingSeconds; } }
 
+    /// <summary>가장 최근 제한시간 종료 시 확정한 라운드 점령 점수다.</summary>
+    public TerritoryScore LastRoundScore { get; private set; }
+    /// <summary>정산을 마친 모든 라운드의 플레이어 소유 타일 수를 더한 점수다.</summary>
+    public int TotalPlayerTiles { get; private set; }
+    /// <summary>정산을 마친 모든 라운드의 몬스터 소유 타일 수를 더한 점수다.</summary>
+    public int TotalMonsterTiles { get; private set; }
+    /// <summary>제한시간 종료로 정상 정산한 라운드 수다.</summary>
+    public int CompletedRoundCount { get; private set; }
+
     /// <summary>
     /// (이전 상태, 새 상태). 내부 상태가 모두 갱신된 뒤 호출된다.
     /// 이 매니저는 씬이 바뀌어도 살아 있으므로, 씬 객체가 구독했다면 씬을 떠날 때 반드시 해제할 것.
@@ -61,6 +70,9 @@ public class StageManager
     private StageInfoData _pendingEnter;
     private bool _pendingProceed;
     private bool _pendingFail;
+
+    /// <summary>동일 라운드의 종료 통지가 반복되어도 점수를 한 번만 누적하도록 막는다.</summary>
+    private bool _roundSettled;
     #endregion
 
     public StageManager()
@@ -246,6 +258,11 @@ public class StageManager
         CurrentStageInfo = null;
         CurrentRound = ERound.A;
         Result = EStageResult.Cleared;
+        LastRoundScore = default;
+        TotalPlayerTiles = 0;
+        TotalMonsterTiles = 0;
+        CompletedRoundCount = 0;
+        _roundSettled = false;
     }
 
     private void SpawnPersistent()
@@ -289,11 +306,14 @@ public class StageManager
 
     #region 라운드
     /// <summary>라운드 시작의 유일한 경로 — A·B·C가 모두 이 함수를 지난다.</summary>
+    /// <param name="round">새로 시작하고 점령 상태를 초기화할 라운드다.</param>
     private void BeginRound(ERound round)
     {
         CurrentRound = round;
+        _roundSettled = false;
 
         // 순서 1: 보이는 것과 영역을 이 라운드의 것으로. RoundRunner의 스폰 검사가 이 영역을 본다
+        // area는 이번 라운드에서 이동과 점령이 가능한 바닥 타일 집합이다.
         TerrainArea area = _playData.GetArea(round);
         Managers.Map.SetRound(round, area);
 
@@ -303,6 +323,7 @@ public class StageManager
 
         // 순서 3: 라운드 실행 — 시작 조건은 "호출 즉시"
         _roundRunner.Begin(_playData.GetRound(round), ROUND_DURATION_SECONDS);
+        Managers.Map.BeginTerritoryRound();
 
         LogPrinter.Log($"[StageManager] Round {round} 시작 — {ROUND_DURATION_SECONDS}s, 영역 {area.CellCount}셀");
         ChangePhase(EStagePhase.Playing);
@@ -311,6 +332,14 @@ public class StageManager
     /// <summary>RoundRunner가 시간 종료 시 호출 (Tick 안). 몬스터 정리는 RoundRunner가 이미 끝낸 뒤다.</summary>
     private void OnRoundEnded()
     {
+        if (Phase != EStagePhase.Playing || _roundSettled)
+            return;
+        _roundSettled = true;
+        LastRoundScore = Managers.Map.FinishTerritoryRound();
+        TotalPlayerTiles += LastRoundScore.PlayerTiles;
+        TotalMonsterTiles += LastRoundScore.MonsterTiles;
+        CompletedRoundCount++;
+
         if (CurrentRound == LAST_ROUND)
         {
             Result = EStageResult.Cleared;
@@ -378,6 +407,7 @@ public class StageManager
         _pendingProceed = false;
 
         _roundRunner.Stop(); // 통지 없이 정리 — 실패는 "라운드가 끝났다"가 아니다
+        Managers.Map.FinishTerritoryRound();
         Result = EStageResult.Failed;
 
         LogPrinter.Log($"[StageManager] Round {CurrentRound}에서 실패");

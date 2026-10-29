@@ -84,6 +84,8 @@ public sealed class StageFlowPresenter
         }
     }
 
+    /// <summary>스테이지 상태에 맞는 화면을 열고 결과 팝업에 확정된 점령 점수를 전달한다.</summary>
+    /// <param name="phase">표시할 선택 또는 결과 화면의 기준이 되는 현재 스테이지 상태다.</param>
     private void ShowUI(EStagePhase phase)
     {
         switch (phase)
@@ -94,16 +96,20 @@ public sealed class StageFlowPresenter
 
             case EStagePhase.RoundResult:
                 {
+                    // popup은 이번 라운드 점령 수와 누적 점수를 표시할 기존 결과 창이다.
                     UI_RoundEndPopup popup = Managers.UI.ShowPopupUI<UI_RoundEndPopup>();
-                    popup.SetInfo(Managers.Stage.CurrentRound, _onResultConfirmed);
+                    popup.SetInfo(Managers.Stage.CurrentRound, _onResultConfirmed,
+                        Managers.Stage.LastRoundScore.PlayerTiles, Managers.Stage.TotalPlayerTiles);
                     _resultPopup = popup;
                     break;
                 }
 
             case EStagePhase.StageResult:
                 {
+                    // popup은 최종 결과와 정산 완료한 라운드의 누적 점수를 표시할 기존 결과 창이다.
                     UI_GameEndPopup popup = Managers.UI.ShowPopupUI<UI_GameEndPopup>();
-                    popup.SetInfo(Managers.Stage.Result, _onResultConfirmed);
+                    popup.SetInfo(Managers.Stage.Result, _onResultConfirmed,
+                        Managers.Stage.TotalPlayerTiles, Managers.Stage.CompletedRoundCount);
                     _resultPopup = popup;
                     break;
                 }

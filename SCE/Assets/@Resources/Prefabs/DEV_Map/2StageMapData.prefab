@@ -742,6 +742,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6138921652962478583}
   - component: {fileID: 7443772804693199518}
+  - component: {fileID: 4242000000000000001}
   m_Layer: 0
   m_Name: 2StageMapData
   m_TagString: Untagged
@@ -768,6 +769,22 @@ Transform:
   - {fileID: 1820562999594432324}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4242000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 497007200865692806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d64103f8d4eb4b8896af96c9df2456c7, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  _playerSprite: {fileID: -171549057, guid: c201e7408503aab4d8b2dd348b3fcd4a, type: 3}
+  _monsterSprite: {fileID: -1145757561, guid: c201e7408503aab4d8b2dd348b3fcd4a, type: 3}
+  _sortingLayerName: Default
+  _sortingOrder: -1
 --- !u!156049354 &7443772804693199518
 Grid:
   m_ObjectHideFlags: 0

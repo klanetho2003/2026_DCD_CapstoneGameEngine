@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Data;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using static Define;
@@ -22,6 +23,38 @@ public sealed class MapView
     private readonly List<RoundAuthoring> _roundBuffer = new();
 
     private GameObject _root;
+
+    /// <summary>현재 스테이지의 스프라이트 설정과 점령 전용 타일맵을 담당한다.</summary>
+    private TileTerritoryView _territoryView;
+
+    /// <summary>맵 프리팹의 점령 표시 컴포넌트를 찾아 논리 격자에 맞게 초기화한다.</summary>
+    /// <param name="grid">맵 데이터에 기록된 실제 좌표 원점과 칸 크기다.</param>
+    public void InitializeTerritory(in GridSpec grid)
+    {
+        if (_root == null)
+            return;
+        _territoryView = _root.GetComponent<TileTerritoryView>();
+        if (_territoryView != null)
+            _territoryView.Initialize(in grid);
+        else
+            Debug.LogWarning("[MapView] 맵 루트에 TileTerritoryView와 점령 스프라이트를 설정하세요.", _root);
+    }
+
+    /// <summary>점령이나 탈취가 발생한 한 칸의 표시만 갱신한다.</summary>
+    /// <param name="cell">소유권이 바뀐 논리 타일 좌표다.</param>
+    /// <param name="owner">타일의 새로운 소유 진영이다.</param>
+    public void SetTerritoryOwner(Vector2Int cell, TileOwner owner)
+    {
+        if (_territoryView != null)
+            _territoryView.SetOwner(cell, owner);
+    }
+
+    /// <summary>다음 라운드에서 이전 소유권 색상이 남지 않도록 점령 표시를 비운다.</summary>
+    public void ClearTerritory()
+    {
+        if (_territoryView != null)
+            _territoryView.Clear();
+    }
 
     public bool IsSpawned { get { return _root != null; } }
 
@@ -63,6 +96,7 @@ public sealed class MapView
             Managers.Resource.Destroy(_root);
 
         _root = null;
+        _territoryView = null;
         Array.Clear(_roundRoots, 0, _roundRoots.Length);
         HasRoundRoots = false;
     }

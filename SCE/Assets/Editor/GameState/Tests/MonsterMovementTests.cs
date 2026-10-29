@@ -123,7 +123,7 @@ public class MonsterMovementPolicyTests
 }
 
 /// <summary>실제 Unity 2D 물리 장면에서 도착 선점, 이동 취소, 순환과 탈출 상태를 검증한다.</summary>
-public class MonsterMovementIntegrationTests
+public partial class MonsterMovementIntegrationTests
 {
     /// <summary>테스트가 사용하는 공통 물리 갱신 간격이다.</summary>
     private const float STEP = 0.02f;

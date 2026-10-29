@@ -47,6 +47,12 @@ public class CreatureMovement : InitBase
     /// <summary>이번 한 칸 이동이 향하는 타일이며 출발 시 선점하지 않는다.</summary>
     private Vector2Int _targetCell;
 
+    /// <summary>공격용 트리거를 제외하고 실제 타일 진입을 감지할 이동 충돌체다.</summary>
+    private Collider2D _movementCollider;
+
+    /// <summary>이번 목적지에 실제로 진입하여 점령 처리를 한 번 완료했는지 나타낸다.</summary>
+    private bool _capturedTarget;
+
     /// <summary>현재 맵에 출발 또는 도착 칸을 정상 등록했는지 나타낸다.</summary>
     public bool HasCell { get; private set; }
 
@@ -61,6 +67,10 @@ public class CreatureMovement : InitBase
 
     /// <summary>동일 목적지 충돌 시 플레이어에게 우선권을 주기 위한 소유자 분류다.</summary>
     public bool IsPlayerControlled => _owner is Villager;
+
+    /// <summary>점령에 사용할 진영이며 플레이어와 몬스터가 아닌 이동 주체는 중립이다.</summary>
+    public TileOwner TerritoryOwner => _owner is Villager ? TileOwner.Player :
+        _owner is MonsterBase ? TileOwner.Monster : TileOwner.Neutral;
 
     /// <summary>사망 통지 도중에도 죽은 캐릭터의 이전 선점이 새 스폰을 막지 않도록 생존을 확인한다.</summary>
     public bool CanOccupyCell
@@ -94,13 +104,22 @@ public class CreatureMovement : InitBase
     public Vector2 CacheMoveDirection =>
         _owner != null ? _owner.CacheMoveDirection : Vector2.zero;
 
-    /// <summary>공통 초기화 후 이동에 사용할 Rigidbody2D를 한 번 찾아 보관한다.</summary>
+    /// <summary>공통 초기화 후 실제 이동 바디와 진입 판정용 일반 충돌체를 한 번 찾아 보관한다.</summary>
     public override bool Init()
     {
         if (base.Init() == false)
             return false;
 
         RB2D = GetComponent<Rigidbody2D>();
+        // collider는 이동 판정에 사용할 루트의 일반 충돌체 후보이며 공격용 트리거는 제외한다.
+        foreach (Collider2D collider in GetComponents<Collider2D>())
+        {
+            if (!collider.isTrigger && collider.enabled)
+            {
+                _movementCollider = collider;
+                break;
+            }
+        }
         return true;
     }
 
@@ -122,6 +141,8 @@ public class CreatureMovement : InitBase
             _currentCell = cell;
             _targetCell = cell;
             HasCell = _map.TryClaimCell(cell, this);
+            if (HasCell)
+                _map.TryCaptureCell(cell, this);
             if (!HasCell)
                 Debug.LogWarning($"[Movement] 스폰 타일 선점 실패: {cell}", this);
         }
@@ -168,6 +189,8 @@ public class CreatureMovement : InitBase
         if (_owner == null || RB2D == null || !isActiveAndEnabled ||
             !HasCell || IsMoving || _map == null || !_map.IsLoaded)
             return false;
+        if (_map.HasTerritoryRound && !_map.IsTerritoryOpen)
+            return false;
 
         // 현재 타일과 목적지 타일 사이의 좌표 차이다.
         Vector2Int difference = targetCell - _currentCell;
@@ -196,6 +219,7 @@ public class CreatureMovement : InitBase
         _isInputDriven = false;
         _stalledSeconds = 0f;
         _previousPhysicsPosition = RB2D.position;
+        _capturedTarget = false;
         RB2D.linearVelocity = Vector2.zero;
         _owner.CacheMoveDirection = (_destination - _startPosition).normalized;
         return true;
@@ -217,6 +241,12 @@ public class CreatureMovement : InitBase
         if (!HasCell)
             return;
 
+        if (_map.HasTerritoryRound && !_map.IsTerritoryOpen)
+        {
+            CancelToCurrentCell();
+            return;
+        }
+
         // creature는 전투 캐릭터일 때 사망 여부를 검사할 소유자다.
         if (_owner is CombatCreature creature && creature.IsDead)
         {
@@ -227,6 +257,9 @@ public class CreatureMovement : InitBase
         if (IsMoving && !IsReturning &&
             (!CanEnterCell(_targetCell) || _map.ShouldYieldDestination(this, _targetCell)))
             BeginReturn();
+
+        if (IsMoving && !IsReturning)
+            CaptureCurrentTileEntry();
 
         if (IsMoving)
         {
@@ -318,6 +351,8 @@ public class CreatureMovement : InitBase
         {
             _map.ReleaseCell(_currentCell, this);
             _currentCell = _targetCell;
+            if (!_capturedTarget)
+                _map.TryCaptureCell(_currentCell, this);
         }
         RB2D.position = _destination;
         RB2D.linearVelocity = Vector2.zero;
@@ -329,6 +364,35 @@ public class CreatureMovement : InitBase
         Action callback = _onComplete;
         _onComplete = null;
         callback?.Invoke();
+    }
+
+    /// <summary>실제로 이동한 충돌체가 목적지 내부에 진입하면 중앙 도착보다 먼저 점령한다.</summary>
+    public void CaptureCurrentTileEntry()
+    {
+        if (_map != null && _map.IsLoaded && HasCell && RB2D != null && IsMoving && !IsReturning)
+            UpdateTerritoryEntry();
+    }
+
+    /// <summary>목적지 경계 안으로 실제 진입했는지 검사하고 한 번의 이동에 한 번만 점령한다.</summary>
+    private void UpdateTerritoryEntry()
+    {
+        if (_capturedTarget || !_map.IsTerritoryOpen)
+            return;
+        // direction은 현재 선점 칸에서 인접 목적지로 향하는 한 칸 방향이다.
+        Vector2Int direction = _targetCell - _currentCell;
+        if (Vector2.Dot(RB2D.position - _startPosition, (Vector2)direction) <= POSITION_EPSILON)
+            return;
+        // center는 진입을 감지할 목적지 셀의 월드 중심이다.
+        Vector2 center = _map.CellCenterToWorld(_targetCell);
+        // leadingPoint는 목적지에 가장 가까운 실제 이동 충돌체 표면이며 충돌체가 없으면 판정 위치다.
+        Vector2 leadingPoint = _movementCollider != null && _movementCollider.enabled
+            ? _movementCollider.ClosestPoint(center) : RB2D.position;
+        // penetration은 목적지의 진입 경계보다 안쪽으로 들어간 깊이며 단순 경계 접촉은 제외한다.
+        float penetration = direction.x != 0
+            ? (leadingPoint.x - center.x) * direction.x + _map.Grid.CellSize * 0.5f
+            : (leadingPoint.y - center.y) * direction.y + _map.Grid.CellSize * 0.5f;
+        if (penetration > POSITION_EPSILON)
+            _capturedTarget = _map.TryCaptureCell(_targetCell, this);
     }
 
     /// <summary>맵 범위와 벽 데이터, 현재 라운드의 영역을 검사하여 타일 진입 여부를 반환한다.</summary>
@@ -377,12 +441,15 @@ public class CreatureMovement : InitBase
         _targetCell = cell;
         HasCell = true;
         RB2D.position = _map.CellCenterToWorld(cell);
+        _map.TryCaptureCell(cell, this);
         return true;
     }
 
     /// <summary>맵을 다시 조회하지 않고 자신이 등록한 기존 타일 선점만 해제한다.</summary>
     private void ReleaseClaim()
     {
+        // 마지막 물리 진행 직후 정산용 디스폰이 발생해도 이미 진입한 타일의 점령은 반영한다.
+        CaptureCurrentTileEntry();
         if (HasCell && _map != null)
             _map.ReleaseCell(_currentCell, this);
         HasCell = false;
@@ -408,11 +475,13 @@ public class CreatureMovement : InitBase
         IsReturning = false;
         _isInputDriven = false;
         _inputDirection = Vector2.zero;
-        _inputSpeedWeight = 1f;
+        _inputSpeedWeight = _owner is Villager ? Villager.DEFAULT_MOVE_SPEED_WEIGHT : 1f;
         _elapsed = 0f;
         _duration = 0f;
         _stepSpeed = 0f;
         _onComplete = null;
+
+        _capturedTarget = false;
 
         if (RB2D != null)
             RB2D.linearVelocity = Vector2.zero;

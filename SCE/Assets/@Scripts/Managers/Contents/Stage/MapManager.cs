@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 using static Define;
 
-/// <summary>맵 데이터와 라운드 영역, 도착한 캐릭터의 타일 선점을 관리한다.</summary>
+/// <summary>맵 데이터와 라운드 영역, 도착 후 선점과 지속적인 타일 소유권을 관리한다.</summary>
 public class MapManager
 {
     /// <summary>현재 로드한 타일과 스테이지 데이터다.</summary>
@@ -32,6 +32,78 @@ public class MapManager
 
     /// <summary>박스 등 외부 시스템이 벽으로 등록한 추가 차단 타일이다.</summary>
     private readonly HashSet<Vector2Int> _blockedCells = new();
+
+    /// <summary>캐릭터의 도착 선점과 별개로 보관하는 이번 라운드의 타일 소유권이다.</summary>
+    private readonly TileTerritory _territory = new();
+
+    /// <summary>현재 맵에서 점령 라운드를 시작한 적이 있는지 나타낸다.</summary>
+    public bool HasTerritoryRound => _territory.HasRound;
+    /// <summary>정산으로 잠기지 않아 점령과 탈취를 허용하는지 나타낸다.</summary>
+    public bool IsTerritoryOpen => _territory.IsOpen;
+    /// <summary>현재 플레이어가 소유한 타일 수다.</summary>
+    public int PlayerTerritoryCount => _territory.PlayerTiles;
+    /// <summary>현재 몬스터가 소유한 타일 수다.</summary>
+    public int MonsterTerritoryCount => _territory.MonsterTiles;
+
+    /// <summary>현재 타일의 소유권을 선점 주체와 독립적으로 조회한다.</summary>
+    /// <param name="cell">소유권을 조회할 타일의 정수 좌표다.</param>
+    public TileOwner GetTileOwner(Vector2Int cell)
+    {
+        return _territory.GetOwner(cell);
+    }
+
+    /// <summary>소유권과 표시를 초기화하고 각 캐릭터가 서 있는 칸부터 점령을 시작한다.</summary>
+    public void BeginTerritoryRound()
+    {
+        _territory.BeginRound();
+        _view.ClearTerritory();
+        // entry는 라운드 시작에 현재 위치를 점령할 선점 타일과 이동 주체다.
+        foreach (KeyValuePair<Vector2Int, CreatureMovement> entry in _occupants)
+        {
+            if (entry.Value == null || !entry.Value.CanOccupyCell)
+                continue;
+            entry.Value.CancelToCurrentCell();
+            TryCaptureCell(entry.Key, entry.Value);
+        }
+    }
+
+    /// <summary>추가 점령과 이동을 잠그고 정산 순간의 소유 수를 반환한다.</summary>
+    public TerritoryScore FinishTerritoryRound()
+    {
+        // entry는 마지막 물리 진행부터 정산 사이에 발생한 실제 진입을 먼저 반영할 주체다.
+        foreach (KeyValuePair<Vector2Int, CreatureMovement> entry in _occupants)
+        {
+            if (entry.Value != null)
+                entry.Value.CaptureCurrentTileEntry();
+        }
+        // score는 이동 취소와 디스폰 이후에도 유지할 정산 순간의 소유 수다.
+        TerritoryScore score = _territory.FinishRound();
+        // entry는 결과 화면에서 이동과 남은 입력을 정리할 현재 선점 주체다.
+        foreach (KeyValuePair<Vector2Int, CreatureMovement> entry in _occupants)
+        {
+            if (entry.Value != null)
+                entry.Value.CancelToCurrentCell();
+        }
+        return score;
+    }
+
+    /// <summary>실제 진입 또는 현재 배치된 칸만 점령하고 소유권이 바뀐 칸의 표시를 갱신한다.</summary>
+    /// <param name="cell">실제로 진입하거나 현재 서 있는 타일 좌표다.</param>
+    /// <param name="requester">타일 소유권을 얻으려는 생존 캐릭터의 이동 컴포넌트다.</param>
+    public bool TryCaptureCell(Vector2Int cell, CreatureMovement requester)
+    {
+        if (!_territory.IsOpen || requester == null || !requester.HasCell ||
+            !requester.CanOccupyCell || requester.TerritoryOwner == TileOwner.Neutral ||
+            !CanEnterCell(cell, requester))
+            return false;
+        if (cell != requester.CurrentCell &&
+            (!requester.IsMoving || requester.IsReturning || requester.TargetCell != cell ||
+             ShouldYieldDestination(requester, cell)))
+            return false;
+        if (_territory.TryCapture(cell, requester.TerritoryOwner))
+            _view.SetTerritoryOwner(cell, requester.TerritoryOwner);
+        return true;
+    }
 
     /// <summary>맵, 라운드 영역, 벽 배치가 변경될 때 증가하는 경로 환경 버전이다.</summary>
     public int TraversalVersion { get; private set; }
@@ -124,6 +196,7 @@ public class MapManager
     /// 맵 데이터(JSON)를 읽고, mapPrefabKey가 있으면 Stage Prefab도 스폰한다.
     /// 실패하면 아무것도 남기지 않고 false를 돌려준다 — 이전 맵의 데이터로 진행되는 일을 막는다.
     /// </summary>
+    /// <param name="mapDataKey">맵 좌표와 라운드 정보가 저장된 JSON 리소스 키다.</param>
     /// <param name="mapPrefabKey">null이면 프리팹을 스폰하지 않는다 (맵이 Scene에 직접 놓여 있는 기존 방식).</param>
     public bool LoadMap(string mapDataKey, string mapPrefabKey = null)
     {
@@ -148,6 +221,7 @@ public class MapManager
 
         CurrentMap = map;
         _grid = map.Grid;
+        _view.InitializeTerritory(in _grid);
 
         _playerSpawnPoint = new ETileType[_grid.Width, _grid.Height];
 
@@ -207,6 +281,7 @@ public class MapManager
     }
     #endregion
 
+    /// <summary>맵 표시와 좌표, 선점 및 점령 상태를 정리하여 다음 맵으로 이전 기록이 넘어가지 않게 한다.</summary>
     public void UnloadMap()
     {
         _view.Despawn();
@@ -217,6 +292,7 @@ public class MapManager
         _area = null;
         _occupants.Clear();
         _blockedCells.Clear();
+        _territory.Clear();
         TraversalVersion++;
         OccupancyVersion++;
         /*_collision = null;
@@ -229,10 +305,14 @@ public class MapManager
     /// 라운드 전환의 유일한 경로 — 보이는 것(라운드 루트)과 영역 데이터를 함께 바꾼다.
     /// 둘을 따로 바꿀 수 있게 열어 두면 한쪽만 바뀐 상태가 생긴다.
     /// </summary>
+    /// <param name="round">보이게 할 라운드 루트의 구분 값이다.</param>
+    /// <param name="area">새 라운드에서 이동과 점령을 허용하는 타일 집합이다.</param>
     public void SetRound(ERound round, TerrainArea area)
     {
         _view.ShowRound(round);
         _area = area;
+        _territory.Clear();
+        _view.ClearTerritory();
         TraversalVersion++;
     }
 
