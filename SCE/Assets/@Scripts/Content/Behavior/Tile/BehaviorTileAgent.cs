@@ -4,9 +4,9 @@
 /// </summary>
 public interface IBehaviorTileAgent : IBehaviorAgent
 {
-    /// <summary>한 칸 출발 · 도착 결과 · 시선 · 통행 조회 (몬스터마다 하나 — 기존 이동 제어기와 같은 규칙)</summary>
+    /// <summary>한 칸 출발 · 도착 결과 · 시선 · 통행 조회 (몬스터마다 하나)</summary>
     MonsterTileStepper Stepper { get; }
 
-    /// <summary>도착 기록 · 세 바퀴 순환 · 탈출 예고 · BFS 이탈 · 봉쇄 대기 (몬스터마다 하나 — 기존 이동 제어기와 같은 규칙)</summary>
+    /// <summary>도착 기록 · 세 바퀴 순환 · 탈출 예고 · BFS 이탈 · 봉쇄 대기 (몬스터마다 하나)</summary>
     MonsterEscapeTracker EscapeTracker { get; }
 }

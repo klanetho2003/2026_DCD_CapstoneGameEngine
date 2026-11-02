@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-/// <summary>몬스터 한 개의 한 칸 출발과 도착 결과, 정지 중 시선을 관리하며 순찰 제어기와 행동 트리가 같은 출발 규칙을 쓰도록 몬스터마다 하나를 둔다.</summary>
+/// <summary>몬스터 한 개의 한 칸 출발과 도착 결과, 정지 중 시선을 관리하며 행동 트리의 칸 이동 노드가 쓰도록 몬스터마다 하나를 둔다.</summary>
 public sealed class MonsterTileStepper
 {
     /// <summary>한 칸 이동을 실행하고 도착을 알려줄 몬스터다.</summary>

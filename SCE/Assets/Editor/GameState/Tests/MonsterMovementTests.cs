@@ -325,96 +325,6 @@ public partial class MonsterMovementIntegrationTests
         Assert.IsTrue(_map.CanEnterCell(new Vector2Int(2, 2), null));
     }
 
-    /// <summary>오른쪽 출발 후 장애물을 만나면 아래쪽으로 우회전하는지 확인한다.</summary>
-    [Test]
-    public void Monster_StartsRightAndTurnsRightWhenBlocked()
-    {
-        // 오른쪽 벽을 만날 몬스터와 행동 제어기다.
-        MonsterBase monster = CreateMonster(new Vector2Int(2, 2));
-        // 현재 테스트 몬스터의 순환과 예고, 탈출 상태를 갱신할 행동 제어기다.
-        var controller = new MonsterMovementController(monster);
-        controller.Tick(STEP);
-        Assert.AreEqual(Vector2Int.right, controller.Facing);
-        Tick(20);
-        controller.Tick(STEP);
-        Assert.AreEqual(Vector2Int.down, controller.Facing);
-    }
-
-    /// <summary>같은 순환 세 바퀴 뒤에만 예고를 시작하고 4초 전에는 탈출하지 않는지 확인한다.</summary>
-    [Test]
-    public void Monster_ThreeLapsThenFourSecondPreparation()
-    {
-        // 내부의 새 타일로 탈출할 수 있는 4x4 보드의 몬스터다.
-        MonsterBase monster = CreateMonster(new Vector2Int(0, 3));
-        // 현재 테스트 몬스터의 순환과 예고, 탈출 상태를 갱신할 행동 제어기다.
-        var controller = new MonsterMovementController(monster);
-        RunUntil(controller, MonsterMovementState.PreparingEscape, 1000);
-        Assert.AreEqual(3, controller.LoopRepetitions);
-        Assert.AreEqual(4f, controller.PreparationRemaining, 0.001f);
-        TickController(controller, 100);
-        Assert.AreEqual(MonsterMovementState.PreparingEscape, controller.State);
-        Assert.AreEqual(2f, controller.PreparationRemaining, 0.01f);
-        RunUntil(controller, MonsterMovementState.Escaping, 150);
-        RunUntil(controller, MonsterMovementState.Patrol, 60);
-        Assert.AreEqual(0, controller.LoopRepetitions);
-    }
-
-    /// <summary>탈출할 새 타일이 없으면 워프 없이 머물고 차단 해제 후 다시 움직이는지 확인한다.</summary>
-    [Test]
-    public void Monster_NoEscapeRemainsTrappedUntilEnvironmentChanges()
-    {
-        SetMap(3, 2);
-        _map.SetCellBlocked(new Vector2Int(2, 0), true);
-        _map.SetCellBlocked(new Vector2Int(2, 1), true);
-        // 네 타일 순환에 갇힐 몬스터와 행동 제어기다.
-        MonsterBase monster = CreateMonster(new Vector2Int(0, 1));
-        // 현재 테스트 몬스터의 순환과 예고, 탈출 상태를 갱신할 행동 제어기다.
-        var controller = new MonsterMovementController(monster);
-        RunUntil(controller, MonsterMovementState.Trapped, 1000);
-        // 워프와 자동 재시작이 발생하지 않는지 비교할 봉쇄 위치다.
-        Vector2 position = monster.Movement.RB2D.position;
-        TickController(controller, 200);
-        Assert.AreEqual(MonsterMovementState.Trapped, controller.State);
-        Assert.AreEqual(position, monster.Movement.RB2D.position);
-        _map.SetCellBlocked(new Vector2Int(2, 1), false);
-        TickController(controller, 1);
-        Assert.AreEqual(MonsterMovementState.Patrol, controller.State);
-        Assert.IsTrue(monster.Movement.IsMoving);
-    }
-
-    /// <summary>박스 배치 변경에 해당하는 통행 버전 변경 시 예고를 취소하고 기록을 비우는지 확인한다.</summary>
-    [Test]
-    public void Monster_ObstacleChangeCancelsPreparation()
-    {
-        // 순환 예고 중 배치 변경을 받을 몬스터다.
-        MonsterBase monster = CreateMonster(new Vector2Int(0, 3));
-        // 현재 테스트 몬스터의 순환과 예고, 탈출 상태를 갱신할 행동 제어기다.
-        var controller = new MonsterMovementController(monster);
-        RunUntil(controller, MonsterMovementState.PreparingEscape, 1000);
-        _map.SetCellBlocked(new Vector2Int(1, 1), true);
-        TickController(controller, 1);
-        Assert.AreEqual(MonsterMovementState.Patrol, controller.State);
-        Assert.AreEqual(0, controller.LoopRepetitions);
-        Assert.AreEqual(0f, controller.PreparationRemaining);
-    }
-
-    /// <summary>결과 화면에서 행동과 4초 타이머가 계속 진행되지 않는지 확인한다.</summary>
-    [Test]
-    public void Monster_ResultPhaseStopsMovementAndTimer()
-    {
-        // 순환 예고 도중 결과 화면으로 전환할 몬스터다.
-        MonsterBase monster = CreateMonster(new Vector2Int(0, 3));
-        // 현재 테스트 몬스터의 순환과 예고, 탈출 상태를 갱신할 행동 제어기다.
-        var controller = new MonsterMovementController(monster);
-        RunUntil(controller, MonsterMovementState.PreparingEscape, 1000);
-        // 결과 화면 진입 시점에 남아 있던 예고 시간이다.
-        float remaining = controller.PreparationRemaining;
-        SetField(typeof(StageManager), Managers.Stage, "<Phase>k__BackingField", EStagePhase.RoundResult);
-        TickController(controller, 100);
-        Assert.AreEqual(remaining, controller.PreparationRemaining);
-        Assert.IsFalse(monster.Movement.IsMoving);
-    }
-
     /// <summary>테스트 맵의 격자와 벽 데이터를 직접 구성하여 리소스 로딩과 분리한다.</summary>
     /// <param name="width">테스트 보드의 가로 타일 수다.</param>
     /// <param name="height">테스트 보드의 세로 타일 수다.</param>
@@ -514,31 +424,6 @@ public partial class MonsterMovementIntegrationTests
             }
             _physics.Simulate(STEP);
         }
-    }
-
-    /// <summary>몬스터 판단과 실제 물리 진행을 같은 시간 간격으로 반복한다.</summary>
-    /// <param name="controller">갱신할 몬스터 행동 제어기다.</param>
-    /// <param name="count">진행할 갱신 횟수다.</param>
-    private void TickController(MonsterMovementController controller, int count)
-    {
-        // frame은 판단과 물리를 함께 진행한 테스트 갱신 횟수다.
-        for (int frame = 0; frame < count; frame++)
-        {
-            controller.Tick(STEP);
-            Tick(1);
-        }
-    }
-
-    /// <summary>제한 횟수 안에 지정한 행동 상태가 나타나는지 검증한다.</summary>
-    /// <param name="controller">관찰할 행동 제어기다.</param>
-    /// <param name="state">도달해야 할 행동 상태다.</param>
-    /// <param name="limit">무한 반복을 방지하는 최대 물리 갱신 횟수다.</param>
-    private void RunUntil(MonsterMovementController controller, MonsterMovementState state, int limit)
-    {
-        // frame은 목표 상태를 기다리며 소비한 갱신 횟수다.
-        for (int frame = 0; frame < limit && controller.State != state; frame++)
-            TickController(controller, 1);
-        Assert.AreEqual(state, controller.State);
     }
 
     /// <summary>리소스 로딩과 분리된 테스트 구성을 위해 비공개 필드에 테스트 데이터를 넣는다.</summary>

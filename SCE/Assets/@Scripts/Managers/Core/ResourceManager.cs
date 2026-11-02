@@ -7,6 +7,12 @@ using Object = UnityEngine.Object;
 
 public class ResourceManager
 {
+    /// <summary>
+    /// 타이틀에서 미리 읽는 Addressable label — Load&lt;T&gt;(key)는 미리 읽은 것에서만 찾는다.
+    /// 행동 트리 읽기(BehaviorManager) · 행동 트리 편집기의 Addressable 등록이 함께 쓴다 — label 이름은 이 한 곳에서 정한다.
+    /// </summary>
+    public const string PreLoadLabel = "PreLoad";
+
     // Addressable에서 Load한 모든 대상들은 담는다 //(key값은 Addresable에서 지정한 string값이고, value는 Load한 대상)
     Dictionary<string, Object> _resources = new Dictionary<string, Object>();
 

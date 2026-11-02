@@ -1,32 +1,62 @@
 {
   "id": "Monster_TilePatrol",
-  "settings": { "tickInterval": 0.0 },
+  "settings": {
+    "tickInterval": 0.0,
+    "nearDistance": 0.0,
+    "farIntervalMultiplier": 3.0,
+    "activationDistance": 0.0
+  },
+  "blackboard": [],
   "root": {
     "type": "Selector",
     "children": [
       {
         "type": "Sequence",
+        "children": [
+          {
+            "type": "TileEscapeStep",
+            "decorators": [],
+            "services": [],
+            "id": "TileEscapeStep1"
+          }
+        ],
         "decorators": [
           {
             "type": "TileEscapeDue",
-            "abort": "LowerPriority"
+            "abort": "LowerPriority",
+            "inverse": false,
+            "id": "TileEscapeDue1"
           }
         ],
-        "children": [ { "type": "TileEscapeStep" } ]
+        "services": [],
+        "id": "Sequence1"
       },
       {
         "type": "Sequence",
         "children": [
           {
             "type": "TilePatrolStep",
-            "trackLoops": true
+            "trackLoops": true,
+            "decorators": [],
+            "services": [],
+            "id": "TilePatrolStep1"
           },
           {
             "type": "Wait",
-            "seconds": 0.5
+            "seconds": 0.5,
+            "randomDeviation": 0.0,
+            "decorators": [],
+            "services": [],
+            "id": "Wait1"
           }
-        ]
+        ],
+        "decorators": [],
+        "services": [],
+        "id": "Sequence2"
       }
-    ]
+    ],
+    "decorators": [],
+    "services": [],
+    "id": "Selector1"
   }
 }

@@ -1,0 +1,46 @@
+{
+  "id": "Monster_TileDefault",
+  "settings": {
+    "tickInterval": 0.0,
+    "nearDistance": 0.0,
+    "farIntervalMultiplier": 3.0,
+    "activationDistance": 0.0
+  },
+  "blackboard": [],
+  "root": {
+    "type": "Selector",
+    "children": [
+      {
+        "type": "Sequence",
+        "children": [
+          {
+            "type": "TileEscapeStep",
+            "decorators": [],
+            "services": [],
+            "id": "TileEscapeStep1"
+          }
+        ],
+        "decorators": [
+          {
+            "type": "TileEscapeDue",
+            "abort": "LowerPriority",
+            "inverse": false,
+            "id": "TileEscapeDue1"
+          }
+        ],
+        "services": [],
+        "id": "Sequence1"
+      },
+      {
+        "type": "TilePatrolStep",
+        "trackLoops": true,
+        "decorators": [],
+        "services": [],
+        "id": "TilePatrolStep1"
+      }
+    ],
+    "decorators": [],
+    "services": [],
+    "id": "Selector1"
+  }
+}

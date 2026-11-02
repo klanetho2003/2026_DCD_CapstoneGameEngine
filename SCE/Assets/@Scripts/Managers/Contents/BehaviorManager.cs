@@ -10,8 +10,6 @@ using UnityEngine;
 /// </summary>
 public class BehaviorManager
 {
-    private const string PreLoadLabel = "PreLoad"; // 트리 JSON의 Addressable label — 타이틀의 미리 읽기 (UI_TitleScene)와 같은 label
-
     private readonly Dictionary<string, BehaviorTreeDefinition> _definitions = new Dictionary<string, BehaviorTreeDefinition>(StringComparer.Ordinal);
     private readonly HashSet<string> _failedIds = new HashSet<string>(StringComparer.Ordinal);
     private readonly List<BehaviorCompileMessage> _messages = new List<BehaviorCompileMessage>();
@@ -45,7 +43,7 @@ public class BehaviorManager
         TextAsset text = Managers.Resource.Load<TextAsset>(treeId);
         if (text == null)
         {
-            LogPrinter.LogError($"[BehaviorManager] 트리 '{treeId}' 없음 — 트리 JSON의 Addressable 주소가 트리 Id와 같은지, {PreLoadLabel} label이 있는지 확인");
+            LogPrinter.LogError($"[BehaviorManager] 트리 '{treeId}' 없음 — 트리 JSON의 Addressable 주소가 트리 Id와 같은지, {ResourceManager.PreLoadLabel} label이 있는지 확인");
             return null;
         }
 
@@ -82,6 +80,96 @@ public class BehaviorManager
             LogPrinter.LogError($"[BehaviorManager] 트리 '{treeId}' 변형 실패 — 이 변형을 쓰는 몬스터는 가만히 있는다");
         return definition;
     }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// 편집기 — 트리 글 (트리 JSON)을 컴파일해 그 Id의 정의로 둔다: 있으면 바꾸고, 실패해 기억한 Id면 기억을 지운다. 그 트리의 변형 정의는 새 기반으로 바로 다시 만든다 (RebuildVariants).
+    /// 나중에 스폰하는 몬스터가 이 정의를 쓴다. 변형 Id ('/'가 있는 Id)는 받지 않는다 (null).
+    /// 컴파일에 실패하면 아무것도 바꾸지 않고 null (문제는 messages — 먼저 비운다). O(트리 크기 + 보관한 Id 수 + 변형 수 × 키 수)
+    /// </summary>
+    public BehaviorTreeDefinition ReplaceDefinition(string treeId, string json, List<BehaviorCompileMessage> messages)
+    {
+        messages.Clear();
+        if (string.IsNullOrEmpty(treeId) || BehaviorTreeVariants.TrySplit(treeId, out _, out _))
+            return null;
+        BehaviorTreeDefinition definition = BehaviorTreeLoader.Load(json, BehaviorNodeRegistry.Default, messages);
+        if (definition == null)
+            return null;
+        _definitions[treeId] = definition;
+        _failedIds.Remove(treeId);
+        RebuildVariants(treeId, definition);
+        return definition;
+    }
+
+    /// <summary>
+    /// 기반을 바꾼 뒤 — 이미 만든 그 트리의 변형 정의를 새 기반으로 다시 만든다. 만들지 못한 변형 (지웠거나 값이 맞지 않음)은 편집기 에러 뒤 이전 정의를 그대로 둔다 —
+    /// 그 변형의 몬스터는 (지금 있든 나중에 스폰하든) 하던 트리 그대로 (Play를 다시 시작하면 그 변형은 실패 — 가만히 있는다).
+    /// 실패를 기억한 그 트리의 변형은 잊는다 (다음 GetDefinition이 새 기반으로 다시 본다). O(보관한 Id 수 + 변형 수 × 키 수)
+    /// </summary>
+    private void RebuildVariants(string treeId, BehaviorTreeDefinition baseDefinition)
+    {
+        var variantIds = new List<string>();
+        foreach (string id in _definitions.Keys)
+        {
+            if (id.Length > treeId.Length && BehaviorTreeVariants.BelongsTo(id, treeId))
+                variantIds.Add(id);
+        }
+        for (int i = 0; i < variantIds.Count; i++)
+        {
+            string id = variantIds[i];
+            BehaviorTreeVariants.TrySplit(id, out _, out string variantName);
+            _messages.Clear();
+            BehaviorTreeDefinition rebuilt = BehaviorTreeVariants.Build(baseDefinition, variantName, _messages);
+            ReportMessages(id);
+            if (rebuilt != null)
+                _definitions[id] = rebuilt;
+            else
+                LogPrinter.LogError($"[BehaviorManager] 트리 '{id}' — 새 트리로 변형을 만들지 못함 — 이 변형의 몬스터는 이전 트리를 그대로 쓴다 (Play를 다시 시작하면 가만히 있는다)");
+        }
+        _failedIds.RemoveWhere(id => id.Length > treeId.Length && BehaviorTreeVariants.BelongsTo(id, treeId));
+    }
+
+    /// <summary>
+    /// 편집기 — Play 중 저장한 트리를 지금 몬스터에 입힌다: 다시 컴파일해 정의를 바꾸고 (ReplaceDefinition — 변형도 새 기반으로), 그 트리 또는 그 트리의 변형을 쓰는 몬스터
+    /// (ObjectManager.Monsters)를 자기 트리 Id의 새 정의로 다시 묶는다 (MonsterBase.ReloadBehaviorTree). 다시 묶은 몬스터 수, 컴파일에 실패하면 -1 (정의 · 몬스터 그대로).
+    /// unchanged = 새 트리로 만들지 못한 변형의 몬스터 수 (하던 트리 그대로이거나 원래 가만히 있던 몬스터 — 까닭은 편집기 에러). O(트리 크기 + 몬스터 수)
+    /// </summary>
+    public int ReloadTree(string treeId, string json, List<BehaviorCompileMessage> messages, out int unchanged)
+    {
+        unchanged = 0;
+        BehaviorTreeDefinition definition = ReplaceDefinition(treeId, json, messages);
+        if (definition == null)
+            return -1;
+        int count = 0;
+        foreach (MonsterBase monster in Managers.Object.Monsters)
+        {
+            string monsterTreeId = monster != null ? monster.BehaviorTreeId : null;
+            if (BehaviorTreeVariants.BelongsTo(monsterTreeId, treeId) == false)
+                continue;
+            BehaviorTreeDefinition own = GetDefinition(monsterTreeId);
+            if (own == null || ReferenceEquals(own.Asset, definition.Asset) == false)
+            {
+                unchanged++; // 새 기반으로 만들지 못한 변형 — 이전 정의를 두었거나 원래 실패
+                continue;
+            }
+            if (monster.ReloadBehaviorTree(monsterTreeId, own))
+                count++;
+        }
+        return count;
+    }
+
+    /// <summary>ReloadTree와 같다 — 새 트리로 만들지 못한 변형의 몬스터 수는 받지 않는다</summary>
+    public int ReloadTree(string treeId, string json, List<BehaviorCompileMessage> messages)
+    {
+        return ReloadTree(treeId, json, messages, out _);
+    }
+
+    /// <summary>편집기 — 그 Id의 트리를 읽거나 만들지 못해 기억했는가 (디버거가 그 몬스터에 트리가 없는 까닭을 가린다). O(1)</summary>
+    public bool HasFailed(string treeId)
+    {
+        return string.IsNullOrEmpty(treeId) == false && _failedIds.Contains(treeId);
+    }
+#endif
 
     /// <summary>컴파일 문제를 한 줄씩 — 편집기에서만</summary>
     [Conditional("UNITY_EDITOR")]

@@ -255,23 +255,6 @@ public partial class MonsterMovementIntegrationTests
         Assert.AreEqual(2, _map.FinishTerritoryRound().MonsterTiles);
     }
 
-    /// <summary>점령 상태가 계속 바뀌어도 몬스터 순환과 탈출 예고를 무효화하지 않는지 확인한다.</summary>
-    [Test]
-    public void Territory_DoesNotResetMonsterPatrolHistory()
-    {
-        // monster는 열린 점령 라운드에서 같은 경로를 순환할 몬스터다.
-        MonsterBase monster = CreateMonster(new Vector2Int(0, 3));
-        _map.BeginTerritoryRound();
-        // version은 소유권 변경으로 증가하면 안 되는 정적 이동 환경 버전이다.
-        int version = _map.TraversalVersion;
-        // controller는 점령 처리와 함께 기존 순환 규칙을 수행할 행동 제어기다.
-        var controller = new MonsterMovementController(monster);
-        RunUntil(controller, MonsterMovementState.PreparingEscape, 1000);
-        Assert.AreEqual(3, controller.LoopRepetitions);
-        Assert.AreEqual(version, _map.TraversalVersion);
-        Assert.Greater(_map.MonsterTerritoryCount, 1);
-    }
-
     /// <summary>동일 종료는 한 번만 누적하고 새 라운드는 소유권만 초기화하는지 확인한다.</summary>
     [Test]
     public void Territory_StageSettlesOnceAndAccumulatesSeparateRounds()

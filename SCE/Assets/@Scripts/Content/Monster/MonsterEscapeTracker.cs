@@ -2,7 +2,20 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>몬스터 한 개의 성공한 도착 기록과 세 바퀴 순환 뒤의 탈출 단계(예고, BFS 이탈, 봉쇄 대기)를 관리하며 기존 이동 제어기와 행동 트리가 같은 규칙을 쓰도록 몬스터마다 하나를 둔다.</summary>
+/// <summary>몬스터가 순찰, 탈출 예고, BFS 이탈, 봉쇄 대기 중 어느 상태인지 구분한다.</summary>
+public enum MonsterMovementState
+{
+    /// <summary>직진과 우회전 우선 규칙으로 이동한다.</summary>
+    Patrol,
+    /// <summary>기본 이동을 유지하면서 4초 동안 탈출을 예고한다.</summary>
+    PreparingEscape,
+    /// <summary>BFS가 찾은 기록 밖 목적지를 향해 한 칸씩 이동한다.</summary>
+    Escaping,
+    /// <summary>탈출 경로가 없어 이동 환경이 바뀔 때까지 워프 없이 기다린다.</summary>
+    Trapped
+}
+
+/// <summary>몬스터 한 개의 성공한 도착 기록과 세 바퀴 순환 뒤의 탈출 단계(예고, BFS 이탈, 봉쇄 대기)를 관리하며 행동 트리의 칸 이동 노드가 쓰도록 몬스터마다 하나를 둔다.</summary>
 public sealed class MonsterEscapeTracker
 {
     /// <summary>같은 순환을 완주해야 하는 횟수다.</summary>

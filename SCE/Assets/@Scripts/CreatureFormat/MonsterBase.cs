@@ -3,11 +3,14 @@ using System;
 using UnityEngine;
 using static Define;
 
-/// <summary>몬스터의 데이터와 전투 처리를 관리하고 공통 이동 컴포넌트에 이동을 요청한다. 행동 트리 Id가 있으면 행동 트리가, 없으면 기존 이동 제어기가 움직인다.</summary>
+/// <summary>몬스터의 데이터와 전투 처리를 관리하고 행동 트리로 공통 이동 컴포넌트에 이동을 요청한다. 행동 트리 Id가 비어 있으면 연속 순찰 기본 트리를 쓴다.</summary>
 public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
 {
     /// <summary>행동 트리가 새 행동을 시작하지 않는 동안의 태그다.</summary>
     private const ECreatureTag ACTION_LOCK_TAGS = ECreatureTag.UsingSkill | ECreatureTag.Stunned | ECreatureTag.ForceMoving;
+
+    /// <summary>MonsterData.BehaviorTreeId가 비어 있을 때 쓰는 연속 순찰과 탈출의 기본 트리 Id(트리 JSON의 Addressable 주소)다.</summary>
+    public const string DEFAULT_BEHAVIOR_TREE_ID = "Monster_TileDefault";
 
     /// <summary>현재 몬스터의 템플릿에서 읽은 전용 데이터다.</summary>
     public MonsterData Data { get; private set; }
@@ -19,16 +22,13 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
     /// <summary>프리팹에 연결된 몬스터 애니메이션이며 없는 경우 null로 안전하게 처리한다.</summary>
     public override BaseCreatureAnim CreatureAnim => GetComponent<BaseCreatureAnim>();
 
-    /// <summary>현재 생애의 순찰, 반복 감지, 카운트다운, BFS 이탈을 관리하며 행동 트리를 쓰는 몬스터는 갱신하지 않는다.</summary>
-    public MonsterMovementController MovementController { get; private set; }
-
-    /// <summary>이번 스폰의 행동 트리(MonsterData.BehaviorTreeId)를 매 프레임 갱신하는 실행기다.</summary>
+    /// <summary>이번 스폰의 행동 트리(MonsterData.BehaviorTreeId, 비어 있으면 기본 트리)를 매 프레임 갱신하는 실행기다.</summary>
     public BehaviorTreeRunner BehaviorRunner { get; private set; }
 
-    /// <summary>이번 스폰의 데이터에 행동 트리 Id가 있는지 나타내며 참이면 기존 이동 제어기를 갱신하지 않는다.</summary>
-    private bool _usesBehaviorTree;
+    /// <summary>이번 스폰이 쓰는 트리 Id이며 MonsterData.BehaviorTreeId, 비어 있으면 기본 트리 Id다. 행동 트리 편집기가 쓰는 몬스터를 찾을 때 읽는다.</summary>
+    public string BehaviorTreeId { get; private set; }
 
-    /// <summary>이번 스폰의 행동 트리 정의이며 Id가 없거나 읽기에 실패하면 null이다.</summary>
+    /// <summary>이번 스폰의 행동 트리 정의이며 읽기에 실패하면 null이고 몬스터는 가만히 있는다.</summary>
     private BehaviorTreeDefinition _behaviorTree;
 
     /// <summary>실행기를 묶은 생애의 스폰 번호이며 다르면 새 생애로 다시 묶는다.</summary>
@@ -40,10 +40,10 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
     /// <summary>타일 중앙 사이의 실제 이동을 담당하는 공통 컴포넌트다.</summary>
     public CreatureMovement Movement { get; private set; }
 
-    /// <summary>한 칸 출발과 도착 결과, 정지 중 시선을 관리하며 순찰 제어기와 행동 트리가 함께 쓴다.</summary>
+    /// <summary>한 칸 출발과 도착 결과, 정지 중 시선을 관리하며 행동 트리의 칸 이동 노드가 쓴다.</summary>
     public MonsterTileStepper Stepper { get; private set; }
 
-    /// <summary>성공한 도착 기록과 세 바퀴 순환 뒤의 탈출 단계를 관리하며 순찰 제어기와 행동 트리가 함께 쓴다.</summary>
+    /// <summary>성공한 도착 기록과 세 바퀴 순환 뒤의 탈출 단계를 관리하며 행동 트리의 칸 이동 노드가 쓴다.</summary>
     public MonsterEscapeTracker EscapeTracker { get; private set; }
 
     /// <summary>몬스터의 이동 속도 스탯에서 읽은 기본 월드 이동 속도다.</summary>
@@ -70,7 +70,7 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
         return true;
     }
 
-    /// <summary>템플릿 데이터와 이동 소유자를 연결하고 새 생애의 오른쪽 순찰 또는 행동 트리를 준비한다.</summary>
+    /// <summary>템플릿 데이터와 이동 소유자를 연결하고 새 생애의 오른쪽 순찰과 행동 트리를 준비한다.</summary>
     /// <param name="objectID">몬스터를 구성할 템플릿 데이터의 식별자다.</param>
     public override void SetInfo(int objectID)
     {
@@ -78,26 +78,19 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
 
         Data = GetCreatureData<MonsterData>();
         Movement.SetInfo(this);
-        if (MovementController == null)
-            MovementController = new MonsterMovementController(this);
-        else
-            MovementController.Reset();
+        ResetTileMovement();
 
-        _usesBehaviorTree = Data != null && !string.IsNullOrEmpty(Data.BehaviorTreeId);
-        _behaviorTree = _usesBehaviorTree ? Managers.Behavior.GetDefinition(Data.BehaviorTreeId) : null;
+        BehaviorTreeId = Data != null && !string.IsNullOrEmpty(Data.BehaviorTreeId)
+            ? Data.BehaviorTreeId : DEFAULT_BEHAVIOR_TREE_ID;
+        _behaviorTree = Managers.Behavior.GetDefinition(BehaviorTreeId);
         if (_behaviorTree == null)
             BehaviorRunner.Unbind();
         BehaviorRunner.Start();
     }
 
-    /// <summary>초기화한 몬스터의 행동과 예고 타이머를 게임 시간에 맞춰 갱신한다. 행동 트리 Id가 있으면 기존 이동 제어기 대신 행동 트리를 갱신한다.</summary>
+    /// <summary>초기화한 몬스터의 행동 트리와 예고 타이머를 게임 시간에 맞춰 갱신한다.</summary>
     private void Update()
     {
-        if (!_usesBehaviorTree)
-        {
-            MovementController?.Tick(Time.deltaTime);
-            return;
-        }
         if (_behaviorTree != null)
             UpdateBehavior();
     }
@@ -105,7 +98,14 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
     /// <summary>풀 반환 시 이전 생애의 순환 기록과 경로, 카운트다운을 비운다.</summary>
     private void OnDisable()
     {
-        MovementController?.Reset();
+        ResetTileMovement();
+    }
+
+    /// <summary>새 생애나 풀 반환, 사망 시 탈출 기록과 한 칸 출발 상태를 비우고 시선을 오른쪽으로 되돌린다.</summary>
+    private void ResetTileMovement()
+    {
+        EscapeTracker.Reset();
+        Stepper.Reset(true);
     }
 
     #region Combat Creature
@@ -135,7 +135,7 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
     protected override void OnDie()
     {
         Movement.CancelToCurrentCell();
-        MovementController?.Reset();
+        ResetTileMovement();
         BehaviorRunner.Stop();
         LogPrinter.Log($"[MonsterBase] {Data.prefabName} Died");
         Managers.Object.Despawn(this);
@@ -225,5 +225,30 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
         value = 0;
         return false;
     }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// 편집기 — Play 중 저장한 트리를 다시 읽었을 때 (BehaviorManager.ReloadTree가 몬스터마다 부른다). 이 몬스터의 트리 Id(BehaviorTreeId)가 treeId면 이번 스폰의 트리를 새 정의로 바꾸고,
+    /// 생애를 시작했으면 실행기를 다시 묶는다 (노드 칸 · Blackboard 처음 값 · 루트부터 — 새 생애의 묶기와 같다, 탈출 기록 · 시선은 그대로). 실행기가 실행 중이었으면 진행 중인 한 칸을 칸 중앙으로 되돌리고,
+    /// 멈춰 있던 실행기 (죽음)는 멈춘 채 둔다. 바꿨으면 true. O(칸 수 + 키 수)
+    /// </summary>
+    /// <param name="treeId">다시 읽은 트리 Id다.</param>
+    /// <param name="definition">이 몬스터의 트리 Id로 찾은 새 정의다.</param>
+    public bool ReloadBehaviorTree(string treeId, BehaviorTreeDefinition definition)
+    {
+        if (definition == null || !string.Equals(BehaviorTreeId, treeId, StringComparison.Ordinal))
+            return false;
+        _behaviorTree = definition;
+        if (_lifeSerial != SpawnSerial)
+            return true; // 첫 갱신이 새 정의로 묶는다
+        bool stopped = BehaviorRunner.IsStopped;
+        if (!stopped)
+            Stepper.Cancel();
+        BehaviorRunner.Bind(definition);
+        if (stopped)
+            BehaviorRunner.Stop();
+        return true;
+    }
+#endif
     #endregion
 }

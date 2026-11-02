@@ -10,6 +10,11 @@ public interface ILoader<Key, Value>
 
 public class DataManager
 {   
+    /// <summary>크리처 데이터 표의 Addressable 주소 — 게임(InitData)과 편집기(EditorGameData)가 함께 쓴다.</summary>
+    public const string VillagerDataKey = "PlayerData";
+    public const string MonsterDataKey = "MonsterData";
+    public const string NpcDataKey = "NpcData";
+
     public bool IsDataLoaded { get; set; } = false; // Temp
 
     public Dictionary<int, CreatureData> CreatureDataDic = new();
@@ -20,9 +25,9 @@ public class DataManager
     public void InitData()
     {
         #region Creature Data
-        VillagerDataDic = LoadJson<VillagerDataLoader, int, VillagerData>("PlayerData").MakeDict();
-        MonsterDataDic = LoadJson<MonsterDataLoader, int, MonsterData>("MonsterData").MakeDict();
-        NpcDataDic = LoadJson<NPCDataLoader, int, NPCData>("NpcData").MakeDict();
+        VillagerDataDic = LoadJson<VillagerDataLoader, int, VillagerData>(VillagerDataKey).MakeDict();
+        MonsterDataDic = LoadJson<MonsterDataLoader, int, MonsterData>(MonsterDataKey).MakeDict();
+        NpcDataDic = LoadJson<NPCDataLoader, int, NPCData>(NpcDataKey).MakeDict();
 
         foreach (var pair in VillagerDataDic)
             CreatureDataDic[pair.Key] = pair.Value;

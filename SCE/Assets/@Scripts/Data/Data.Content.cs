@@ -47,7 +47,7 @@ namespace Data
     [Serializable]
     public class MonsterData : CombatCreatureData
     {
-        // 행동 트리 Id (= 트리 JSON의 Addressable 주소, Managers.Behavior). 비어 있으면 기존 이동 제어기가 움직인다
+        // 행동 트리 Id (= 트리 JSON의 Addressable 주소, Managers.Behavior). 비어 있으면 연속 순찰 기본 트리 (MonsterBase)
         public string BehaviorTreeId;
     }
 
