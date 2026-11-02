@@ -1,6 +1,7 @@
 ﻿{
   "Datas": [
     {
+      "BehaviorTreeId": "Monster_TilePatrol",
       "hurtboxLayoutKey": "DEV_temp_hurtbox",
       "SkillIDs": [
         999
@@ -28,7 +29,7 @@
         },
         {
           "sType": 4,
-          "sValue": 3.0
+          "sValue": 1.0
         },
         {
           "sType": 5,
@@ -48,6 +49,7 @@
       ]
     },
     {
+      "BehaviorTreeId": "Monster_TilePatrol",
       "hurtboxLayoutKey": "DEV_temp_hurtbox",
       "SkillIDs": [],
       "templateID": 100,
@@ -93,6 +95,7 @@
       ]
     },
     {
+      "BehaviorTreeId": "Monster_TilePatrol",
       "hurtboxLayoutKey": "DEV_temp_hurtbox",
       "SkillIDs": [],
       "templateID": 200,
@@ -138,6 +141,7 @@
       ]
     },
     {
+      "BehaviorTreeId": "Monster_TilePatrol",
       "hurtboxLayoutKey": "DEV_temp_hurtbox",
       "SkillIDs": [],
       "templateID": 201,
@@ -183,6 +187,7 @@
       ]
     },
     {
+      "BehaviorTreeId": "Monster_TilePatrol",
       "hurtboxLayoutKey": "DEV_temp_hurtbox",
       "SkillIDs": [],
       "templateID": 300,

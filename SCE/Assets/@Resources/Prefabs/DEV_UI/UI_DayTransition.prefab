@@ -253,7 +253,6 @@ GameObject:
   - component: {fileID: 559161714307863264}
   - component: {fileID: 3488322728052698950}
   - component: {fileID: 1766918251588492715}
-  - component: {fileID: 3987616155246259676}
   m_Layer: 5
   m_Name: UI_DayTransition
   m_TagString: Untagged
@@ -344,18 +343,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &3987616155246259676
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1821458592061441344}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f9f9e2f0cf8c22439eb25a9d2400635, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI_DayTransition
 --- !u!1 &1854925470602669976
 GameObject:
   m_ObjectHideFlags: 0

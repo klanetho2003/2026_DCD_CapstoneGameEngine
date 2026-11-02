@@ -14,12 +14,14 @@ public class Managers : MonoBehaviour
     private MapManager _map = new MapManager();
     private StageManager _stage = new StageManager();
     private GameStateManager _gameState = new GameStateManager();
+    private BehaviorManager _behavior = new BehaviorManager();
 
     public static InteractionManager Interaction { get { return Instance?._interaction; } }
     public static CameraManager Camera { get { return Instance?._camera; } }
     public static MapManager Map { get { return Instance?._map; } }
     public static StageManager Stage { get { return Instance?._stage; } }
     public static GameStateManager GameState { get { return Instance?._gameState; } }
+    public static BehaviorManager Behavior { get { return Instance?._behavior; } }
     #endregion
 
     #region Core

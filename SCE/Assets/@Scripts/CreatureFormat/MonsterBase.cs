@@ -3,9 +3,12 @@ using System;
 using UnityEngine;
 using static Define;
 
-/// <summary>몬스터의 데이터와 전투 처리를 관리하고 공통 이동 컴포넌트에 이동을 요청한다.</summary>
-public class MonsterBase : CombatCreature, IMovable
+/// <summary>몬스터의 데이터와 전투 처리를 관리하고 공통 이동 컴포넌트에 이동을 요청한다. 행동 트리 Id가 있으면 행동 트리가, 없으면 기존 이동 제어기가 움직인다.</summary>
+public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
 {
+    /// <summary>행동 트리가 새 행동을 시작하지 않는 동안의 태그다.</summary>
+    private const ECreatureTag ACTION_LOCK_TAGS = ECreatureTag.UsingSkill | ECreatureTag.Stunned | ECreatureTag.ForceMoving;
+
     /// <summary>현재 몬스터의 템플릿에서 읽은 전용 데이터다.</summary>
     public MonsterData Data { get; private set; }
 
@@ -16,14 +19,32 @@ public class MonsterBase : CombatCreature, IMovable
     /// <summary>프리팹에 연결된 몬스터 애니메이션이며 없는 경우 null로 안전하게 처리한다.</summary>
     public override BaseCreatureAnim CreatureAnim => GetComponent<BaseCreatureAnim>();
 
-    /// <summary>현재 생애의 순찰, 반복 감지, 카운트다운, BFS 이탈을 관리한다.</summary>
+    /// <summary>현재 생애의 순찰, 반복 감지, 카운트다운, BFS 이탈을 관리하며 행동 트리를 쓰는 몬스터는 갱신하지 않는다.</summary>
     public MonsterMovementController MovementController { get; private set; }
+
+    /// <summary>이번 스폰의 행동 트리(MonsterData.BehaviorTreeId)를 매 프레임 갱신하는 실행기다.</summary>
+    public BehaviorTreeRunner BehaviorRunner { get; private set; }
+
+    /// <summary>이번 스폰의 데이터에 행동 트리 Id가 있는지 나타내며 참이면 기존 이동 제어기를 갱신하지 않는다.</summary>
+    private bool _usesBehaviorTree;
+
+    /// <summary>이번 스폰의 행동 트리 정의이며 Id가 없거나 읽기에 실패하면 null이다.</summary>
+    private BehaviorTreeDefinition _behaviorTree;
+
+    /// <summary>실행기를 묶은 생애의 스폰 번호이며 다르면 새 생애로 다시 묶는다.</summary>
+    private int _lifeSerial;
+
+    /// <summary>라운드 진행 중에만 흐르는 행동 트리 시계(초)이며 라운드 정지 중에는 기다리기도 멈춘다.</summary>
+    private float _behaviorClock;
 
     /// <summary>타일 중앙 사이의 실제 이동을 담당하는 공통 컴포넌트다.</summary>
     public CreatureMovement Movement { get; private set; }
 
     /// <summary>한 칸 출발과 도착 결과, 정지 중 시선을 관리하며 순찰 제어기와 행동 트리가 함께 쓴다.</summary>
     public MonsterTileStepper Stepper { get; private set; }
+
+    /// <summary>성공한 도착 기록과 세 바퀴 순환 뒤의 탈출 단계를 관리하며 순찰 제어기와 행동 트리가 함께 쓴다.</summary>
+    public MonsterEscapeTracker EscapeTracker { get; private set; }
 
     /// <summary>몬스터의 이동 속도 스탯에서 읽은 기본 월드 이동 속도다.</summary>
     public float MoveSpeed { get { return GetStatValue(EStatType.MoveSpeed).Value; } }
@@ -41,13 +62,15 @@ public class MonsterBase : CombatCreature, IMovable
         if (Movement == null)
             Movement = gameObject.AddComponent<CreatureMovement>();
         Stepper = new MonsterTileStepper(this);
+        EscapeTracker = new MonsterEscapeTracker(Stepper);
+        BehaviorRunner = new BehaviorTreeRunner(this, BehaviorGameWorld.Instance);
         if (GetComponent<MonsterEscapeIndicator>() == null)
             gameObject.AddComponent<MonsterEscapeIndicator>();
 
         return true;
     }
 
-    /// <summary>템플릿 데이터와 이동 소유자를 연결하고 새 생애의 오른쪽 순찰을 준비한다.</summary>
+    /// <summary>템플릿 데이터와 이동 소유자를 연결하고 새 생애의 오른쪽 순찰 또는 행동 트리를 준비한다.</summary>
     /// <param name="objectID">몬스터를 구성할 템플릿 데이터의 식별자다.</param>
     public override void SetInfo(int objectID)
     {
@@ -59,12 +82,24 @@ public class MonsterBase : CombatCreature, IMovable
             MovementController = new MonsterMovementController(this);
         else
             MovementController.Reset();
+
+        _usesBehaviorTree = Data != null && !string.IsNullOrEmpty(Data.BehaviorTreeId);
+        _behaviorTree = _usesBehaviorTree ? Managers.Behavior.GetDefinition(Data.BehaviorTreeId) : null;
+        if (_behaviorTree == null)
+            BehaviorRunner.Unbind();
+        BehaviorRunner.Start();
     }
 
-    /// <summary>초기화한 몬스터의 행동과 예고 타이머를 게임 시간에 맞춰 갱신한다.</summary>
+    /// <summary>초기화한 몬스터의 행동과 예고 타이머를 게임 시간에 맞춰 갱신한다. 행동 트리 Id가 있으면 기존 이동 제어기 대신 행동 트리를 갱신한다.</summary>
     private void Update()
     {
-        MovementController?.Tick(Time.deltaTime);
+        if (!_usesBehaviorTree)
+        {
+            MovementController?.Tick(Time.deltaTime);
+            return;
+        }
+        if (_behaviorTree != null)
+            UpdateBehavior();
     }
 
     /// <summary>풀 반환 시 이전 생애의 순환 기록과 경로, 카운트다운을 비운다.</summary>
@@ -101,6 +136,7 @@ public class MonsterBase : CombatCreature, IMovable
     {
         Movement.CancelToCurrentCell();
         MovementController?.Reset();
+        BehaviorRunner.Stop();
         LogPrinter.Log($"[MonsterBase] {Data.prefabName} Died");
         Managers.Object.Despawn(this);
     }
@@ -140,6 +176,54 @@ public class MonsterBase : CombatCreature, IMovable
     public void StopForceMove(Action onComplete = null)
     {
         throw new NotImplementedException();
+    }
+    #endregion
+
+    #region 행동 트리 (IBehaviorTileAgent)
+    /// <summary>사망이나 라운드 정지 중에는 진행 중인 한 칸을 칸 중앙으로 되돌리고 트리 시계와 예고 시간을 멈추며, 맵 배치가 바뀌면 탈출 기록을 비우고, 새 생애면 실행기를 묶은 뒤 예고 시간과 트리를 갱신한다.</summary>
+    private void UpdateBehavior()
+    {
+        if (IsDead || Managers.Stage.Phase != EStagePhase.Playing)
+        {
+            Stepper.Cancel();
+            return;
+        }
+        if (EscapeTracker.IsTraversalStale)
+        {
+            // 맵의 정적 배치가 바뀌면 진행 중인 한 칸을 칸 중앙으로 되돌리고 탈출 기록을 비운다 (시선은 그대로).
+            Stepper.Cancel();
+            EscapeTracker.Reset();
+        }
+        if (_lifeSerial != SpawnSerial)
+        {
+            // 스폰 번호는 SetInfo 뒤에 매겨지므로 첫 갱신에서 이 생애의 처음 상태로 묶는다.
+            _lifeSerial = SpawnSerial;
+            BehaviorRunner.Bind(_behaviorTree);
+        }
+        EscapeTracker.TickPreparation(Time.deltaTime);
+        _behaviorClock += Time.deltaTime;
+        BehaviorRunner.Tick(_behaviorClock);
+    }
+
+    /// <summary>행동 트리 노드가 읽는 몬스터의 월드 위치다.</summary>
+    Vector2 IBehaviorAgent.Position => transform.position;
+
+    /// <summary>스킬, 기절, 강제 이동 중에는 행동 트리가 새 행동을 시작하지 않는다.</summary>
+    bool IBehaviorAgent.IsActionLocked => HasTag(ACTION_LOCK_TAGS);
+
+    /// <summary>행동 트리가 이동을 멈출 때 진행 중인 한 칸을 취소하고 선점한 칸 중앙에 정렬한다.</summary>
+    void IBehaviorAgent.StopMoving()
+    {
+        Stepper.Cancel();
+    }
+
+    /// <summary>몬스터 데이터에서 읽는 Blackboard 처음 값 출처가 아직 없어 항상 거짓이다.</summary>
+    /// <param name="seed">Blackboard 키가 밝힌 처음 값 출처다.</param>
+    /// <param name="value">찾지 못하면 0이다.</param>
+    bool IBehaviorAgent.TryGetIntSeed(string seed, out int value)
+    {
+        value = 0;
+        return false;
     }
     #endregion
 }

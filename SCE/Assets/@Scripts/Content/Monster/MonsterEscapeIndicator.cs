@@ -19,9 +19,9 @@ public sealed class MonsterEscapeIndicator : MonoBehaviour
     /// <summary>플레이 중 탈출을 준비하는 몬스터의 월드 위치를 화면 좌표로 바꾸어 예고를 그린다.</summary>
     private void OnGUI()
     {
-        if (_owner == null || _owner.MovementController == null || _owner.IsDead ||
+        if (_owner == null || _owner.EscapeTracker == null || _owner.IsDead ||
             Managers.Stage.Phase != EStagePhase.Playing ||
-            _owner.MovementController.State != MonsterMovementState.PreparingEscape)
+            _owner.EscapeTracker.State != MonsterMovementState.PreparingEscape)
             return;
 
         // 월드의 몬스터 위치를 화면으로 투영할 현재 메인 카메라다.
@@ -41,7 +41,7 @@ public sealed class MonsterEscapeIndicator : MonoBehaviour
         if (screen.z <= 0f)
             return;
         // 4, 3, 2, 1 순서로 표시할 남은 초의 올림 값이다.
-        int seconds = Mathf.CeilToInt(_owner.MovementController.PreparationRemaining);
+        int seconds = Mathf.CeilToInt(_owner.EscapeTracker.PreparationRemaining);
         GUI.Box(new Rect(screen.x - 30f, Screen.height - screen.y - 24f, 60f, 30f),
             "! " + seconds, _style);
     }

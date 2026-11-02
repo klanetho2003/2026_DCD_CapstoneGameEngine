@@ -19,11 +19,18 @@ public static class BehaviorNodeCatalog
         registry.Register<BehaviorSetVector2Task>();
         registry.Register<BehaviorClearKeyTask>();
 
+        // Task — 칸 이동 (SCE)
+        registry.Register<BehaviorTilePatrolStepTask>();
+        registry.Register<BehaviorTileEscapeStepTask>();
+
         // Decorator
         registry.Register<BehaviorBlackboardDecorator>();
         registry.Register<BehaviorCooldownDecorator>();
         registry.Register<BehaviorTimeLimitDecorator>();
         registry.Register<BehaviorLoopDecorator>();
         registry.Register<BehaviorForceSuccessDecorator>();
+
+        // Decorator — 칸 이동 (SCE)
+        registry.Register<BehaviorTileEscapeDueDecorator>();
     }
 }

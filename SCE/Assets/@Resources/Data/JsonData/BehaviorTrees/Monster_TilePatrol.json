@@ -1,0 +1,32 @@
+{
+  "id": "Monster_TilePatrol",
+  "settings": { "tickInterval": 0.0 },
+  "root": {
+    "type": "Selector",
+    "children": [
+      {
+        "type": "Sequence",
+        "decorators": [
+          {
+            "type": "TileEscapeDue",
+            "abort": "LowerPriority"
+          }
+        ],
+        "children": [ { "type": "TileEscapeStep" } ]
+      },
+      {
+        "type": "Sequence",
+        "children": [
+          {
+            "type": "TilePatrolStep",
+            "trackLoops": true
+          },
+          {
+            "type": "Wait",
+            "seconds": 0.5
+          }
+        ]
+      }
+    ]
+  }
+}

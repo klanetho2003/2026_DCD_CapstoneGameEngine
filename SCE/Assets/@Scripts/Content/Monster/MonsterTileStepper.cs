@@ -19,6 +19,15 @@ public sealed class MonsterTileStepper
     /// <summary>시작한 이동의 성공 콜백을 아직 기다리는지 나타낸다.</summary>
     public bool IsAwaitingArrival { get; private set; }
 
+    /// <summary>마지막으로 시작한 한 칸이 선점까지 마친 실제 도착으로 끝났는지 나타내며 출발, 취소, 초기화에서 거짓이 된다.</summary>
+    public bool LastStepArrived { get; private set; }
+
+    /// <summary>몬스터가 지금 선점한 타일이다.</summary>
+    public Vector2Int CurrentCell => _owner.Movement.CurrentCell;
+
+    /// <summary>순찰 방향 규칙에 넘길 이 몬스터의 공통 통행 조회이며 생성 시 한 번만 만든다.</summary>
+    public Func<Vector2Int, bool> CanEnter { get; }
+
     /// <summary>도착 후 Dictionary의 키로 기록할 실제 출발 타일이다.</summary>
     public Vector2Int StepOrigin { get; private set; }
 
@@ -31,6 +40,7 @@ public sealed class MonsterTileStepper
     {
         _owner = owner;
         _onMovementArrived = OnMovementArrived;
+        CanEnter = cell => Managers.Map.CanEnterCell(cell, _owner.Movement);
     }
 
     /// <summary>새 생애나 배치 변경 시 도착 대기를 비우고 필요하면 초기 방향인 오른쪽으로 되돌린다.</summary>
@@ -38,6 +48,7 @@ public sealed class MonsterTileStepper
     public void Reset(bool resetFacing)
     {
         IsAwaitingArrival = false;
+        LastStepArrived = false;
         _onArrived = null;
         if (resetFacing)
             Facing = Vector2Int.right;
@@ -52,6 +63,7 @@ public sealed class MonsterTileStepper
             return false;
         StepOrigin = _owner.Movement.CurrentCell;
         StepDirection = direction;
+        LastStepArrived = false;
         _onArrived = onArrived;
 
         // 플레이어의 현재 최종 이동 속도를 비교할 빙의 대상이다.
@@ -74,6 +86,7 @@ public sealed class MonsterTileStepper
         if (!IsAwaitingArrival || _owner.Movement.IsMoving)
             return false;
         IsAwaitingArrival = false;
+        LastStepArrived = false;
         _onArrived = null;
         return true;
     }
@@ -83,6 +96,7 @@ public sealed class MonsterTileStepper
     {
         _owner.Movement.CancelToCurrentCell();
         IsAwaitingArrival = false;
+        LastStepArrived = false;
         _onArrived = null;
     }
 
@@ -90,6 +104,7 @@ public sealed class MonsterTileStepper
     private void OnMovementArrived()
     {
         IsAwaitingArrival = false;
+        LastStepArrived = true;
         // 통지 안에서 다음 출발을 요청해도 그 통지를 지우지 않도록 먼저 비운다.
         Action callback = _onArrived;
         _onArrived = null;
