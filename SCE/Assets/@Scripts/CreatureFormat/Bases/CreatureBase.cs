@@ -18,6 +18,12 @@ public abstract class CreatureBase : InitBase, IStatModifierController
     public abstract Vector2 LookDirection { get; }
     public abstract BaseCreatureAnim CreatureAnim { get; }
 
+    /// <summary>
+    /// 스폰 번호 — ObjectManager.Spawn이 스폰마다 새로 매긴다 (1부터 늘기만, 0 = 아직 스폰 전).
+    /// 개체를 오래 쥐는 쪽 (행동 트리 Blackboard 등)이 풀에서 다시 쓰인 개체를 이전 생애의 참조와 가린다. O(1)
+    /// </summary>
+    public int SpawnSerial { get; internal set; }
+
     #region Game Event
     /// <summary>
     /// 개체 발생 이벤트의 공통 정책(멀티플레이 권한 등)은 CanRaiseGameEvents에 둔다.

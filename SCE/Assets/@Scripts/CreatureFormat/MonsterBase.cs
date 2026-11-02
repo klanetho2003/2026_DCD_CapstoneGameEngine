@@ -9,9 +9,9 @@ public class MonsterBase : CombatCreature, IMovable
     /// <summary>현재 몬스터의 템플릿에서 읽은 전용 데이터다.</summary>
     public MonsterData Data { get; private set; }
 
-    /// <summary>정지 중에도 유지되는 행동 제어기의 시선 방향이며 초기 방향은 오른쪽이다.</summary>
-    public override Vector2 LookDirection => MovementController != null
-        ? (Vector2)MovementController.Facing : Vector2.right;
+    /// <summary>정지 중에도 유지되는 한 칸 출발기의 시선 방향이며 초기 방향은 오른쪽이다.</summary>
+    public override Vector2 LookDirection => Stepper != null
+        ? (Vector2)Stepper.Facing : Vector2.right;
 
     /// <summary>프리팹에 연결된 몬스터 애니메이션이며 없는 경우 null로 안전하게 처리한다.</summary>
     public override BaseCreatureAnim CreatureAnim => GetComponent<BaseCreatureAnim>();
@@ -21,6 +21,9 @@ public class MonsterBase : CombatCreature, IMovable
 
     /// <summary>타일 중앙 사이의 실제 이동을 담당하는 공통 컴포넌트다.</summary>
     public CreatureMovement Movement { get; private set; }
+
+    /// <summary>한 칸 출발과 도착 결과, 정지 중 시선을 관리하며 순찰 제어기와 행동 트리가 함께 쓴다.</summary>
+    public MonsterTileStepper Stepper { get; private set; }
 
     /// <summary>몬스터의 이동 속도 스탯에서 읽은 기본 월드 이동 속도다.</summary>
     public float MoveSpeed { get { return GetStatValue(EStatType.MoveSpeed).Value; } }
@@ -37,6 +40,7 @@ public class MonsterBase : CombatCreature, IMovable
         Movement = GetComponent<CreatureMovement>();
         if (Movement == null)
             Movement = gameObject.AddComponent<CreatureMovement>();
+        Stepper = new MonsterTileStepper(this);
         if (GetComponent<MonsterEscapeIndicator>() == null)
             gameObject.AddComponent<MonsterEscapeIndicator>();
 

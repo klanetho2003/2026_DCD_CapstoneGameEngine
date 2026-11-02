@@ -52,6 +52,7 @@ public class CreatureFactory
 public class ObjectManager
 {
     private CreatureFactory _factory = new CreatureFactory();
+    private int _lastSpawnSerial; // 스폰 번호 (CreatureBase.SpawnSerial) — 늘기만
 
     public Villager PossessedTarget { get; private set; }
 
@@ -99,6 +100,7 @@ public class ObjectManager
         if (creature == null) return null;
 
         creature.SetInfo(templateID);
+        creature.SpawnSerial = ++_lastSpawnSerial; // 새 생애
 
         var objectType = creature.CreatureType;
 

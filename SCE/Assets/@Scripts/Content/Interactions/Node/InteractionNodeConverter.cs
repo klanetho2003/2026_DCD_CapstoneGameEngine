@@ -12,10 +12,18 @@ public sealed class InteractionNodeConverter<TBase> : JsonConverter where TBase 
     private const string TypeKey = "type";
 
     private readonly Func<string, TBase> _create;
+    private readonly Func<Type, string> _keyOf;
 
     public InteractionNodeConverter(Func<string, TBase> create)
     {
         _create = create; // 레지스트리 조회. 실패 시 null 반환 계약
+    }
+
+    /// <summary>저장할 때 형식 → 키를 keyOf로 찾는다 (등록되지 않은 형식이면 null 반환 계약) — Interaction 밖의 노드 등록소용</summary>
+    public InteractionNodeConverter(Func<string, TBase> create, Func<Type, string> keyOf)
+    {
+        _create = create;
+        _keyOf = keyOf;
     }
 
     public override bool CanConvert(Type objectType)
@@ -51,7 +59,7 @@ public sealed class InteractionNodeConverter<TBase> : JsonConverter where TBase 
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
     {
         Type type = value.GetType();
-        if (InteractionNodeRegistry.TryGetKey(type, out string key) == false)
+        if (TryGetKey(type, out string key) == false)
             throw new JsonSerializationException($"레지스트리에 없는 노드 타입 {type.Name}");
 
         // JObject.FromObject(value, serializer)는 이 컨버터를 재호출해 무한 재귀 → 계약 프로퍼티를 직접 순회
@@ -72,5 +80,14 @@ public sealed class InteractionNodeConverter<TBase> : JsonConverter where TBase 
         }
 
         writer.WriteEndObject();
+    }
+
+    /// <summary>형식 → 키 — keyOf가 있으면 그것, 없으면 InteractionNodeRegistry</summary>
+    private bool TryGetKey(Type type, out string key)
+    {
+        if (_keyOf == null)
+            return InteractionNodeRegistry.TryGetKey(type, out key);
+        key = _keyOf(type);
+        return key != null;
     }
 }

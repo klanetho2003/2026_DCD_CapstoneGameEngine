@@ -16,7 +16,7 @@ public enum MonsterMovementState
     Trapped
 }
 
-/// <summary>몬스터 한 개의 이동 판단과 성공한 도착 기록, 세 바퀴 순환 뒤의 탈출을 관리한다.</summary>
+/// <summary>몬스터 한 개의 이동 판단과 성공한 도착 기록, 세 바퀴 순환 뒤의 탈출을 관리한다. 방향 규칙은 TilePatrolRule, 한 칸 출발은 몬스터의 MonsterTileStepper를 쓴다.</summary>
 public sealed class MonsterMovementController
 {
     /// <summary>같은 순환을 완주해야 하는 횟수다.</summary>
@@ -31,6 +31,9 @@ public sealed class MonsterMovementController
     /// <summary>통행 가능 여부와 선점, 환경 변경 버전을 제공하는 맵이다.</summary>
     private readonly MapManager _map;
 
+    /// <summary>한 칸 출발과 도착 결과, 시선을 관리하는 몬스터의 공용 출발기다.</summary>
+    private readonly MonsterTileStepper _stepper;
+
     /// <summary>타일별 출발 방향과 순환 횟수를 용량 재할당 없이 관리하는 기록이다.</summary>
     private readonly MonsterPatrolHistory _history = new();
 
@@ -43,17 +46,8 @@ public sealed class MonsterMovementController
     /// <summary>한 칸 도착 때마다 새 델리게이트를 만들지 않기 위한 완료 콜백이다.</summary>
     private readonly Action _onArrived;
 
-    /// <summary>BFS에 전달할 공통 통행 조회 콜백이다.</summary>
+    /// <summary>BFS와 순찰 방향 규칙에 전달할 공통 통행 조회 콜백이다.</summary>
     private readonly Func<Vector2Int, bool> _canEnter;
-
-    /// <summary>도착 후 Dictionary의 키로 기록할 실제 출발 타일이다.</summary>
-    private Vector2Int _pendingOrigin;
-
-    /// <summary>도착 후 Dictionary의 값으로 기록할 실제 이동 방향이다.</summary>
-    private Vector2Int _pendingDirection;
-
-    /// <summary>시작한 이동의 성공 콜백을 아직 기다리는지 나타낸다.</summary>
-    private bool _awaitingArrival;
 
     /// <summary>탈출 경로에서 다음에 이동할 목록 위치다.</summary>
     private int _pathIndex;
@@ -67,8 +61,8 @@ public sealed class MonsterMovementController
     /// <summary>현재 몬스터의 행동 단계다.</summary>
     public MonsterMovementState State { get; private set; }
 
-    /// <summary>정지 중에도 유지되는 논리적인 시선 및 직진 방향이다.</summary>
-    public Vector2Int Facing { get; private set; } = Vector2Int.right;
+    /// <summary>정지 중에도 유지되는 논리적인 시선 및 직진 방향이며 몬스터의 출발기가 보관한다.</summary>
+    public Vector2Int Facing => _stepper.Facing;
 
     /// <summary>현재 탈출 예고가 끝날 때까지 남은 초다.</summary>
     public float PreparationRemaining { get; private set; }
@@ -82,6 +76,7 @@ public sealed class MonsterMovementController
     {
         _owner = owner;
         _map = Managers.Map;
+        _stepper = owner.Stepper;
         _onArrived = OnArrived;
         _canEnter = CanEnter;
         Reset();
@@ -94,13 +89,11 @@ public sealed class MonsterMovementController
         _history.Clear();
         _path.Clear();
         _pathIndex = 0;
-        _awaitingArrival = false;
+        _stepper.Reset(resetFacing);
         PreparationRemaining = 0f;
         State = MonsterMovementState.Patrol;
         _traversalVersion = _map.TraversalVersion;
         _occupancyVersion = _map.OccupancyVersion;
-        if (resetFacing)
-            Facing = Vector2Int.right;
     }
 
     /// <summary>플레이 중에만 타이머를 진행하고 칸 중앙에서 다음 행동을 한 번 판단한다.</summary>
@@ -111,8 +104,7 @@ public sealed class MonsterMovementController
             return;
         if (_owner.IsDead || Managers.Stage.Phase != EStagePhase.Playing)
         {
-            _owner.Movement.CancelToCurrentCell();
-            _awaitingArrival = false;
+            _stepper.Cancel();
             return;
         }
 
@@ -122,10 +114,9 @@ public sealed class MonsterMovementController
             Reset(false);
         }
 
-        if (_awaitingArrival && !_owner.Movement.IsMoving)
+        if (_stepper.TryConsumeCancelled())
         {
             // 양보나 물리 장애물로 취소된 이동은 성공한 출발 기록에 남기지 않는다.
-            _awaitingArrival = false;
             if (State == MonsterMovementState.Escaping)
             {
                 BeginEscape();
@@ -157,12 +148,13 @@ public sealed class MonsterMovementController
             if (_pathIndex >= _path.Count || !CanEnter(_path[_pathIndex]))
                 BeginEscape();
             else
-                TryStartStep(_path[_pathIndex] - _owner.Movement.CurrentCell);
+                _stepper.TryStartStep(_path[_pathIndex] - _owner.Movement.CurrentCell, _onArrived);
             return;
         }
 
         // 정상 이동에서 우선순위를 만족한 실제 다음 방향이다.
-        if (!TryChoosePatrolDirection(out Vector2Int direction))
+        if (!TilePatrolRule.TryChooseDirection(_owner.Movement.CurrentCell, Facing, _canEnter,
+            out Vector2Int direction))
         {
             if (State == MonsterMovementState.Patrol)
             {
@@ -177,55 +169,13 @@ public sealed class MonsterMovementController
             _history.Repetitions >= REQUIRED_REPETITIONS)
             BeginPreparation();
 
-        TryStartStep(direction);
-    }
-
-    /// <summary>정면, 오른쪽, 뒤쪽, 왼쪽 순서로 실제 진입 가능한 방향을 선택한다.</summary>
-    /// <param name="selected">통행 가능한 다음 한 칸 방향이며 실패 시 0이다.</param>
-    private bool TryChoosePatrolDirection(out Vector2Int selected)
-    {
-        // 각 후보를 오른쪽으로 90도씩 돌리며 확인할 방향이다.
-        Vector2Int direction = Facing;
-        // attempt는 정면부터 오른쪽으로 회전하며 검사한 방향 수다.
-        for (int attempt = 0; attempt < 4; attempt++)
-        {
-            if (CanEnter(_owner.Movement.CurrentCell + direction))
-            {
-                selected = direction;
-                return true;
-            }
-            direction = new Vector2Int(direction.y, -direction.x);
-        }
-        selected = Vector2Int.zero;
-        return false;
-    }
-
-    /// <summary>한 칸 이동의 기록 후보를 보관하고 플레이어의 실제 속도에 맞춰 이동을 요청한다.</summary>
-    /// <param name="direction">현재 칸에서 도착하려는 인접 칸의 방향이다.</param>
-    private bool TryStartStep(Vector2Int direction)
-    {
-        if (_owner.MoveSpeed <= 0f)
-            return false;
-        _pendingOrigin = _owner.Movement.CurrentCell;
-        _pendingDirection = direction;
-
-        // 플레이어의 현재 최종 이동 속도를 비교할 빙의 대상이다.
-        Villager player = Managers.Object.PossessedTarget;
-        // 플레이어가 없으면 기본 속도, 있으면 동일한 실제 속도를 적용할 배율이다.
-        float speedWeight = player != null && player.Movement != null
-            ? player.Movement.EffectiveMoveSpeed / _owner.MoveSpeed : 1f;
-        _awaitingArrival = _owner.Movement.TryMoveToCell(
-            _pendingOrigin + direction, speedWeight, _onArrived);
-        if (_awaitingArrival)
-            Facing = direction;
-        return _awaitingArrival;
+        _stepper.TryStartStep(direction, _onArrived);
     }
 
     /// <summary>선점까지 완료한 이동만 기록하고 예고 취소 또는 탈출 완료를 판정한다.</summary>
     private void OnArrived()
     {
-        _awaitingArrival = false;
-        _history.RecordArrival(_pendingOrigin, _pendingDirection);
+        _history.RecordArrival(_stepper.StepOrigin, _stepper.StepDirection);
         if (State == MonsterMovementState.Escaping)
         {
             _pathIndex++;
