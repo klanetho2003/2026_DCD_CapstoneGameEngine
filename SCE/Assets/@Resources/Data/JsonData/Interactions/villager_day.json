@@ -38,7 +38,7 @@
       "effects": [
         {
           "type": "PrintLog",
-          "text": "어서 오세요"
+          "text": "어서 오세요!"
         },
         {
           "type": "RaiseSignal",
