@@ -4,6 +4,7 @@
 /// </summary>
 public static class InteractionNodeCatalog
 {
+    /// <summary>상호작용 편집기와 JSON 로더에서 선택할 수 있는 조건 및 효과 부품을 등록한다.</summary>
     public static void RegisterAll()
     {
         // Conditions
@@ -14,6 +15,8 @@ public static class InteractionNodeCatalog
         InteractionNodeRegistry.RegisterCondition<StateValueCondition>();
         InteractionNodeRegistry.RegisterCondition<DayCondition>();
         InteractionNodeRegistry.RegisterCondition<DayPeriodCondition>();
+        InteractionNodeRegistry.RegisterCondition<StagePlayingCondition>();
+        InteractionNodeRegistry.RegisterCondition<CanPushBoxCondition>();
 
         // Effects
         InteractionNodeRegistry.RegisterEffect<ShowMarkerEffect>();
@@ -24,5 +27,6 @@ public static class InteractionNodeCatalog
         InteractionNodeRegistry.RegisterEffect<PlayAnimationEffect>();
         InteractionNodeRegistry.RegisterEffect<RaiseSignalEffect>();
         InteractionNodeRegistry.RegisterEffect<SwapCreatureDataEffect>();
+        InteractionNodeRegistry.RegisterEffect<PushBoxEffect>();
     }
 }

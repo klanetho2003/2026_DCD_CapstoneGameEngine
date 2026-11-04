@@ -1,0 +1,25 @@
+{
+  "id": "player_sokoban",
+  "interactions": [
+    {
+      "id": "push_box",
+      "trigger": "Tick",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.05,
+      "conditions": [
+        {
+          "type": "StagePlaying"
+        },
+        {
+          "type": "CanPushBox"
+        }
+      ],
+      "effects": [
+        {
+          "type": "PushBox"
+        }
+      ]
+    }
+  ]
+}

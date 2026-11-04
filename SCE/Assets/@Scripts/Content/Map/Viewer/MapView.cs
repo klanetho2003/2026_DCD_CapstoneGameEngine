@@ -27,6 +27,49 @@ public sealed class MapView
     /// <summary>현재 스테이지의 스프라이트 설정과 점령 전용 타일맵을 담당한다.</summary>
     private TileTerritoryView _territoryView;
 
+    /// <summary>맵 프리팹 안의 실제 박스들을 초기화와 라운드 복원에서 재사용할 목록이다.</summary>
+    private readonly List<GridBox> _boxBuffer = new();
+
+    /// <summary>맵 좌표가 준비되면 비활성 라운드의 박스까지 현재 맵에 연결한다.</summary>
+    /// <param name="map">박스의 통행 차단과 좌표 변환을 담당할 현재 맵이다.</param>
+    public void InitializeBoxes(MapManager map)
+    {
+        if (_root == null)
+            return;
+        _root.GetComponentsInChildren(true, _boxBuffer);
+        // box는 현재 맵 프리팹 안에 직접 배치한 실제 박스다.
+        foreach (GridBox box in _boxBuffer)
+            box.Initialize(map);
+    }
+
+    /// <summary>새 라운드의 활성 박스를 모두 해제한 뒤 최초 배치로 복원하여 자리 바꿈 충돌을 막는다.</summary>
+    /// <param name="map">새 라운드 영역이 반영된 현재 맵이다.</param>
+    public void ResetBoxes(MapManager map)
+    {
+        if (_root == null)
+            return;
+        _root.GetComponentsInChildren(true, _boxBuffer);
+        // box는 초기 위치로 동시에 복원하기 전에 이전 등록을 해제할 박스다.
+        foreach (GridBox box in _boxBuffer)
+            box.ReleaseRegistration();
+        // box는 다른 박스의 이전 위치에 막히지 않고 최초 배치를 등록할 박스다.
+        foreach (GridBox box in _boxBuffer)
+            box.Initialize(map, false);
+    }
+
+    /// <summary>새 라운드에 켜진 박스의 최초 배치가 해당 칸인지 조회한다.</summary>
+    /// <param name="cell">플레이어의 기존 위치와 비교할 타일 좌표다.</param>
+    public bool IsBoxSpawnCell(Vector2Int cell)
+    {
+        // box는 아직 캐릭터와 겹쳐 등록하지 못했을 수도 있는 활성 박스다.
+        foreach (GridBox box in _boxBuffer)
+        {
+            if (box != null && box.isActiveAndEnabled && box.SpawnCell == cell)
+                return true;
+        }
+        return false;
+    }
+
     /// <summary>맵 프리팹의 점령 표시 컴포넌트를 찾아 논리 격자에 맞게 초기화한다.</summary>
     /// <param name="grid">맵 데이터에 기록된 실제 좌표 원점과 칸 크기다.</param>
     public void InitializeTerritory(in GridSpec grid)
@@ -97,6 +140,7 @@ public sealed class MapView
 
         _root = null;
         _territoryView = null;
+        _boxBuffer.Clear();
         Array.Clear(_roundRoots, 0, _roundRoots.Length);
         HasRoundRoots = false;
     }

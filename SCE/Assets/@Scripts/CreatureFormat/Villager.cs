@@ -10,6 +10,8 @@ public class Villager : CombatCreature, IMovable
 
     public VillagerStateMachine StateMachine { get; private set; }
     public CreatureMovement Movement { get; private set; }
+    /// <summary>방향키 입력으로 박스와 함께 한 칸을 이동시키는 실행기다.</summary>
+    public BoxPushController BoxPush { get; private set; }
     public VillagerAnim Anim { get; private set; }
     public override BaseCreatureAnim CreatureAnim => Anim;
     public UserAim UserAim { get; private set; }
@@ -21,6 +23,7 @@ public class Villager : CombatCreature, IMovable
     // skill
     public SkillSlots SkillSlots { get; private set; }
 
+    /// <summary>이동, 박스 밀기, 애니메이션과 입력 관련 컴포넌트를 최초 한 번 연결한다.</summary>
     public override bool Init()
     {
         if (base.Init() == false)
@@ -29,6 +32,9 @@ public class Villager : CombatCreature, IMovable
         // 1. Component Cache
         StateMachine = GetComponent<VillagerStateMachine>();
         Movement = GetComponent<CreatureMovement>();
+        BoxPush = GetComponent<BoxPushController>();
+        if (BoxPush == null)
+            BoxPush = gameObject.AddComponent<BoxPushController>();
         Anim = GetComponent<VillagerAnim>();
         UserAim = GetComponent<UserAim>();
 
@@ -37,6 +43,8 @@ public class Villager : CombatCreature, IMovable
         return true;
     }
 
+    /// <summary>캐릭터 데이터를 적용하고 이동기와 박스 밀기 등 플레이어 기능의 소유자를 설정한다.</summary>
+    /// <param name="objectID">플레이어 데이터 표에서 조회할 캐릭터 식별자다.</param>
     public override void SetInfo(int objectID)
     {
         base.SetInfo(objectID);
@@ -45,6 +53,7 @@ public class Villager : CombatCreature, IMovable
 
         StateMachine.SetInfo(this);
         Movement.SetInfo(this);
+        BoxPush.SetInfo(this);
         Anim.SetInfo(this);
         UserAim.SetInfo(this);
 

@@ -15,6 +15,9 @@ public class DataManager
     public const string MonsterDataKey = "MonsterData";
     public const string NpcDataKey = "NpcData";
 
+    /// <summary>사용자가 인터랙션 에디터에서 박스 밀기 카드를 조립할 빈 Set의 Addressable 주소다.</summary>
+    public const string PlayerSokobanSetKey = "player_sokoban";
+
     public bool IsDataLoaded { get; set; } = false; // Temp
 
     public Dictionary<int, CreatureData> CreatureDataDic = new();
@@ -22,6 +25,7 @@ public class DataManager
     public Dictionary<int, MonsterData> MonsterDataDic = new();
     public Dictionary<int, NPCData> NpcDataDic = new();
 
+    /// <summary>캐릭터와 게임 상태 데이터를 읽고 플레이어 박스 밀기 Set을 포함한 상호작용 정의를 등록한다.</summary>
     public void InitData()
     {
         #region Creature Data
@@ -62,6 +66,13 @@ public class DataManager
 
         TextAsset textAsset_7 = Managers.Resource.Load<TextAsset>("villager_nola");
         Managers.Interaction.LoadSet(textAsset_7.text);
+
+        // boxSet은 카드 조립 전에는 비어 있으며 에디터에서 저장한 뒤 다음 실행에 로드되는 플레이어 Set이다.
+        TextAsset boxSet = Managers.Resource.Load<TextAsset>(PlayerSokobanSetKey);
+        if (boxSet != null)
+            Managers.Interaction.LoadSet(boxSet.text);
+        else
+            LogPrinter.LogError($"[DataManager] 박스 밀기 Set 로드 실패: {PlayerSokobanSetKey}. PreLoad 등록을 확인하세요.");
     }
 
     private Loader LoadJson<Loader, Key, Value>(string path) where Loader : ILoader<Key, Value>

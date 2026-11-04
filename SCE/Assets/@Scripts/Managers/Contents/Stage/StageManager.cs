@@ -317,8 +317,9 @@ public class StageManager
         TerrainArea area = _playData.GetArea(round);
         Managers.Map.SetRound(round, area);
 
-        // 순서 2: 플레이어가 새 영역 밖에 서 있으면 SpawnPoint로
+        // 순서 2: 플레이어가 새 영역 밖이거나 박스 초기 배치와 겹치면 SpawnPoint로
         MovePlayerIntoArea(area);
+        Managers.Map.RefreshBoxes();
         UpdateDeathHook();
 
         // 순서 3: 라운드 실행 — 시작 조건은 "호출 즉시"
@@ -351,19 +352,23 @@ public class StageManager
         }
     }
 
-    /// <summary>SpawnPoint는 모든 라운드의 영역 안이다 (Exporter와 StagePlayData.TryBuild가 보장).</summary>
+    /// <summary>플레이어가 새 영역 밖이거나 박스 초기 배치와 겹치면 공통 스폰 칸으로 옮긴다.</summary>
+    /// <param name="area">이번 라운드에서 플레이어가 이동할 수 있는 영역이다.</param>
     private void MovePlayerIntoArea(TerrainArea area)
     {
+        // villager는 라운드가 바뀌어도 유지할 현재 빙의 플레이어다.
         Villager villager = Managers.Object.PossessedTarget;
         if (villager.IsValid() == false)
             return;
 
-        Vector2Int cell = Managers.Map.WorldToCell(villager.transform.position);
-        if (area.Contains(cell))
-            return; // 영역 안이면 위치 유지
+        // cell은 물리 정지 직후 Transform 갱신과 무관하게 확인할 실제 선점 칸이다.
+        Vector2Int cell = villager.Movement != null && villager.Movement.HasCell
+            ? villager.Movement.CurrentCell : Managers.Map.WorldToCell(villager.transform.position);
+        if (area.Contains(cell) && !Managers.Map.IsBoxSpawnCell(cell))
+            return; // 영역 안이고 박스 초기 배치와 겹치지 않으면 위치 유지
 
         TeleportPossessed(villager, Managers.Map.CellCenterToWorld(_playData.PlayerSpawn.Cell));
-        LogPrinter.Log($"[StageManager] 플레이어가 Round {CurrentRound} 영역 밖 {cell} — SpawnPoint로 이동");
+        LogPrinter.Log($"[StageManager] 플레이어가 Round {CurrentRound} 영역 밖 또는 박스 초기 배치 {cell}와 겹침 — SpawnPoint로 이동");
     }
 
     /// <summary>순간 이동의 유일한 경로. 프로젝트의 이동 방식에 맞춰 이 한 곳만 고친다.</summary>

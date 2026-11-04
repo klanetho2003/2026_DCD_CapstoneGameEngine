@@ -41,6 +41,12 @@ public class CreatureMovement : InitBase
     /// <summary>소유자 등록 시 연결한 맵이며 비활성화 중 전역 매니저를 다시 만들지 않도록 보관한다.</summary>
     private MapManager _map;
 
+    /// <summary>플레이어와 박스가 함께 이동하는 동안 일반 이동의 중복 시작을 막는 실행기다.</summary>
+    private BoxPushController _boxPushController;
+
+    /// <summary>네 방향으로 보정된 현재 입력이며 방향키를 떼면 0으로 돌아간다.</summary>
+    public Vector2 InputDirection => _inputDirection;
+
     /// <summary>실제 도착을 완료하여 현재 선점하고 있는 타일이다.</summary>
     private Vector2Int _currentCell;
 
@@ -127,10 +133,12 @@ public class CreatureMovement : InitBase
     /// <param name="owner">이동 속도와 이동 방향을 공유할 소유 캐릭터다.</param>
     public void SetInfo(IMovable owner)
     {
+        _boxPushController?.CancelPush(false);
         ReleaseClaim();
         ClearMovement();
         _owner = owner;
         _map = Managers.Map;
+        _boxPushController = GetComponent<BoxPushController>();
         _inputSpeedWeight = owner is Villager ? Villager.DEFAULT_MOVE_SPEED_WEIGHT : 1f;
 
         if (RB2D != null && _map.IsLoaded)
@@ -161,7 +169,7 @@ public class CreatureMovement : InitBase
         _isInputDriven = true;
 
         // 새 입력은 저장하지만 진행 중인 한 칸의 목적지는 바꾸지 않는다.
-        if (IsMoving)
+        if (IsMoving || (_boxPushController != null && _boxPushController.IsPushing))
             return;
 
         TryStartNextStep();
@@ -190,6 +198,8 @@ public class CreatureMovement : InitBase
             !HasCell || IsMoving || _map == null || !_map.IsLoaded)
             return false;
         if (_map.HasTerritoryRound && !_map.IsTerritoryOpen)
+            return false;
+        if (_boxPushController != null && _boxPushController.IsPushing && !_boxPushController.IsStartingPushStep)
             return false;
 
         // 현재 타일과 목적지 타일 사이의 좌표 차이다.
@@ -311,7 +321,8 @@ public class CreatureMovement : InitBase
     /// <summary>저장된 입력으로 다음 타일을 계산하고 진입 가능한 경우 한 칸 이동을 시작한다.</summary>
     private void TryStartNextStep()
     {
-        if (IsMoving || _inputDirection == Vector2.zero)
+        if (IsMoving || _inputDirection == Vector2.zero ||
+            (_boxPushController != null && _boxPushController.IsPushing))
             return;
 
         if (!HasCell || _map == null || !_map.IsLoaded)
@@ -419,6 +430,7 @@ public class CreatureMovement : InitBase
     /// <summary>라운드 정지나 사망 시 진행 중인 이동을 취소하고 선점 중인 칸 중앙에 정렬한다.</summary>
     public void CancelToCurrentCell()
     {
+        _boxPushController?.CancelPush(false);
         ClearMovement();
         if (HasCell && _map != null && _map.IsLoaded && RB2D != null)
             RB2D.position = _map.CellCenterToWorld(_currentCell);
@@ -430,6 +442,7 @@ public class CreatureMovement : InitBase
     {
         if (_map == null || !_map.IsLoaded || RB2D == null || _owner == null)
             return false;
+        _boxPushController?.CancelPush();
         // 외부 배치 요청을 타일 중앙 좌표로 변환하기 위한 목적지 칸이다.
         Vector2Int cell = _map.WorldToCell(worldPosition);
         if (!_map.TryClaimCell(cell, this))
@@ -490,9 +503,16 @@ public class CreatureMovement : InitBase
             _owner.CacheMoveDirection = Vector2.zero;
     }
 
+    /// <summary>박스 밀기가 끝나면 밀기 중에도 저장한 방향키 입력에 따라 일반 연속 이동을 재개한다.</summary>
+    public void ResumeInputAfterPush()
+    {
+        _isInputDriven = true;
+    }
+
     /// <summary>비활성화 또는 풀 반환 시 이전 이동과 콜백을 정리하고 소유자 연결을 해제한다.</summary>
     private void OnDisable()
     {
+        _boxPushController?.CancelPush(false);
         ReleaseClaim();
         ClearMovement();
         _owner = null;

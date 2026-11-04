@@ -5,7 +5,7 @@ using UnityEngine;
 using static Define;
 
 /// <summary>맵 데이터와 라운드 영역, 도착 후 선점과 지속적인 타일 소유권을 관리한다.</summary>
-public class MapManager
+public partial class MapManager
 {
     /// <summary>현재 로드한 타일과 스테이지 데이터다.</summary>
     public Data.MapData CurrentMap { get; private set; }
@@ -30,7 +30,7 @@ public class MapManager
     /// <summary>도착을 완료하여 각 타일을 선점한 캐릭터의 이동 컴포넌트다.</summary>
     private readonly Dictionary<Vector2Int, CreatureMovement> _occupants = new();
 
-    /// <summary>박스 등 외부 시스템이 벽으로 등록한 추가 차단 타일이다.</summary>
+    /// <summary>박스의 별도 등록과 무관하게 외부 시스템이 벽으로 지정한 추가 차단 타일이다.</summary>
     private readonly HashSet<Vector2Int> _blockedCells = new();
 
     /// <summary>캐릭터의 도착 선점과 별개로 보관하는 이번 라운드의 타일 소유권이다.</summary>
@@ -115,10 +115,7 @@ public class MapManager
     /// <param name="cell">검사할 타일의 정수 좌표다.</param>
     public bool IsWalkableCell(Vector2Int cell)
     {
-        return IsLoaded && cell.x >= 0 && cell.x < _grid.Width &&
-            cell.y >= 0 && cell.y < _grid.Height &&
-            CurrentMap.CollisionRows[cell.y][cell.x] != MAP_TOOL_WALL &&
-            !_blockedCells.Contains(cell) && !IsOutsideArea(cell);
+        return IsTerrainCellWalkable(cell) && IsBoxCellAccessible(cell, null);
     }
 
     /// <summary>정적 장애물과 다른 캐릭터의 도착 후 선점을 함께 검사한다.</summary>
@@ -127,7 +124,7 @@ public class MapManager
     public bool CanEnterCell(Vector2Int cell, CreatureMovement requester)
     {
         // occupant는 검사 칸에 실제 도착하여 선점한 이동 주체다.
-        return IsWalkableCell(cell) &&
+        return IsTerrainCellWalkable(cell) && IsBoxCellAccessible(cell, requester) &&
             (!_occupants.TryGetValue(cell, out CreatureMovement occupant) ||
              occupant == null || !occupant.CanOccupyCell || occupant == requester);
     }
@@ -222,6 +219,7 @@ public class MapManager
         CurrentMap = map;
         _grid = map.Grid;
         _view.InitializeTerritory(in _grid);
+        _view.InitializeBoxes(this);
 
         _playerSpawnPoint = new ETileType[_grid.Width, _grid.Height];
 
@@ -284,6 +282,7 @@ public class MapManager
     /// <summary>맵 표시와 좌표, 선점 및 점령 상태를 정리하여 다음 맵으로 이전 기록이 넘어가지 않게 한다.</summary>
     public void UnloadMap()
     {
+        CancelBoxPushes();
         _view.Despawn();
 
         CurrentMap = null;
@@ -292,6 +291,9 @@ public class MapManager
         _area = null;
         _occupants.Clear();
         _blockedCells.Clear();
+        _boxes.Clear();
+        _boxDestinations.Clear();
+        _boxPushers.Clear();
         _territory.Clear();
         TraversalVersion++;
         OccupancyVersion++;
@@ -309,8 +311,10 @@ public class MapManager
     /// <param name="area">새 라운드에서 이동과 점령을 허용하는 타일 집합이다.</param>
     public void SetRound(ERound round, TerrainArea area)
     {
-        _view.ShowRound(round);
+        CancelBoxPushes();
         _area = area;
+        _view.ShowRound(round);
+        _view.ResetBoxes(this);
         _territory.Clear();
         _view.ClearTerritory();
         TraversalVersion++;
