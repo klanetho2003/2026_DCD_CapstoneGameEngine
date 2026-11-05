@@ -811,6 +811,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: UI_Panel_Title
       objectReference: {fileID: 0}
+    - target: {fileID: 6421534735467996341, guid: 356885b224b21e846b3cae0d0f69bd97, type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 113887355}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
