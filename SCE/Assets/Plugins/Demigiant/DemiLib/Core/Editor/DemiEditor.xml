@@ -954,6 +954,13 @@
             Gets all fields from an object and its hierarchy inheritance
             </summary>
         </member>
+        <member name="M:DG.DemiEditor.DeEditorReflectionUtils.GetFieldInfo(UnityEditor.SerializedProperty)">
+            <summary>
+            Retrieves the <see cref="T:System.Reflection.FieldInfo"/> for the given property.<para/>
+            WARNING: when used with fields drawn by Odin it returns a faulty field (without custom attributes and other things).
+            This wasn't an issue in Odin 4.0.2.1 and appared in 4.0.2.2 or 4.0.2.3 
+            </summary>
+        </member>
         <member name="M:DG.DemiEditor.DeEditorReflectionUtils.DeepCopy``1(``0)">
             <summary>
             Perform a deep copy of the class
