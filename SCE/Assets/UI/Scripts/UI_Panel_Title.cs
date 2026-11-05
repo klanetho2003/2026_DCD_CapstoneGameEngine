@@ -5,12 +5,14 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using static Define;
 
-public class UI_PanelTitle : UI_Scene
+public class UI_Panel_Title : UI_Scene
 {
     #region Bind UI
     private enum Buttons
     {
         Btn_Play,
+        Btn_Settings,
+        Btn_Quit,
     }
     #endregion
 
@@ -27,6 +29,14 @@ public class UI_PanelTitle : UI_Scene
         BindButtons(typeof(Buttons));
 
         GetButton(Buttons.Btn_Play).BindEvent((evt) => { OnClickStartButton(); }, UIEvent.Click);
+
+        Button settings = GetButton(Buttons.Btn_Settings);
+        if (settings != null)
+            settings.BindEvent((evt) => { Managers.UI.ShowPopupUI<UI_Panel_Settings>(); }, UIEvent.Click);
+
+        Button quit = GetButton(Buttons.Btn_Quit);
+        if (quit != null)
+            quit.BindEvent((evt) => { Application.Quit(); }, UIEvent.Click);
 
         // Loading 시작
         StartLoadAssets();

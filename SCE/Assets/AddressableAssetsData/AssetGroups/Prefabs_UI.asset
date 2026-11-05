@@ -21,6 +21,24 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 23749b096efb5984cb736950a687dabd
+    m_Address: UI_Panel_Countdown
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ebea4a3d2b07654aa32b85e4e6937ac
+    m_Address: UI_Panel_Paused
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 356885b224b21e846b3cae0d0f69bd97
+    m_Address: UI_Panel_Title
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 38b15fc2a3050494ab5c3c36a405d071
     m_Address: UI_StageSelectItem
     m_ReadOnly: 0
@@ -33,6 +51,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 53bc8962ce9577a4cab1285a36e1d1e3
+    m_Address: UI_Panel_HUD
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 90ea40b4c405a5744b7a56c63f064086
     m_Address: UI_GameEndPopup
     m_ReadOnly: 0
@@ -41,6 +65,36 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9809eca1efd4dce439d41d26692ac2ab
     m_Address: UI_StageSelect
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac04dfad99a3b4f48a4b805f0faee0ae
+    m_Address: UI_Panel_PlanetSelect
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: afab13174991f4449bc75d06cd7779ca
+    m_Address: UI_Panel_YouDied
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b1c09e9bc70cb33449e03979b8233b6d
+    m_Address: UI_Panel_Clear
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d2fb6429876485d4fa6705adf4be0e6b
+    m_Address: UI_Panel_Settings
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e953baae75a1fd0438b94221c6f8f670
+    m_Address: UI_Panel_StageStart
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
