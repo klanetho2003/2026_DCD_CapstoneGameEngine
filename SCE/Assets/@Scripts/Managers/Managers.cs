@@ -80,7 +80,7 @@ public class Managers : MonoBehaviour
             GameEventBus.SetRuleSink(s_instance._gameState);
             s_instance._gameState.Init();
 
-            // 설정 파일은 설정을 쓰는 매니저들이 모두 만들어진 뒤에 읽는다. 진행 파일은 상태 정의를 읽은 뒤 (LoadGameData)
+            // 설정 파일은 설정을 쓰는 매니저들이 모두 만들어진 뒤에 읽는다 (등록된 설정 구역이 없으면 아무것도 하지 않는다). 진행 파일은 리소스 로드 뒤 (LoadGameData)
             s_instance._save.Init();
             s_instance._save.Load(ESaveFile.Settings);
 
@@ -91,7 +91,7 @@ public class Managers : MonoBehaviour
     #region 게임 데이터 로딩
     /// <summary>
     /// 타이틀 화면이 부른다. PreLoad 리소스를 모두 읽으면 시트 데이터 → 진행 파일 순서로 초기화하고 onCompleted를 부른다.
-    /// 진행 파일은 상태 정의(InitData)를 읽은 뒤에만 입힐 수 있어 이 순서를 지키며, 타이틀 UI가 몇 개든 이 순서는 여기 하나다.
+    /// 타이틀 UI가 몇 개든 이 순서는 여기 하나다.
     /// 어느 단계든 실패하면 onCompleted를 부르지 않는다 (시작 화면에 머문다). 이번 실행에서 이미 초기화했으면 리소스만 다시 읽는다.
     /// </summary>
     /// <param name="onCompleted">모든 단계가 끝나면 한 번 불린다.</param>
@@ -121,7 +121,7 @@ public class Managers : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            // 상태 정의가 없으면 진행 데이터를 입힐 수 없어 불러오지 않는다 (저장 파일은 그대로 남는다)
+            // 시작 화면에 머무르므로 진행 데이터도 불러오지 않는다 (저장 파일은 그대로 남는다)
             LogPrinter.LogError($"[Managers] 데이터 초기화 실패 — 진행 데이터를 불러오지 않음\n{e}"/*$"[무시된 로딩 에러] 초기화 중 예외가 발생했지만 강제로 통과합니다.\n{e}"*/);
             return;
         }

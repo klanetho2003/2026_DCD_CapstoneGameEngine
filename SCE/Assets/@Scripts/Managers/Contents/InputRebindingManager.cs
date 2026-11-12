@@ -4,13 +4,13 @@ using UnityEngine.InputSystem;
 using static LogPrinter;
 
 /// <summary>
-/// New Input System의 키 리바인딩 + 사용자 설정 영구 저장.
+/// New Input System의 키 리바인딩.
+/// 키 설정은 지금 저장하지 않는다 — 설정 파일에 등록된 구역이 없어 SaveBindings · LoadBindings는 아무것도 쓰고 읽지 않으며,
+/// 바꾼 키는 이번 실행 동안만 유지된다. 설정 파일에 키 설정 구역이 생기면 두 함수가 그대로 쓰고 읽는다.
 /// 
 /// 사용 흐름:
-/// 1. 게임 시작 >> Managers.Init 끝에서 SaveManager가 설정 파일을 읽어 복원 (InputBindingSaveSection)
-/// 2. 옵션 메뉴 >> StartRebinding(Action, callback) >> 사용자 키 입력 대기
-/// 3. 새 키 누름 >> 자동 SaveBindings >> SaveManager가 설정 파일 저장
-/// 4. 이후 게임 실행 시 1과 같이 복원
+/// 1. 옵션 메뉴 >> StartRebinding(Action, callback) >> 사용자 키 입력 대기
+/// 2. 새 키 누름 >> 자동 SaveBindings (지금은 저장하지 않음)
 /// </summary>
 public class InputRebindingManager
 {
@@ -101,7 +101,7 @@ public class InputRebindingManager
 
         _actionAsset.RemoveAllBindingOverrides();
 
-        // 기본값으로 되돌린 것을 설정 파일에 남긴다 (다른 설정은 그대로)
+        // 기본값으로 되돌린 것을 설정 파일에 남긴다 (설정 구역이 없으면 아무것도 쓰지 않는다)
         Managers.Save.Save(ESaveFile.Settings);
     }
 }

@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 /// <summary>저장 파일 종류이며 설정은 새 게임을 시작해도 남고 진행은 새 게임에서 처음 상태로 돌아간다.</summary>
 public enum ESaveFile
 {
-    /// <summary>키 설정 등 사용자 설정이다.</summary>
+    /// <summary>사용자 설정이다. 지금은 등록된 구역이 없어 파일을 쓰지 않는다.</summary>
     Settings,
     /// <summary>게임 상태 등 플레이 진행이다.</summary>
     Progress,
@@ -21,6 +21,8 @@ public enum ESaveLoadResult
     RestoredFromBackup,
     /// <summary>본 파일과 백업을 모두 읽지 못해 처음 상태로 시작했다.</summary>
     Corrupted,
+    /// <summary>이 파일에 등록된 구역이 없어 읽지도 만들지도 않았다.</summary>
+    Unused,
 }
 
 /// <summary>

@@ -15,6 +15,7 @@ using static Define;
 /// 읽기는 본 파일, 안 되면 .bak 순서이며 둘 다 안 되면 처음 상태로 시작하고 읽지 못한 파일은 .corrupt로 남겨 덮어쓰지 않는다.
 /// 손상 검사는 구역 글의 SHA-256이며 편집기는 손으로 고친 파일을 경고만 하고 읽는다.
 /// 저장된 구역 버전이 낮으면 구역의 Migrate로 한 단계씩 올린 뒤 입히고, 모르는 구역과 입히지 못한 구역은 보존해 그대로 다시 쓴다.
+/// 없앤 구역(s_retiredKeys)은 보존하지 않고 버리며, 등록된 구역이 없는 파일은 읽지도 만들지도 쓰지도 않는다.
 /// 파일과 백업이 모두 없으면 불러올 때 처음 상태로 새로 만든다. 이번 실행에서 불러오기 전에는 그 파일을 저장하지 않는다. Stage가 끝나면 진행 파일을 자동 저장한다.
 /// Managers의 필드 초기화에서 만들어지므로 Unity API는 Init부터 쓴다. 매 프레임 비용은 없다.
 /// </summary>
@@ -52,6 +53,9 @@ public class SaveManager
     };
 
     private static readonly UTF8Encoding s_utf8 = new UTF8Encoding(false);
+
+    /// <summary>없앤 구역의 키이며 옛 파일에 남아 있어도 보존하지 않고 버린다. 구역을 없앨 때 그 키를 더하고, 이 키는 다시 쓰지 않는다.</summary>
+    private static readonly string[] s_retiredKeys = { "gameState", "inputBindings" };
 
     /// <summary>파일 하나의 경로와 이번 실행의 상태다.</summary>
     private sealed class FileState
@@ -100,8 +104,7 @@ public class SaveManager
     /// <summary>저장 대상 목록이며 구역을 더할 때 여기에 한 줄 더한다.</summary>
     private void RegisterSections()
     {
-        Register(new GameStateSaveSection());
-        Register(new InputBindingSaveSection());
+        Register(new StageRecordSaveSection());
     }
 
     private void Register(ISaveSection section)
@@ -124,23 +127,49 @@ public class SaveManager
         }
         return null;
     }
+
+    /// <summary>파일에 등록된 구역이 있는지다. 없으면 그 파일은 읽지도 만들지도 쓰지도 않는다. O(구역 수)</summary>
+    private bool HasSections(ESaveFile file)
+    {
+        for (int i = 0; i < _sections.Count; i++)
+        {
+            if (_sections[i].SaveFile == file)
+                return true;
+        }
+        return false;
+    }
+
+    private static bool IsRetired(string key)
+    {
+        for (int i = 0; i < s_retiredKeys.Length; i++)
+        {
+            if (string.Equals(s_retiredKeys[i], key, StringComparison.Ordinal))
+                return true;
+        }
+        return false;
+    }
     #endregion
 
     #region 불러오기
     /// <summary>
     /// 저장 경로에서 파일을 찾아 읽고 그 파일의 구역마다 입힌다. 파일과 백업이 모두 없으면 처음 상태로 새로 만든다.
+    /// 없앤 구역이 들어 있었으면 바로 다시 써서 파일에서 지운다. 등록된 구역이 없는 파일은 손대지 않고 Unused다.
     /// 어떤 결과든 이후 그 파일을 저장할 수 있다. O(파일 크기 + 구역 수)
     /// </summary>
     /// <param name="file">불러올 파일 종류다.</param>
     public ESaveLoadResult Load(ESaveFile file)
     {
+        if (HasSections(file) == false)
+            return ESaveLoadResult.Unused;
+
         FileState state = _files[(int)file];
         state.Preserved.Clear();
         state.Loaded = true;
 
         if (TryReadFile(state.Path, out JObject sections, out string error))
         {
-            Apply(file, sections);
+            if (Apply(file, sections))
+                Save(file);
             LogPrinter.Log($"[SaveManager] {s_fileNames[(int)file]} 불러옴");
             return ESaveLoadResult.Loaded;
         }
@@ -159,7 +188,8 @@ public class SaveManager
         {
             Debug.LogError($"[SaveManager] {s_fileNames[(int)file]} 읽기 실패 ({error}) — 백업으로 불러옴");
             KeepCorrupt(state.Path);
-            Apply(file, sections);
+            if (Apply(file, sections))
+                Save(file);
             return ESaveLoadResult.RestoredFromBackup;
         }
 
@@ -169,14 +199,22 @@ public class SaveManager
         return ESaveLoadResult.Corrupted;
     }
 
-    /// <summary>등록된 구역마다 저장 글을 입히고, 모르는 구역과 입히지 못한 구역은 보존한다.</summary>
-    private void Apply(ESaveFile file, JObject sections)
+    /// <summary>등록된 구역마다 저장 글을 입히고, 모르는 구역과 입히지 못한 구역은 보존한다. 없앤 구역을 버렸으면 true다.</summary>
+    private bool Apply(ESaveFile file, JObject sections)
     {
         FileState state = _files[(int)file];
+        bool droppedRetired = false;
         foreach (JProperty property in sections.Properties())
         {
-            if (FindSection(file, property.Name) == null)
-                state.Preserved[property.Name] = property.Value.DeepClone();
+            if (FindSection(file, property.Name) != null)
+                continue;
+            if (IsRetired(property.Name))
+            {
+                LogPrinter.Log($"[SaveManager] {s_fileNames[(int)file]}의 없앤 구역 '{property.Name}'을 버림");
+                droppedRetired = true;
+                continue;
+            }
+            state.Preserved[property.Name] = property.Value.DeepClone();
         }
 
         for (int i = 0; i < _sections.Count; i++)
@@ -198,6 +236,7 @@ public class SaveManager
                 Debug.LogError($"[SaveManager] 구역 '{section.Key}' 입히기 실패 ({error}) — 처음 상태로 두고 저장된 글은 보존함");
             }
         }
+        return droppedRetired;
     }
 
     /// <summary>구역 글의 버전을 확인하고 필요하면 한 단계씩 이주한 뒤 입힌다.</summary>
@@ -266,11 +305,14 @@ public class SaveManager
     #region 저장
     /// <summary>
     /// 파일의 구역마다 지금 상태를 모아 원자적으로 쓴다. 이번 실행에서 불러오기 전이거나 구역 하나라도 모으지 못하면 쓰지 않고 false다 (이전 파일 그대로).
-    /// O(구역 데이터 크기)
+    /// 등록된 구역이 없는 파일은 쓰지 않고 false다. O(구역 데이터 크기)
     /// </summary>
     /// <param name="file">저장할 파일 종류다.</param>
     public bool Save(ESaveFile file)
     {
+        if (HasSections(file) == false)
+            return false;
+
         FileState state = _files[(int)file];
         if (state.Loaded == false)
         {
@@ -319,6 +361,9 @@ public class SaveManager
     /// <param name="file">처음 상태로 돌릴 파일 종류다.</param>
     public bool ResetFile(ESaveFile file)
     {
+        if (HasSections(file) == false)
+            return false;
+
         FileState state = _files[(int)file];
         state.Preserved.Clear();
         state.Loaded = true;

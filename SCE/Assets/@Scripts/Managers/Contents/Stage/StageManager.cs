@@ -50,6 +50,9 @@ public class StageManager
     /// <summary>제한시간 종료로 정상 정산한 라운드 수다.</summary>
     public int CompletedRoundCount { get; private set; }
 
+    /// <summary>Stage마다의 최고 기록이다. 판이 끝나면 결과 상태로 바뀌기 직전에 넣으며 Stage 한 판보다 오래 산다 (진행 파일에 저장).</summary>
+    public StageRecordBook Records { get; } = new StageRecordBook();
+
     /// <summary>
     /// (이전 상태, 새 상태). 내부 상태가 모두 갱신된 뒤 호출된다.
     /// 이 매니저는 씬이 바뀌어도 살아 있으므로, 씬 객체가 구독했다면 씬을 떠날 때 반드시 해제할 것.
@@ -344,6 +347,7 @@ public class StageManager
         if (CurrentRound == LAST_ROUND)
         {
             Result = EStageResult.Cleared;
+            ReportResult();
             ChangePhase(EStagePhase.StageResult);
         }
         else
@@ -416,7 +420,21 @@ public class StageManager
         Result = EStageResult.Failed;
 
         LogPrinter.Log($"[StageManager] Round {CurrentRound}에서 실패");
+        ReportResult();
         ChangePhase(EStagePhase.StageResult);
+    }
+
+    /// <summary>
+    /// 이번 판의 결과(클리어 여부, 정산한 라운드의 점령 타일 합)를 기록에 넣는다. 결과 상태로 바꾸기 직전에 불러
+    /// PhaseChanged의 자동 저장이 이 기록을 쓰게 한다. Stage 밖이면 아무것도 하지 않는다.
+    /// </summary>
+    private void ReportResult()
+    {
+        if (CurrentStageInfo == null)
+            return;
+
+        var record = new StageRecord(Result == EStageResult.Cleared, new TerritoryScore(TotalPlayerTiles, TotalMonsterTiles));
+        Records.Report(CurrentStageInfo.StageId, record);
     }
     #endregion
 

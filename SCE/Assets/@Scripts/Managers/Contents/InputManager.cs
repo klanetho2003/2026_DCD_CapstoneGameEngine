@@ -64,7 +64,7 @@ public class InputManager
          * ex) ActionAsset.전역Input.Enable();*/
 
         Rebinding = new InputRebindingManager();
-        Rebinding.Init(); // 바인딩 복원은 Managers.Init 끝에서 SaveManager가 설정 파일을 읽을 때 한다
+        Rebinding.Init(); // 키 설정은 저장하지 않는다 (InputRebindingManager 참고)
 
         RegisterContext(new NoneInputReader());
         RegisterContext(new MovementInputReader());
