@@ -533,6 +533,102 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &3183796440364150980
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4342927347601413654}
+  - component: {fileID: 7757037221263886641}
+  - component: {fileID: 1851448368497537218}
+  m_Layer: 5
+  m_Name: Starfield
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &4342927347601413654
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3183796440364150980}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5502415795429822232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 640, y: 360}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &7757037221263886641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3183796440364150980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab0d4f3a816ff3847a4e484d36e8523b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StarfieldBackground
+  designWidth: 640
+  designHeight: 360
+  pixelScale: 1
+  starSprite: {fileID: 21300000, guid: b55b527610ff4a53a0d71c55b7795b68, type: 3}
+  debugLog: 0
+  stars:
+    seed: 12345
+    starCount: 150
+    minSpacingInCells: 8
+    minAlpha: 0.2
+    maxAlpha: 0.8
+    colors:
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 0.9019608, g: 0.92941177, b: 1, a: 1}
+    - {r: 0.8, g: 0.85490197, b: 1, a: 1}
+    maxAttemptsPerStar: 30
+    halfAlphaRatio: 0.5
+    halfAlpha: 0.4
+--- !u!114 &1851448368497537218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3183796440364150980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b17ca522a7e130949a016157e189c00a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StarTwinkler
+  background: {fileID: 0}
+  twinkleEnabled: 1
+  maxConcurrent: 100
+  minDuration: 1.5
+  maxDuration: 4
+  minInterval: 0.4
+  maxInterval: 1.2
+  peakAlpha: 1
+  dimStarThreshold: 0.4
+  restTime: 2
+  crossAtPeak: 1
+  crossSprite: {fileID: 21300000, guid: 3a45652ae02c4dd3959bbdf694d5c820, type: 3}
+  crossThreshold: 0.85
+  debugLog: 0
+  debugColor: 0
+  summaryInterval: 5
 --- !u!1 &3310282930355330551
 GameObject:
   m_ObjectHideFlags: 0
@@ -563,6 +659,7 @@ RectTransform:
   m_Children:
   - {fileID: 6940596504898674594}
   - {fileID: 3474651678104662749}
+  - {fileID: 4342927347601413654}
   - {fileID: 4969045184078777125}
   - {fileID: 2637061882083699224}
   m_Father: {fileID: 0}
@@ -1520,7 +1617,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3474651678104662749
 RectTransform:
   m_ObjectHideFlags: 0
