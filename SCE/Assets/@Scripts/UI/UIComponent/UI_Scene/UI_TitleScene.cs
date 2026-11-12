@@ -57,6 +57,7 @@ public class UI_TitleScene : UI_Scene
 
                     // (DB) Data Init
                     //Managers.Game.InitGame();
+                    Managers.Save.Load(ESaveFile.Progress); // 상태 정의(InitData)를 읽은 뒤
 
                     // Resource가 필요한 Manager Init
                     // _ = Managers.Analytics.InitializeAsync();

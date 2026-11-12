@@ -32,6 +32,7 @@ public class Managers : MonoBehaviour
     private InputManager _input = new InputManager();
     private DataManager _data = new DataManager();
     private SceneManagerEx _scene = new SceneManagerEx();
+    private SaveManager _save = new SaveManager();
 
     public static ResourceManager Resource { get { return Instance?._resource; } } // Nullable 설명을 넣을까말까
     public static PoolManager Pool { get { return Instance?._pool; } }
@@ -40,6 +41,7 @@ public class Managers : MonoBehaviour
     public static InputManager Input { get { return Instance?._input; } }
     public static DataManager Data { get { return Instance?._data; } }
     public static SceneManagerEx Scene { get { return Instance?._scene; } }
+    public static SaveManager Save { get { return Instance?._save; } }
     #endregion
 
     private void Start()
@@ -77,6 +79,10 @@ public class Managers : MonoBehaviour
 
             GameEventBus.SetRuleSink(s_instance._gameState);
             s_instance._gameState.Init();
+
+            // 설정 파일은 설정을 쓰는 매니저들이 모두 만들어진 뒤에 읽는다. 진행 파일은 상태 정의를 읽은 뒤 (UI_TitleScene)
+            s_instance._save.Init();
+            s_instance._save.Load(ESaveFile.Settings);
 
             // s_instance._skillInputHandler.Init();
         }

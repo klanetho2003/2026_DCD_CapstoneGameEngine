@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using static LogPrinter;
@@ -8,16 +7,13 @@ using static LogPrinter;
 /// New Input System의 키 리바인딩 + 사용자 설정 영구 저장.
 /// 
 /// 사용 흐름:
-/// 1. 게임 시작 >> Init >> LoadBindings (PlayerPrefs에서 복원)
+/// 1. 게임 시작 >> Managers.Init 끝에서 SaveManager가 설정 파일을 읽어 복원 (InputBindingSaveSection)
 /// 2. 옵션 메뉴 >> StartRebinding(Action, callback) >> 사용자 키 입력 대기
-/// 3. 새 키 누름 >> 자동 SaveBindings >> PlayerPrefs 저장
-/// 4. 이후 게임 실행 시 LoadBindings로 복원
+/// 3. 새 키 누름 >> 자동 SaveBindings >> SaveManager가 설정 파일 저장
+/// 4. 이후 게임 실행 시 1과 같이 복원
 /// </summary>
 public class InputRebindingManager
 {
-    private string DirectoryPath => Path.Combine(Application.dataPath, "@Resources", "Data", "InputData");
-    private string FilePath => Path.Combine(DirectoryPath, "InputBindings.json");
-
     private InputActionAsset _actionAsset;
     private InputActionRebindingExtensions.RebindingOperation _currentOperation;
 
@@ -31,8 +27,6 @@ public class InputRebindingManager
             LogError("[InputRebindingManager] InputActionAsset이 null입니다.");
             return;
         }
-
-        LoadBindings();
     }
 
     /// <summary>
@@ -86,14 +80,7 @@ public class InputRebindingManager
         if (_actionAsset == null)
             return;
 
-        string json = _actionAsset.SaveBindingOverridesAsJson();
-
-        // 1. 지정된 경로에 폴더가 없다면 생성
-        if (Directory.Exists(DirectoryPath) == false)
-            Directory.CreateDirectory(DirectoryPath);
-
-        // 2. JSON 문자열을 파일로 저장
-        File.WriteAllText(FilePath, json);
+        Managers.Save.Save(ESaveFile.Settings);
     }
 
     public void LoadBindings()
@@ -101,13 +88,7 @@ public class InputRebindingManager
         if (_actionAsset == null)
             return;
 
-        // 파일이 존재하지 않으면 로드 패스
-        if (File.Exists(FilePath) == false)
-            return;
-
-        // JSON 파일을 읽어와서 적용
-        string json = File.ReadAllText(FilePath);
-        _actionAsset.LoadBindingOverridesFromJson(json);
+        Managers.Save.Load(ESaveFile.Settings);
     }
 
     /// <summary>
@@ -120,8 +101,7 @@ public class InputRebindingManager
 
         _actionAsset.RemoveAllBindingOverrides();
 
-        // 기본값으로 되돌렸으므로 기존 저장된 JSON 파일 삭제
-        if (File.Exists(FilePath))
-            File.Delete(FilePath);
+        // 기본값으로 되돌린 것을 설정 파일에 남긴다 (다른 설정은 그대로)
+        Managers.Save.Save(ESaveFile.Settings);
     }
 }

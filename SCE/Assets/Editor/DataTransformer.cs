@@ -74,6 +74,13 @@ public class DataTransformer : EditorWindow
                 Debug.Log("No Permanent Data Detected");
             }
         }
+
+        // Save Folder (SaveManager — 설정 · 진행과 그 백업)
+        {
+            SaveManager.DeleteFiles(ESaveFile.Settings);
+            SaveManager.DeleteFiles(ESaveFile.Progress);
+            Debug.Log($"Save Files Deleted ({SaveManager.FolderPath})");
+        }
     }
 
     [MenuItem("Tools/ParseExcel %#K")]
