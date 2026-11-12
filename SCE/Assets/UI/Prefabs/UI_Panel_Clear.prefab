@@ -115,6 +115,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c51ef9db8cb880429338ed012689562, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_Panel_Clear
+  _planetSprites:
+  - {fileID: 21300000, guid: 9457a16272a145c49e75557f686691f4, type: 3}
+  - {fileID: 21300000, guid: 101c12bc356e483881c7dee78d3e9f99, type: 3}
+  - {fileID: 21300000, guid: 8152ae227c3d4b7ab9df70136a2931ea, type: 3}
+  - {fileID: 21300000, guid: 54e4f0b35bc1c144a801080a34b3c729, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!1001 &2951716398532493062
 PrefabInstance:
   m_ObjectHideFlags: 0

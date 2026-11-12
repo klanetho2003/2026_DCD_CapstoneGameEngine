@@ -115,8 +115,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5510b2fe9be2eb441b0ab4f24b34b2b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_Panel_StageStart
-  _showSeconds: 1
-  _roundNumSprites: []
+  _showSeconds: 3
+  _roundNumSprites:
+  - {fileID: 21300000, guid: d1ff9ab93ed67c949aac3a452e068e99, type: 3}
+  - {fileID: 21300000, guid: 04445df2056cf3d47a65691c32ede070, type: 3}
+  - {fileID: 21300000, guid: ffe84690f6a92a8489fc891f5555a4e0, type: 3}
+  _planetSprites:
+  - {fileID: 21300000, guid: 9457a16272a145c49e75557f686691f4, type: 3}
+  - {fileID: 21300000, guid: 101c12bc356e483881c7dee78d3e9f99, type: 3}
+  - {fileID: 21300000, guid: 8152ae227c3d4b7ab9df70136a2931ea, type: 3}
+  - {fileID: 21300000, guid: 54e4f0b35bc1c144a801080a34b3c729, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!1001 &4855327090673185227
 PrefabInstance:
   m_ObjectHideFlags: 0

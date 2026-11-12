@@ -115,8 +115,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86972aa0bf05c1d419f861d8ae152954, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_Panel_HUD
-  _clockNormal: {fileID: 0}
-  _clockWarning: {fileID: 0}
+  _clockNormal: {fileID: 21300000, guid: ae6f8b545cec3a44ea20a24b74efc694, type: 3}
+  _clockWarning: {fileID: 21300000, guid: cb1e3d36f002c634494aedfa79e449d5, type: 3}
   _warningSeconds: 10
   _timeWhiteGlyphs:
   - {fileID: 0}
@@ -145,6 +145,27 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   _timeAdvance: 18
+  _bgSpace: {fileID: 21300000, guid: aa5ec97d9fef9384ba089688bfb445c0, type: 3}
+  _bgStars: {fileID: 21300000, guid: aecf0c3e4b441474094546b6cd15ba5f, type: 3}
+  _bgSortingOrder: -100
+  _planetIcons:
+  - {fileID: 21300000, guid: 6c1abbc6d23b49c9835fb536e52be2c0, type: 3}
+  - {fileID: 21300000, guid: bd5772d4fb294117bec0eb35ccba118a, type: 3}
+  - {fileID: 21300000, guid: e8243b6424fd4a41b1d7beb13264f7bb, type: 3}
+  - {fileID: 21300000, guid: 445d458f032c6254ba32f45db0e4b8b8, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  _stageNames:
+  - {fileID: 21300000, guid: 7172ac2af94241709ff88916a8df40e0, type: 3}
+  - {fileID: 21300000, guid: c0b57bdbad7b46d88cb161329f5e009c, type: 3}
+  - {fileID: 21300000, guid: 9411061772184447aac7dfcb19f12454, type: 3}
+  - {fileID: 21300000, guid: ee8ca49987f1e1646979a5e82dba372e, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  _roundNumSprites:
+  - {fileID: 21300000, guid: ec94ba8e78b394949a93e703dc1cb262, type: 3}
+  - {fileID: 21300000, guid: bd8c9c031eb41b14a96e1bcd346a6745, type: 3}
+  - {fileID: 21300000, guid: 370cde45929c020418db2833697f78b6, type: 3}
 --- !u!1001 &9090847440835959575
 PrefabInstance:
   m_ObjectHideFlags: 0

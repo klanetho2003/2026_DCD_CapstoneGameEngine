@@ -30,14 +30,21 @@ public class UI_Panel_YouDied : UI_Popup
         GameObject select = GetObject(GameObjects.Btn_StageSelect);
         if (select != null) BindEvent(select, (evt) => Choose(_onStageSelect));
 
+        // 마우스를 올린 메뉴만 흰 글씨 + 화살표 (타이틀·일시정지와 같은 방식)
+        _menu = new UIMenuSelection(retry, select);
+        _menu.BindHover();
+
         return true;
     }
+
+    private UIMenuSelection _menu;
 
     public void SetInfo(Action onRetry, Action onStageSelect)
     {
         Init();
         _onRetry = onRetry;
         _onStageSelect = onStageSelect;
+        _menu?.Select(0); // 열 때마다 "다시 도전하기"부터
     }
 
     private void Choose(Action callback)

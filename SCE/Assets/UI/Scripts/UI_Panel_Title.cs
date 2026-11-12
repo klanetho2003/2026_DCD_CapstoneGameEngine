@@ -20,6 +20,13 @@ public class UI_Panel_Title : UI_Scene
 
     private string _titleText { get { return _isCompeleteLoad ? "Title Scene" : "Title Scene (Unloaded)"; } }
 
+    // 마우스를 올린 메뉴만 흰 글씨 + 화살표
+    private UIMenuSelection _menu;
+
+    // Title → 게임 전환 페이드 시간 (CoroutineFade 기본값 1.5초보다 짧게)
+    private const float StartFadeDuration = 0.8f;
+    private bool _isStarting = false;
+
     public override bool Init()
     {
         if (base.Init() == false)
@@ -32,11 +39,17 @@ public class UI_Panel_Title : UI_Scene
 
         Button settings = GetButton(Buttons.Btn_Settings);
         if (settings != null)
-            settings.BindEvent((evt) => { Managers.UI.ShowPopupUI<UI_Panel_Settings>(); }, UIEvent.Click);
+            settings.BindEvent((evt) => { OnClickSettingsButton(); }, UIEvent.Click);
 
         Button quit = GetButton(Buttons.Btn_Quit);
         if (quit != null)
             quit.BindEvent((evt) => { Application.Quit(); }, UIEvent.Click);
+
+        _menu = new UIMenuSelection(
+            GetButton(Buttons.Btn_Play)?.gameObject,
+            settings?.gameObject,
+            quit?.gameObject);
+        _menu.BindHover();
 
         // Loading 시작
         StartLoadAssets();
@@ -46,6 +59,14 @@ public class UI_Panel_Title : UI_Scene
 
     void StartLoadAssets()
     {
+        // 게임에서 Back 으로 돌아온 경우: 이미 다 불러왔다.
+        // LoadGameData 를 다시 부르면 IsDataLoaded 가 true 라 완료 콜백이 오지 않아 Play 가 막힌다
+        if (Managers.Data.IsDataLoaded)
+        {
+            OnCompeleteLoad();
+            return;
+        }
+
         // 리소스 → 시트 데이터 → 진행 파일 순서는 Managers.LoadGameData가 맡는다
         Managers.LoadGameData(OnCompeleteLoad);
     }
@@ -62,10 +83,36 @@ public class UI_Panel_Title : UI_Scene
 
     private void OnClickStartButton()
     {
-        if (_isCompeleteLoad == false)
+        if (_isCompeleteLoad == false || _isStarting)
             return;
 
-        Managers.Scene.LoadAsyncScene(EScene.GameScene, () => CoroutineFade.FadeIn(), true);
+        // 페이드 중에 다시 눌러도 처음부터 다시 시작하지 않게
+        _isStarting = true;
+
+        // LoadAsyncScene(…, true) 와 같은 순서: 어두워짐 → 씬 로드 → 밝아짐. 시간만 짧게
+        CoroutineFade.FadeOut(() =>
+        {
+            Managers.Scene.LoadAsyncScene(EScene.GameScene, () => CoroutineFade.FadeIn(null, StartFadeDuration), false);
+        }, StartFadeDuration);
+    }
+
+    // ESC = 설정창. 다른 Popup(설정창 포함)이 떠 있으면 그쪽이 ESC 를 쓴다
+    private void Update()
+    {
+        if (_isCompeleteLoad == false || _isStarting)
+            return;
+
+        if (Managers.UI.GetPopupCount() == 0 && UIPanelInput.ConsumeEsc())
+            OnClickSettingsButton();
+    }
+
+    // 설정창 프리팹은 PreLoad 로 불러오므로, 로드가 끝나기 전에는 열 수 없다
+    private void OnClickSettingsButton()
+    {
+        if (_isCompeleteLoad == false || _isStarting)
+            return;
+
+        Managers.UI.ShowPopupUI<UI_Panel_Settings>();
     }
 }
 

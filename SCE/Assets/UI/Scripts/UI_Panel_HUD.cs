@@ -11,7 +11,16 @@ public class UI_Panel_HUD : UI_Scene
     private enum Images
     {
         Img_Clock,
+        Img_PlanetIcon,
+        Img_StageName,
+        Img_RoundNum,
     }
+
+    [Header("왼쪽 위 행성 표시 (수성, 금성, 지구, 화성, 목성, 토성 = StageCatalog 순서)")]
+    [SerializeField] private Sprite[] _planetIcons;  // icon_planet_*
+    [SerializeField] private Sprite[] _stageNames;   // text_MERCURY …
+    [Tooltip("text_round_num_small_1, 2, 3 (ERound A, B, C)")]
+    [SerializeField] private Sprite[] _roundNumSprites;
 
     [Header("시계 아이콘")]
     [SerializeField] private Sprite _clockNormal;   // icon_clock
@@ -22,6 +31,12 @@ public class UI_Panel_HUD : UI_Scene
     [SerializeField] private Sprite[] _timeWhiteGlyphs = new Sprite[12];
     [SerializeField] private Sprite[] _timeRedGlyphs = new Sprite[12];
     [SerializeField] private int _timeAdvance = 18; // s3 = 6*3
+
+    [Header("게임 뒤 우주 배경 (Common/bg_space_960x540, bg_stars_960x540)")]
+    [SerializeField] private Sprite _bgSpace;
+    [SerializeField] private Sprite _bgStars;
+    [Tooltip("맵·캐릭터(Order in Layer 최소 -1)보다 뒤")]
+    [SerializeField] private int _bgSortingOrder = -100;
 
     private PixelDigits _time;
     private PixelDigits _tiles;
@@ -39,8 +54,53 @@ public class UI_Panel_HUD : UI_Scene
         GameObject go;
         go = UIPanelInput.FindDeep(gameObject, "Txt_Time");       if (go != null) _time = go.GetComponent<PixelDigits>();
         go = UIPanelInput.FindDeep(gameObject, "Txt_Tiles");      if (go != null) _tiles = go.GetComponent<PixelDigits>();
-        go = UIPanelInput.FindDeep(gameObject, "Txt_TilesTotal"); if (go != null) _tilesTotal = go.GetComponent<PixelDigits>();
+        go = UIPanelInput.FindDeep(gameObject, "Txt_TilesGoal");  if (go != null) _tilesTotal = go.GetComponent<PixelDigits>(); // 프리팹 이름은 Txt_TilesGoal ("/80")
+
+        CreateBackground();
         return true;
+    }
+
+    /// <summary>
+    /// 게임 화면 뒤 우주 배경. HUD 와 같은 640×360 ×3 기준으로 가운데 Native Size (넓은 화면에서도 가장자리까지 덮는다).
+    /// 자체 Canvas(정렬 순서 _bgSortingOrder)로 맵·캐릭터 뒤에 그린다. 카메라가 움직여도 화면에 고정.
+    /// </summary>
+    private void CreateBackground()
+    {
+        if (_bgSpace == null)
+            return;
+
+        GameObject panel = UIPanelInput.FindDeep(gameObject, "Panel_HUD");
+        Transform parent = panel != null ? panel.transform : transform;
+        if (parent.Find("Img_BgSpace") != null)
+            return; // 이미 있음
+
+        Image space = CreateImage("Img_BgSpace", parent, _bgSpace);
+        space.transform.SetAsFirstSibling();
+
+        // 이 배경만 따로 정렬: HUD 글자는 위, 배경은 게임보다 뒤
+        Canvas canvas = space.gameObject.AddComponent<Canvas>();
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = _bgSortingOrder;
+
+        if (_bgStars != null)
+            CreateImage("Img_BgStars", space.transform, _bgStars);
+    }
+
+    private static Image CreateImage(string name, Transform parent, Sprite sprite)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        go.layer = parent.gameObject.layer;
+
+        var rt = (RectTransform)go.transform;
+        rt.SetParent(parent, false);
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+
+        var image = go.GetComponent<Image>();
+        image.sprite = sprite;
+        image.raycastTarget = false;
+        image.SetNativeSize();
+        return image;
     }
 
     private void Update()
@@ -49,6 +109,10 @@ public class UI_Panel_HUD : UI_Scene
             return;
 
         SetTime(Mathf.CeilToInt(Managers.Stage.RoundRemainingSeconds));
+
+        // 왼쪽 아래 발판 수: 이번 라운드에 플레이어가 가진 타일 수 (밟을 때마다 올라가고, 뺏기면 내려간다)
+        if (Managers.Map != null)
+            SetTileCount(Managers.Map.PlayerTerritoryCount);
 
         // 다른 Popup 이 없을 때만 일시정지
         if (Managers.UI.GetPopupCount() == 0 && UIPanelInput.ConsumeEsc())
@@ -85,6 +149,36 @@ public class UI_Panel_HUD : UI_Scene
         }
 
         _isWarning = warning;
+    }
+
+    /// <summary>
+    /// 왼쪽 위: 지금 Stage 의 행성 아이콘 + 이름, 라운드 번호.
+    /// 행성은 StageCatalog 목록 순서로 정한다 (행성 선택 화면과 같은 규칙: 1번째 Stage = 수성).
+    /// </summary>
+    public void SetStage(Data.StageInfoData info, ERound round)
+    {
+        Init();
+        SetTileCount(0); // 새 라운드는 0 부터
+
+        int planet = StagePlanet.IndexOf(info);
+        bool icon = StagePlanet.Apply(GetImage(Images.Img_PlanetIcon), _planetIcons, planet, "HUD 행성 아이콘");
+        bool name = StagePlanet.Apply(GetImage(Images.Img_StageName), _stageNames, planet, "HUD 행성 이름");
+        StagePlanet.Apply(GetImage(Images.Img_RoundNum), _roundNumSprites, (int)round - (int)ERound.A, "HUD 라운드 번호");
+
+        Image nameImage = GetImage(Images.Img_StageName);
+        LogPrinter.Log($"[UI_Panel_HUD] SetStage Stage={info?.StageId} 행성={planet} 아이콘={icon} 이름={name} → {(nameImage != null && nameImage.sprite != null ? nameImage.sprite.name : "null")}");
+    }
+
+    private int _lastTiles = int.MinValue;
+
+    /// <summary>뒤집은 타일 수만 (목표 "/80" 은 그대로). 바뀐 때만 다시 그린다.</summary>
+    public void SetTileCount(int current)
+    {
+        Init();
+        if (current == _lastTiles)
+            return;
+        _lastTiles = current;
+        if (_tiles != null) _tiles.Text = current.ToString();
     }
 
     /// <summary>뒤집은 타일 수 / 목표</summary>
