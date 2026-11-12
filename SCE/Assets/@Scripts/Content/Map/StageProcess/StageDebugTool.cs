@@ -84,7 +84,8 @@ public sealed class StageDebugTool : MonoBehaviour
         if (Managers.Object.Villagers.Count > 0) _violations.Add($"Villager {Managers.Object.Villagers.Count}개");
         if (Managers.Stage.CurrentStageInfo != null) _violations.Add("Stage 정보가 남아 있음");
         if (Managers.UI.GetPopupCount() > 0) _violations.Add($"Popup {Managers.UI.GetPopupCount()}개가 열려 있음");
-        if (Managers.Input.HasOverlay == false) _violations.Add("선택 UI의 입력 오버레이가 없음");
+        // 선택 화면은 마우스 전용이라 입력 오버레이를 올리지 않는다 — 켜져 있는지만 본다 (꺼진 오브젝트는 찾지 않는다)
+        if (FindFirstObjectByType<UI_Panel_PlanetSelect>() == null) _violations.Add("Stage 선택 화면이 열려 있지 않음");
 
         _cleanChecks++;
         if (_violations.Count == 0)

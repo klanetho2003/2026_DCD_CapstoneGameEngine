@@ -46,38 +46,8 @@ public class UI_Panel_Title : UI_Scene
 
     void StartLoadAssets()
     {
-        Managers.Resource.Clear();
-        Managers.Data.Clear();
-
-        Managers.Resource.LoadAllAsync<UnityEngine.Object>("PreLoad", (key, count, totalCount) =>
-        {
-            LogPrinter.Log($"{key} {count}/{totalCount}");
-
-            if (!Managers.Data.IsDataLoaded && count == totalCount)
-            {
-                try
-                {
-                    // (Sheet) Data Init
-                    Managers.Data.InitData();
-
-                    // (DB) Data Init
-                    //Managers.Game.InitGame();
-
-                    // Resource가 필요한 Manager Init
-                    // _ = Managers.Analytics.InitializeAsync();
-
-                    OnCompeleteLoad();
-                }
-                catch (System.Exception e)
-                {
-                    LogPrinter.LogError(this, e.ToString()/*$"[무시된 로딩 에러] 초기화 중 예외가 발생했지만 강제로 통과합니다.\n{e}"*/);
-                }
-                finally
-                {
-                    Managers.Data.IsDataLoaded = true;
-                }
-            }
-        });
+        // 리소스 → 시트 데이터 → 진행 파일 순서는 Managers.LoadGameData가 맡는다
+        Managers.LoadGameData(OnCompeleteLoad);
     }
 
     private void OnCompeleteLoad()
