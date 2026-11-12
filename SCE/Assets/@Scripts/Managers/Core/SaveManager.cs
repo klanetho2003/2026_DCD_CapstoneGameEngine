@@ -15,7 +15,7 @@ using static Define;
 /// 읽기는 본 파일, 안 되면 .bak 순서이며 둘 다 안 되면 처음 상태로 시작하고 읽지 못한 파일은 .corrupt로 남겨 덮어쓰지 않는다.
 /// 손상 검사는 구역 글의 SHA-256이며 편집기는 손으로 고친 파일을 경고만 하고 읽는다.
 /// 저장된 구역 버전이 낮으면 구역의 Migrate로 한 단계씩 올린 뒤 입히고, 모르는 구역과 입히지 못한 구역은 보존해 그대로 다시 쓴다.
-/// 이번 실행에서 불러오기 전에는 그 파일을 저장하지 않는다. Stage가 끝나면 진행 파일을 자동 저장한다.
+/// 파일과 백업이 모두 없으면 불러올 때 처음 상태로 새로 만든다. 이번 실행에서 불러오기 전에는 그 파일을 저장하지 않는다. Stage가 끝나면 진행 파일을 자동 저장한다.
 /// Managers의 필드 초기화에서 만들어지므로 Unity API는 Init부터 쓴다. 매 프레임 비용은 없다.
 /// </summary>
 public class SaveManager
@@ -127,7 +127,10 @@ public class SaveManager
     #endregion
 
     #region 불러오기
-    /// <summary>파일을 읽어 그 파일의 구역마다 입힌다. 어떤 결과든 이후 그 파일을 저장할 수 있다. O(파일 크기 + 구역 수)</summary>
+    /// <summary>
+    /// 저장 경로에서 파일을 찾아 읽고 그 파일의 구역마다 입힌다. 파일과 백업이 모두 없으면 처음 상태로 새로 만든다.
+    /// 어떤 결과든 이후 그 파일을 저장할 수 있다. O(파일 크기 + 구역 수)
+    /// </summary>
     /// <param name="file">불러올 파일 종류다.</param>
     public ESaveLoadResult Load(ESaveFile file)
     {
@@ -145,7 +148,10 @@ public class SaveManager
         bool hasFile = File.Exists(state.Path);
         if (hasFile == false && File.Exists(state.BackupPath) == false)
         {
+            // 처음 실행이다. 처음 상태로 두고 바로 파일을 만든다 — 만들지 못해도 Loaded라 다음 저장이 다시 만든다
+            LogPrinter.Log($"[SaveManager] {s_fileNames[(int)file]} 없음 — 처음 상태로 새로 만듦 ({state.Path})");
             ResetSections(file);
+            Save(file);
             return ESaveLoadResult.NoFile;
         }
 
@@ -268,7 +274,8 @@ public class SaveManager
         FileState state = _files[(int)file];
         if (state.Loaded == false)
         {
-            LogPrinter.LogWarning($"[SaveManager] {s_fileNames[(int)file]}는 불러오기 전이라 저장하지 않음");
+            // 저장이 빠지는 것이라 빌드에서도 남긴다. 호출 스택으로 누가 Load 전에 저장했는지 본다
+            Debug.LogWarning($"[SaveManager] {s_fileNames[(int)file]}는 이번 실행에서 불러오기 전이라 저장하지 않음 — Load({file})가 먼저 불려야 한다");
             return false;
         }
 
