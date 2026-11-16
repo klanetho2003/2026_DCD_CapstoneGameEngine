@@ -46,6 +46,8 @@ public class UI_Panel_Clear : UI_Popup
         _openedFrame = Time.frameCount;
         _acceptInputAt = Time.unscaledTime + INPUT_DELAY;
 
+        UISound.Play(Sfx.ClearJingle);
+
         // 깃발 꽂힌 행성 = 방금 클리어한 Stage 의 행성
         StagePlanet.Apply(_planet, _planetSprites, StagePlanet.Current(), "CLEAR 행성");
 

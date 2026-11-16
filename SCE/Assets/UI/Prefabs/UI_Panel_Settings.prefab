@@ -115,6 +115,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d15b414812fe5ba4081cbfe2471d5105, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_Panel_Settings
+  _cellOn: {fileID: 21300000, guid: 7b68c37ad0c6d3c48bd7f732c91dddda, type: 3}
+  _cellOff: {fileID: 21300000, guid: beb946c48fa3f074c9cc1fd8cc5cac9c, type: 3}
 --- !u!1001 &8920912393664885628
 PrefabInstance:
   m_ObjectHideFlags: 0

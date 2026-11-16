@@ -37,13 +37,13 @@ public class UI_Panel_Paused : UI_Popup
         if (resume != null) BindEvent(resume, (evt) => Resume());
 
         GameObject restart = GetObject(GameObjects.Btn_Restart);
-        if (restart != null) BindEvent(restart, (evt) => CloseAndInvoke(RestartRequested));
+        if (restart != null) BindEvent(restart, (evt) => { UISound.Play(Sfx.UiSelect); CloseAndInvoke(RestartRequested); });
 
         GameObject stageSelect = GetObject(GameObjects.Btn_StageSelect);
-        if (stageSelect != null) BindEvent(stageSelect, (evt) => CloseAndInvoke(StageSelectRequested));
+        if (stageSelect != null) BindEvent(stageSelect, (evt) => { UISound.Play(Sfx.UiSelect); CloseAndInvoke(StageSelectRequested); });
 
         GameObject settings = GetObject(GameObjects.Btn_Settings);
-        if (settings != null) BindEvent(settings, (evt) => Managers.UI.ShowPopupUI<UI_Panel_Settings>());
+        if (settings != null) BindEvent(settings, (evt) => { UISound.Play(Sfx.UiSelect); Managers.UI.ShowPopupUI<UI_Panel_Settings>(); });
 
         // 화면에 보이는 순서대로
         _menu = new UIMenuSelection(resume, restart, stageSelect, settings);
@@ -56,6 +56,7 @@ public class UI_Panel_Paused : UI_Popup
     {
         Time.timeScale = 0f;
         _menu?.Select(0); // 열 때마다 "돌아가기"부터
+        UISound.Play(Sfx.PauseOpen);
     }
 
     private void OnDisable()
@@ -75,6 +76,7 @@ public class UI_Panel_Paused : UI_Popup
 
     private void Resume()
     {
+        UISound.Play(Sfx.UiBack);
         Managers.UI.ClosePopupUI(this);
     }
 

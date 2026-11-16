@@ -45,10 +45,14 @@ public class UI_Panel_YouDied : UI_Popup
         _onRetry = onRetry;
         _onStageSelect = onStageSelect;
         _menu?.Select(0); // 열 때마다 "다시 도전하기"부터
+        UISound.Play(Sfx.Died);
     }
 
     private void Choose(Action callback)
     {
+        if (_onRetry == null && _onStageSelect == null)
+            return; // 이미 고른 뒤
+        UISound.Play(Sfx.UiSelect);
         _onRetry = null;
         _onStageSelect = null;
         if (Managers.UI.ClosePopupUI(this))

@@ -37,6 +37,7 @@ public class UI_Panel_StageStart : UI_Popup
     {
         Init();
         _onFinished = onFinished;
+        UISound.Play(Sfx.StageIntro);
 
         int index = (int)round;
         Image image = GetImage(Images.Img_RoundNum);
@@ -48,6 +49,11 @@ public class UI_Panel_StageStart : UI_Popup
 
         // 고양이 아래 행성 = 지금 Stage 의 행성
         StagePlanet.Apply(GetImage(Images.Img_Planet), _planetSprites, StagePlanet.Current(), "시작 화면 행성");
+
+        // 깃발 옆 숫자 = 지금까지 누적 타일 수 (라운드 1: 0, 라운드 2: 1라운드 점수, 라운드 3: 1+2라운드 합)
+        GameObject target = UIPanelInput.FindDeep(gameObject, "Txt_Target");
+        if (target != null && target.TryGetComponent(out PixelDigits tiles))
+            tiles.Text = (Managers.Stage != null ? Managers.Stage.TotalPlayerTiles : 0).ToString();
 
         // 제한 시간 = 인게임 라운드 시간 (라운드가 막 시작된 시점이라 남은 시간 = 전체 시간)
         GameObject timeLimit = UIPanelInput.FindDeep(gameObject, "Txt_TimeLimit");

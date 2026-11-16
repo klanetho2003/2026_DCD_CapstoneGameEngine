@@ -89,6 +89,8 @@ public sealed class BoxPushController : MonoBehaviour
         // started는 플레이어의 박스 원래 칸 진입까지 허용되었는지 나타낸다.
         bool started = _movement.TryMoveToCell(_boxOrigin, speedWeight, OnPlayerArrived);
         IsStartingPushStep = false;
+        if (started)
+            UISound.Play(Sfx.BoxPush); // 박스 밀기 효과음 (UI 쪽 재생 도우미)
         if (!started)
         {
             Finish(false);

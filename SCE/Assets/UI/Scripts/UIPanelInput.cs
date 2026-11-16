@@ -25,6 +25,36 @@ public static class UIPanelInput
         return pressed;
     }
 
+    /// <summary>방향키 (WASD 포함). x: ←-1 / →+1, y: ↑-1 / ↓+1 (메뉴 위→아래 순서). 이번 프레임에 눌렸을 때만</summary>
+    public static Vector2Int ArrowPressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var kb = UnityEngine.InputSystem.Keyboard.current;
+        if (kb == null) return Vector2Int.zero;
+        int x = (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame ? 1 : 0)
+              - (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame ? 1 : 0);
+        int y = (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame ? 1 : 0)
+              - (kb.upArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame ? 1 : 0);
+#else
+        int x = (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D) ? 1 : 0)
+              - (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A) ? 1 : 0);
+        int y = (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S) ? 1 : 0)
+              - (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) ? 1 : 0);
+#endif
+        return new Vector2Int(x, y);
+    }
+
+    /// <summary>Enter / Space</summary>
+    public static bool ConfirmPressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var kb = UnityEngine.InputSystem.Keyboard.current;
+        return kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame);
+#else
+        return Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space);
+#endif
+    }
+
     /// <summary>아무 키 또는 마우스 왼쪽 클릭</summary>
     public static bool AnyKeyPressed()
     {

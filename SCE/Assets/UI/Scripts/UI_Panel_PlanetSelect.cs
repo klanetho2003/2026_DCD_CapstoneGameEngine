@@ -87,7 +87,7 @@ public class UI_Panel_PlanetSelect : UI_Scene
         if (land != null) BindEvent(land, (evt) => OnClickLand());
 
         GameObject back = GetObject(GameObjects.Btn_Back);
-        if (back != null) BindEvent(back, (evt) => _onBack?.Invoke());
+        if (back != null) BindEvent(back, (evt) => { UISound.Play(Sfx.UiBack); _onBack?.Invoke(); });
 
         for (int i = 0; i < Planets.Length; i++)
         {
@@ -231,6 +231,9 @@ public class UI_Panel_PlanetSelect : UI_Scene
         if (hover && IsUnlocked(index) == false)
             return; // 잠긴 행성은 커지지 않는다 (나갈 때는 항상 원래 크기로)
 
+        if (hover)
+            UISound.Play(Sfx.UiHover);
+
         // 커진 행성이 옆 행성에 가려지지 않게. 나가면 선택된 행성을 다시 맨 위로
         BringToFront(hover ? index : _selected);
 
@@ -282,10 +285,14 @@ public class UI_Panel_PlanetSelect : UI_Scene
         if (IsUnlocked(index) == false)
         {
             if (_shakeTime[index] < 0f)
+            {
                 _shakeTime[index] = 0f; // 흔들리는 중에 또 누르면 무시
+                UISound.Play(Sfx.Locked);
+            }
             return;
         }
 
+        UISound.Play(Sfx.UiSelect);
         Select(index);
     }
 
@@ -316,6 +323,7 @@ public class UI_Panel_PlanetSelect : UI_Scene
         if (_selected < 0 || _selected >= StageCount)
             return;
 
+        UISound.Play(Sfx.Land); // 우주선이 행성으로 날아가는 소리
         _onSelected?.Invoke(_catalog.Stages[_selected]);
     }
 
@@ -326,7 +334,10 @@ public class UI_Panel_PlanetSelect : UI_Scene
             return;
 
         if (Managers.UI.GetPopupCount() == 0 && UIPanelInput.ConsumeEsc())
+        {
+            UISound.Play(Sfx.UiSelect);
             Managers.UI.ShowPopupUI<UI_Panel_Settings>();
+        }
     }
 
     #region 행성 움직임 — 열린 행성 둥둥, 잠긴 행성 누르면 흔들기
@@ -477,6 +488,7 @@ public class UI_Panel_PlanetSelect : UI_Scene
             flame.gameObject.SetActive(false);
         }
 
+        UISound.Play(Sfx.Launch);
         StartCoroutine(CoLaunch(holder, group, stars, planet, ship, flame, shipStartY));
     }
 

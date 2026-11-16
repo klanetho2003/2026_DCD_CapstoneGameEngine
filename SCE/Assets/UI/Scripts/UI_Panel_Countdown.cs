@@ -52,6 +52,7 @@ public class UI_Panel_Countdown : UI_Popup
                 image.SetNativeSize();
             }
             bool isGo = i == count - 1;
+            UISound.Play(isGo ? Sfx.CountGo : Sfx.CountTick); // 3·2·1 삑, GO!
             yield return new WaitForSecondsRealtime(isGo ? _goSeconds : _stepSeconds);
         }
 

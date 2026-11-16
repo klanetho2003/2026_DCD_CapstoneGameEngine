@@ -22,6 +22,10 @@ public class UI_Panel_HUD : UI_Scene
     [Tooltip("text_round_num_small_1, 2, 3 (ERound A, B, C)")]
     [SerializeField] private Sprite[] _roundNumSprites;
 
+    [Header("왼쪽 아래 타일 목표 (표시만 — 성공/실패 판정은 게임 쪽)")]
+    [Tooltip("스테이지 전체 목표 타일 수. 게임에 목표 값이 생기면 SetGoalTiles 로 넣는다")]
+    [SerializeField] private int _stageGoalTiles = 80;
+
     [Header("시계 아이콘")]
     [SerializeField] private Sprite _clockNormal;   // icon_clock
     [SerializeField] private Sprite _clockWarning;  // icon_clock_warning
@@ -112,7 +116,14 @@ public class UI_Panel_HUD : UI_Scene
 
         // 왼쪽 아래 발판 수: 이번 라운드에 플레이어가 가진 타일 수 (밟을 때마다 올라가고, 뺏기면 내려간다)
         if (Managers.Map != null)
-            SetTileCount(Managers.Map.PlayerTerritoryCount);
+        {
+            int tiles = Managers.Map.PlayerTerritoryCount;
+            // 타일을 새로 칠했을 때만 "뽁" (라운드 시작 연출 중 = timeScale 0 에 칠해지는 시작 칸은 조용히)
+            bool gained = tiles > _lastTiles && _lastTiles != int.MinValue && Time.timeScale > 0f;
+            SetTileCount(tiles);
+            if (gained)
+                UISound.Play(Sfx.TileCapture, pitchJitter: 0.08f); // 음 높이를 조금씩 바꿔 덜 반복적으로
+        }
 
         // 다른 Popup 이 없을 때만 일시정지
         if (Managers.UI.GetPopupCount() == 0 && UIPanelInput.ConsumeEsc())
@@ -129,6 +140,8 @@ public class UI_Panel_HUD : UI_Scene
         _lastSeconds = seconds;
 
         bool warning = seconds <= _warningSeconds;
+        if (warning && seconds > 0 && Time.timeScale > 0f)
+            UISound.Play(Sfx.TimeWarning); // 10초 이하: 1초마다
 
         if (_time != null)
         {
@@ -159,6 +172,7 @@ public class UI_Panel_HUD : UI_Scene
     {
         Init();
         SetTileCount(0); // 새 라운드는 0 부터
+        RefreshRoundGoal();
 
         int planet = StagePlanet.IndexOf(info);
         bool icon = StagePlanet.Apply(GetImage(Images.Img_PlanetIcon), _planetIcons, planet, "HUD 행성 아이콘");
@@ -167,6 +181,25 @@ public class UI_Panel_HUD : UI_Scene
 
         Image nameImage = GetImage(Images.Img_StageName);
         LogPrinter.Log($"[UI_Panel_HUD] SetStage Stage={info?.StageId} 행성={planet} 아이콘={icon} 이름={name} → {(nameImage != null && nameImage.sprite != null ? nameImage.sprite.name : "null")}");
+    }
+
+    /// <summary>스테이지 전체 목표 타일 수 (게임 쪽에서 스테이지 데이터로 넣을 때). 바로 "/남은 목표" 를 다시 그린다.</summary>
+    public void SetGoalTiles(int goal)
+    {
+        _stageGoalTiles = Mathf.Max(0, goal);
+        RefreshRoundGoal();
+    }
+
+    /// <summary>
+    /// "/남은 목표" = 스테이지 목표 − 지난 라운드까지 누적 (0 아래로는 안 내려감).
+    /// 예: 목표 80, 1라운드 20개 → 2라운드는 "0 / 60". 라운드 시작 때 한 번 정한다.
+    /// </summary>
+    private void RefreshRoundGoal()
+    {
+        Init();
+        int earned = Managers.Stage != null ? Managers.Stage.TotalPlayerTiles : 0;
+        int remaining = Mathf.Max(0, _stageGoalTiles - earned);
+        if (_tilesTotal != null) _tilesTotal.Text = "/" + remaining;
     }
 
     private int _lastTiles = int.MinValue;

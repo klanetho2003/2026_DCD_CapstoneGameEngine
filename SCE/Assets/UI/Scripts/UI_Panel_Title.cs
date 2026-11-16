@@ -43,7 +43,7 @@ public class UI_Panel_Title : UI_Scene
 
         Button quit = GetButton(Buttons.Btn_Quit);
         if (quit != null)
-            quit.BindEvent((evt) => { Application.Quit(); }, UIEvent.Click);
+            quit.BindEvent((evt) => { UISound.Play(Sfx.UiSelect); Application.Quit(); }, UIEvent.Click);
 
         _menu = new UIMenuSelection(
             GetButton(Buttons.Btn_Play)?.gameObject,
@@ -88,6 +88,7 @@ public class UI_Panel_Title : UI_Scene
 
         // 페이드 중에 다시 눌러도 처음부터 다시 시작하지 않게
         _isStarting = true;
+        UISound.Play(Sfx.UiSelect);
 
         // LoadAsyncScene(…, true) 와 같은 순서: 어두워짐 → 씬 로드 → 밝아짐. 시간만 짧게
         CoroutineFade.FadeOut(() =>
@@ -112,6 +113,7 @@ public class UI_Panel_Title : UI_Scene
         if (_isCompeleteLoad == false || _isStarting)
             return;
 
+        UISound.Play(Sfx.UiSelect);
         Managers.UI.ShowPopupUI<UI_Panel_Settings>();
     }
 }

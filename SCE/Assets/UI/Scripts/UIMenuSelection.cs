@@ -33,7 +33,11 @@ public class UIMenuSelection
         for (int i = 0; i < _items.Count; i++)
         {
             int index = i;
-            _items[i].BindEvent((evt) => Select(index), UIEvent.PointerEnter);
+            _items[i].BindEvent((evt) =>
+            {
+                if (index != Index) UISound.Play(Sfx.UiHover); // 다른 항목으로 옮길 때만
+                Select(index);
+            }, UIEvent.PointerEnter);
         }
     }
 
