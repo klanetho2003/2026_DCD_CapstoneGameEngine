@@ -189,10 +189,7 @@ public sealed class StageFlowPresenter
 
                 if (Managers.Stage.Result == EStageResult.Cleared)
                 {
-                    // 다음 행성 해금용 기록 (행성 선택 화면이 읽는다)
-                    if (Managers.Stage.CurrentStageInfo != null)
-                        PlanetProgress.MarkCleared(Managers.Stage.CurrentStageInfo.StageId);
-
+                    // 다음 행성 해금용 클리어 기록은 StageManager가 이 상태 직전에 Records에 넣었다 (행성 선택 화면이 읽는다)
                     UI_Panel_Clear popup = Managers.UI.ShowPopupUI<UI_Panel_Clear>();
                     popup.SetInfo(Managers.Stage.TotalPlayerTiles, 0, _onResultConfirmed);
                     _clearPopup = popup;

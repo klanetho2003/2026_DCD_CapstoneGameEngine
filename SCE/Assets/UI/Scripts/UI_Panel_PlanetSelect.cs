@@ -11,7 +11,7 @@ using static Define;
 ///   var ui = Managers.UI.ShowBaseUI&lt;UI_Panel_PlanetSelect&gt;(sortOrder: UI_Panel_PlanetSelect.SORT_ORDER);
 ///   ui.SetInfo(onStageSelected, onBack);  ui.Show() / ui.Hide()
 /// 행성 순서(수성, 금성, 지구, 화성, 목성, 토성) = StageCatalog 목록 순서.
-/// 열린 행성만 컬러, 잠긴 행성은 흑백(*_locked) — 해금 규칙은 PlanetProgress.
+/// 열린 행성만 컬러, 잠긴 행성은 흑백(*_locked) — 해금 규칙은 IsUnlocked, 클리어 기록은 Managers.Stage.Records.
 /// 잠긴 행성을 누르면 좌우로 흔들린다.
 /// 스스로 닫히지 않는다 — 열고 닫기는 StageFlowPresenter 가 한다.
 /// </summary>
@@ -188,14 +188,17 @@ public class UI_Panel_PlanetSelect : UI_Scene
         get { return _catalog.Stages == null ? 0 : _catalog.Stages.Count; }
     }
 
-    /// <summary>첫 Stage는 처음부터 열림, 그 다음은 바로 앞 Stage를 클리어하면 열림. 목록에 없는 행성은 잠김.</summary>
+    /// <summary>
+    /// 첫 Stage는 처음부터 열림, 그 다음은 바로 앞 Stage를 클리어하면 열림. 목록에 없는 행성은 잠김.
+    /// 클리어 여부는 Managers.Stage.Records — 진행 파일에 저장되고 타이틀 로드(Managers.LoadGameData) 때 불러온 기록이다.
+    /// </summary>
     private bool IsUnlocked(int index)
     {
         if (index < 0 || index >= StageCount)
             return false;
         if (index == 0)
             return true;
-        return PlanetProgress.IsCleared(_catalog.Stages[index - 1].StageId);
+        return Managers.Stage.Records.TryGet(_catalog.Stages[index - 1].StageId, out StageRecord record) && record.Cleared;
     }
 
     /// <summary>열린 행성은 컬러, 잠긴 행성은 흑백 이미지로</summary>
