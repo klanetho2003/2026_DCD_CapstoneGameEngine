@@ -15,14 +15,14 @@ MonoBehaviour:
   m_GroupName: Data_Interaction
   m_GUID: 8e6b39ffae870004fa9394133a9e7623
   m_SerializeEntries:
-  - m_GUID: c24e678f99574af1a7818461427b94ec
-    m_Address: player_sokoban
+  - m_GUID: 2c8d8333bbd929a4d861146139d747e8
+    m_Address: villager_day
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2c8d8333bbd929a4d861146139d747e8
-    m_Address: villager_day
+  - m_GUID: 391598f395ae3d34183edf0a3927b659
+    m_Address: Crack
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -47,6 +47,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6d5a4f308a827ef42ba15fc14fff12ee
     m_Address: villager_merchant_mare
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c24e678f99574af1a7818461427b94ec
+    m_Address: player_sokoban
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad

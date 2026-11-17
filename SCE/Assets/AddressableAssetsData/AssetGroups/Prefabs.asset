@@ -45,6 +45,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8bdeaf23cc4e1f7478ead7e3119a2136
+    m_Address: NPC_Crack
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 906b822111d0f4f4e898f0ad62ca007c
     m_Address: DEV_TempAlert
     m_ReadOnly: 0

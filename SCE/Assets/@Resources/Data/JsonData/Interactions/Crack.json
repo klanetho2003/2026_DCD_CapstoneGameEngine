@@ -1,0 +1,45 @@
+{
+  "id": "Crack",
+  "interactions": [
+    {
+      "id": "Crack",
+      "trigger": "TileExit",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "OnCrumbleTile"
+        }
+      ],
+      "effects": [
+        {
+          "type": "PrintLog",
+          "text": "밟"
+        },
+        {
+          "type": "StepCrumbleTile"
+        }
+      ]
+    },
+    {
+      "id": "new_interaction",
+      "trigger": "TileExit",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "CrumbleTileSteps",
+          "op": "GreaterOrEqual",
+          "value": 3
+        }
+      ],
+      "effects": [
+        {
+          "type": "BreakCrumbleTile"
+        }
+      ]
+    }
+  ]
+}

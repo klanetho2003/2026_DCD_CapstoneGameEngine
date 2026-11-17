@@ -1,4 +1,7 @@
 templateID,creatureType,prefabName,InteractionSetId,StatDatas.sType,StatDatas.sValue,StatResourceDatas.sType,StatResourceDatas.rType,StatResourceDatas.rValue
-5000,NPC,DEV_NPC_Test,villager_day,,,,,
+5000,NPC,NPC_Crack,Crack,,,,,
 5101,NPC,DEV_NPC_merchant_1,merchant,,,,,
 5102,NPC,DEV_NPC_merchant_2,,,,,,
+,,,,,,,,
+6000,NPC,DEV_Gate,gate_village,,,,,
+6001,NPC,DEV_Gate,gate_battle,,,,,

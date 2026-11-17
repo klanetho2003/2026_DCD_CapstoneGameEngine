@@ -3,8 +3,8 @@
     {
       "templateID": 5000,
       "creatureType": 2,
-      "prefabName": "DEV_NPC_Test",
-      "InteractionSetId": "villager_day",
+      "prefabName": "NPC_Crack",
+      "InteractionSetId": "Crack",
       "StatDatas": [],
       "StatResourceDatas": []
     },
@@ -21,6 +21,22 @@
       "creatureType": 2,
       "prefabName": "DEV_NPC_merchant_2",
       "InteractionSetId": null,
+      "StatDatas": [],
+      "StatResourceDatas": []
+    },
+    {
+      "templateID": 6000,
+      "creatureType": 2,
+      "prefabName": "DEV_Gate",
+      "InteractionSetId": "gate_village",
+      "StatDatas": [],
+      "StatResourceDatas": []
+    },
+    {
+      "templateID": 6001,
+      "creatureType": 2,
+      "prefabName": "DEV_Gate",
+      "InteractionSetId": "gate_battle",
       "StatDatas": [],
       "StatResourceDatas": []
     }

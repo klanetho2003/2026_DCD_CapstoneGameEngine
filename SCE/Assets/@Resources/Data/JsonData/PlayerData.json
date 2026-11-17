@@ -10,7 +10,7 @@
       "templateID": 10,
       "creatureType": 0,
       "prefabName": "DEV_BlackCat",
-      "InteractionSetId": "player_sokoban",
+      "InteractionSetId": null,
       "StatDatas": [
         {
           "sType": 0,

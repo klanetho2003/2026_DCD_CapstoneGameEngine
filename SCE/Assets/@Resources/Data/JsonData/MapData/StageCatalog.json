@@ -4,7 +4,7 @@
       "StageId": 1,
       "DisplayName": "1 스테이지",
       "MapPrefabKey": "2StageMap",
-      "MapDataKey": "DevMapData"
+      "MapDataKey": "2StageMapData"
     },
     {
       "StageId": 2,
