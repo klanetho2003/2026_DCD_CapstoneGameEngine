@@ -30,36 +30,6 @@ public sealed class MapView
     /// <summary>맵 프리팹 안의 실제 박스들을 초기화와 라운드 복원에서 재사용할 목록이다.</summary>
     private readonly List<GridBox> _boxBuffer = new();
 
-    /// <summary>맵 프리팹 안의 부서지는 발판들을 초기화와 라운드 복원에서 재사용할 목록이다.</summary>
-    private readonly List<GridCrumbleTile> _crumbleBuffer = new();
-
-    /// <summary>맵 좌표가 준비되면 비활성 라운드의 발판까지 현재 맵에 연결한다.</summary>
-    /// <param name="map">발판의 칸 등록과 좌표 변환을 담당할 현재 맵이다.</param>
-    public void InitializeCrumbleTiles(MapManager map)
-    {
-        if (_root == null)
-            return;
-        _root.GetComponentsInChildren(true, _crumbleBuffer);
-        // tile은 현재 맵 프리팹 안에 직접 배치한 부서지는 발판이다.
-        foreach (GridCrumbleTile tile in _crumbleBuffer)
-            tile.Initialize(map);
-    }
-
-    /// <summary>새 라운드에 켜진 발판을 처음 상태(밟은 횟수 0, 처음 그림)로 다시 등록한다.</summary>
-    /// <param name="map">새 라운드 영역이 반영된 현재 맵이다.</param>
-    public void ResetCrumbleTiles(MapManager map)
-    {
-        if (_root == null)
-            return;
-        _root.GetComponentsInChildren(true, _crumbleBuffer);
-        // tile은 처음 상태로 다시 등록하기 전에 이전 등록을 해제할 발판이다.
-        foreach (GridCrumbleTile tile in _crumbleBuffer)
-            tile.ReleaseRegistration();
-        // tile은 새 라운드 영역에 맞춰 다시 등록할 발판이다.
-        foreach (GridCrumbleTile tile in _crumbleBuffer)
-            tile.Initialize(map);
-    }
-
     /// <summary>켜져 있는 라운드의 바닥(라운드 루트의 직계 자식 Tilemap_Terrain)에서 월드 위치의 타일을 지운다. 라운드 루트가 없는 맵에서는 아무 일도 하지 않는다.</summary>
     /// <param name="worldPosition">지울 칸의 중심 월드 좌표다.</param>
     public void ClearRoundGround(Vector2 worldPosition)
@@ -189,7 +159,6 @@ public sealed class MapView
         _root = null;
         _territoryView = null;
         _boxBuffer.Clear();
-        _crumbleBuffer.Clear();
         Array.Clear(_roundRoots, 0, _roundRoots.Length);
         HasRoundRoots = false;
     }

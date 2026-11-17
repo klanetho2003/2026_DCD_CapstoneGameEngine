@@ -220,7 +220,6 @@ public partial class MapManager
         _grid = map.Grid;
         _view.InitializeTerritory(in _grid);
         _view.InitializeBoxes(this);
-        _view.InitializeCrumbleTiles(this);
 
         _playerSpawnPoint = new ETileType[_grid.Width, _grid.Height];
 
@@ -295,7 +294,6 @@ public partial class MapManager
         _boxes.Clear();
         _boxDestinations.Clear();
         _boxPushers.Clear();
-        _crumbleTiles.Clear();
         _territory.Clear();
         TraversalVersion++;
         OccupancyVersion++;
@@ -318,10 +316,10 @@ public partial class MapManager
         _blockedCells.Clear(); // 추가 차단(없앤 발판 칸 등)은 라운드 수명 — 라운드마다 다른 영역을 쓴다
         _view.ShowRound(round);
         _view.ResetBoxes(this);
-        _view.ResetCrumbleTiles(this);
         _territory.Clear();
         _view.ClearTerritory();
         TraversalVersion++;
+        RoundChanged?.Invoke(); // 라운드 수명 상태(부서진 발판 등)를 처음으로
     }
 
     /// <summary>

@@ -18,7 +18,7 @@ public readonly struct InteractionContext
     /// <summary>스폰 요청 단계에서만 값이 있다. 그 외에는 null.</summary>
     public readonly SpawnRequest SpawnRequest;
 
-    /// <summary>트리거가 일어난 칸 (TileExit: 보유자가 방금 떠난 칸). HasCell이 거짓이면 의미 없는 값이다.</summary>
+    /// <summary>트리거가 일어난 칸 (TileExit: 캐릭터가 방금 떠난 보유자의 칸). HasCell이 거짓이면 의미 없는 값이다.</summary>
     public readonly Vector2Int Cell;
     /// <summary>이 평가에 트리거 칸이 있는지다. 칸을 넘기는 트리거(TileExit)에서만 참이다.</summary>
     public readonly bool HasCell;
@@ -36,12 +36,12 @@ public readonly struct InteractionContext
         HasCell = false;
     }
 
-    /// <summary>칸을 넘기는 트리거(TileExit)용. 촉발 주체는 없다 — 보유자 자신의 이동이다.</summary>
-    public InteractionContext(InteractionComponent source, CreatureBase owner, ETriggerType trigger, float time, Vector2Int cell)
+    /// <summary>칸을 넘기는 트리거(TileExit)용. 촉발 주체는 그 칸을 떠난 캐릭터다.</summary>
+    public InteractionContext(InteractionComponent source, CreatureBase owner, CreatureBase instigator, ETriggerType trigger, float time, Vector2Int cell)
     {
         Source = source;
         Owner = owner;
-        Instigator = null;
+        Instigator = instigator;
         Trigger = trigger;
         Time = time;
         SpawnRequest = null;

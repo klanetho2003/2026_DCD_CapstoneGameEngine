@@ -123,17 +123,20 @@ public sealed class InteractionComponent : InitBase
     }
 
     /// <summary>
-    /// 보유자가 한 칸 이동을 마쳐 이전 칸을 떠난 순간 CreatureMovement가 호출한다 (TileExit).
-    /// 떠난 칸은 컨텍스트의 Cell로 넘긴다 — 이미 새 칸으로 옮긴 뒤라 떠난 칸에는 보유자가 없다.
-    /// TileExit 상호작용이 없으면 비트 확인 1회로 끝난다.
+    /// 보유자가 놓인 칸을 캐릭터가 떠난 순간 InteractionManager가 호출한다 (TileExit).
+    /// 떠난 칸은 컨텍스트의 Cell로 넘긴다 — 떠난 캐릭터는 이미 새 칸으로 옮긴 뒤라 그 칸에는 아무도 없다.
     /// </summary>
-    /// <param name="cell">보유자가 방금 떠난 칸이다.</param>
-    public void OnTileExit(Vector2Int cell)
+    /// <param name="cell">캐릭터가 방금 떠난 보유자의 칸이다.</param>
+    /// <param name="instigator">그 칸을 떠난 캐릭터다.</param>
+    /// <param name="time">쿨다운 기준 시각이다.</param>
+    public void OnTileExit(Vector2Int cell, CreatureBase instigator, float time)
     {
         if ((TriggerMask & (1 << (int)ETriggerType.TileExit)) == 0)
             return;
+        if (instigator == _owner)
+            instigator = null;
 
-        InteractionContext ctx = new InteractionContext(this, _owner, ETriggerType.TileExit, Time.time, cell);
+        InteractionContext ctx = new InteractionContext(this, _owner, instigator, ETriggerType.TileExit, time, cell);
         EvaluateAll(ETriggerType.TileExit, in ctx);
     }
 

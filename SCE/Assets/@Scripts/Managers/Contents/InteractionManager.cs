@@ -5,6 +5,7 @@ using static Define;
 /// <summary>
 /// 정의 저장소 + 트리거 디스패처.
 /// Tick / InputInteract는 여기서 트리거별 리스트로 뿌리고, Zone은 NPC → 컴포넌트로 직접 간다.
+/// TileExit는 보유자가 놓인 칸별 목록으로 뿌린다 (CreatureMovement가 칸을 떠날 때 RaiseTileExit).
 /// </summary>
 public class InteractionManager
 {
@@ -36,6 +37,13 @@ public class InteractionManager
     // 새로 등록된 StateChanged 컴포넌트의 초기 평가 대기열. 처리 중 등록분이 섞이지 않도록 두 개를 교체해 쓴다
     private List<InteractionComponent> _pendingStateInit = new();
     private List<InteractionComponent> _pendingStateInitSwap = new();
+    #endregion
+
+    #region TileExit
+    /// <summary>TileExit 상호작용을 가진 컴포넌트를 보유자가 놓인 칸으로 묶은 목록이다. 보유자는 움직이지 않는다고 본다 (발판 · 맵 NPC).</summary>
+    private readonly Dictionary<Vector2Int, List<InteractionComponent>> _byCell = new();
+    /// <summary>해제할 때 칸 목록을 찾기 위한 컴포넌트별 등록 칸이다.</summary>
+    private readonly Dictionary<InteractionComponent, Vector2Int> _cellOf = new();
     #endregion
 
     public void Init()
@@ -97,6 +105,37 @@ public class InteractionManager
         // 상태가 더 바뀌지 않아도 현재 상태로 1회 평가되도록 — 다음 프레임 (SetInfo 도중 효과 실행 방지)
         if ((mask & (1 << (int)ETriggerType.StateChanged)) != 0 && _pendingStateInit.Contains(component) == false)
             _pendingStateInit.Add(component);
+
+        if ((component.TriggerMask & (1 << (int)ETriggerType.TileExit)) != 0)
+            RegisterCell(component);
+    }
+
+    /// <summary>TileExit 보유자를 지금 놓인 칸에 묶는다. 맵이 없으면 칸을 정할 수 없어 경고한다.</summary>
+    private void RegisterCell(InteractionComponent component)
+    {
+        UnregisterCell(component); // 재SetInfo 방어
+        MapManager map = Managers.Map;
+        if (map == null || map.IsLoaded == false)
+        {
+            LogPrinter.LogWarning($"[InteractionManager] '{component.name}' — 맵이 없어 TileExit 칸을 정하지 못함 (맵 로드 뒤 스폰해야 함)");
+            return;
+        }
+
+        // cell은 보유자가 놓인 칸이며 보유자는 움직이지 않는다고 본다.
+        Vector2Int cell = map.WorldToCell(component.transform.position);
+        if (_byCell.TryGetValue(cell, out List<InteractionComponent> list) == false)
+        {
+            list = new List<InteractionComponent>(1);
+            _byCell.Add(cell, list);
+        }
+        list.Add(component);
+        _cellOf.Add(component, cell);
+    }
+
+    private void UnregisterCell(InteractionComponent component)
+    {
+        if (_cellOf.Remove(component, out Vector2Int cell) && _byCell.TryGetValue(cell, out List<InteractionComponent> list))
+            list.Remove(component);
     }
 
     public void Unregister(InteractionComponent component)
@@ -110,6 +149,7 @@ public class InteractionManager
         for (int t = 0; t < _byTrigger.Length; t++)
             _byTrigger[t].Remove(component); // 디스폰은 드묾 → O(N) 허용
         _pendingStateInit.Remove(component);
+        UnregisterCell(component);
     }
     #endregion
 
@@ -126,6 +166,28 @@ public class InteractionManager
     public void RaiseInput(CreatureBase instigator)
     {
         Dispatch(ETriggerType.InputInteract, instigator);
+    }
+
+    /// <summary>
+    /// CreatureMovement가 캐릭터가 칸을 떠난 순간 호출한다. 그 칸에 놓인 보유자들의 TileExit를 평가한다.
+    /// 그 칸에 보유자가 없으면 사전 조회 1회로 끝난다. O(1)
+    /// </summary>
+    /// <param name="cell">캐릭터가 방금 떠난 칸이다.</param>
+    /// <param name="instigator">그 칸을 떠난 캐릭터다.</param>
+    public void RaiseTileExit(Vector2Int cell, CreatureBase instigator)
+    {
+        if (_byCell.TryGetValue(cell, out List<InteractionComponent> list) == false || list.Count == 0)
+            return;
+
+        float time = Time.time;
+        _isDispatching = true;
+
+        int count = list.Count; // 디스패치 중 Register된 것은 다음 사건부터
+        for (int i = 0; i < count; i++)
+            list[i].OnTileExit(cell, instigator, time);
+
+        _isDispatching = false;
+        FlushPendingUnregister();
     }
 
     /// <summary>
@@ -176,7 +238,12 @@ public class InteractionManager
             list[i].OnTrigger(trigger, instigator, time);
 
         _isDispatching = false;
+        FlushPendingUnregister();
+    }
 
+    /// <summary>디스패치 도중 미뤄 둔 해제를 처리한다.</summary>
+    private void FlushPendingUnregister()
+    {
         if (_pendingUnregister.Count > 0)
         {
             for (int i = 0; i < _pendingUnregister.Count; i++)
@@ -194,6 +261,8 @@ public class InteractionManager
         _pendingUnregister.Clear();
         _pendingStateInit.Clear();
         _pendingStateInitSwap.Clear();
+        _byCell.Clear();
+        _cellOf.Clear();
         _isDispatching = false;
         _hasStateVersion = false; // 다음 씬 첫 프레임에 전체 평가
     }

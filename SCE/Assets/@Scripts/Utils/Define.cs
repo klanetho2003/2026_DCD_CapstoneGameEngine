@@ -245,7 +245,7 @@ public static class Define
         StateChanged,    // 게임 상태가 바뀐 프레임에 1회 (+ 새로 등록된 NPC는 다음 프레임 1회)
         SpawnRequest,   // 스폰 직전 (Instantiate 전). 상태 조건 + 스폰 요청 효과만
         Spawned,        // 스폰 직후 (SetInfo 완료 후). CreatureSpawnHelper 경유 스폰에서 호출
-        TileExit,       // 보유자가 한 칸 이동을 마쳐 이전 칸을 떠난 순간 (CreatureMovement). 떠난 칸 = InteractionContext.Cell
+        TileExit,       // 보유자가 놓인 칸을 캐릭터가 떠난 순간 (CreatureMovement). 촉발 주체 = 떠난 캐릭터, Cell = 그 칸. 보유자는 움직이지 않는 발판 · 맵 NPC
         Count
     }
 

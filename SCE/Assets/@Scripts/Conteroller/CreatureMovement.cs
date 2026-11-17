@@ -375,9 +375,9 @@ public class CreatureMovement : InitBase
         IsReturning = false;
         _owner.CacheMoveDirection = Vector2.zero;
 
-        // 떠난 칸을 보유자의 상호작용(TileExit)에 알린다. 이미 새 칸으로 옮긴 뒤라 떠난 칸에는 이 캐릭터가 없다
-        if (exited && _owner is CreatureBase creature && creature.Interaction != null)
-            creature.Interaction.OnTileExit(exitedCell);
+        // 떠난 칸에 놓인 상호작용 보유자(TileExit)에 알린다. 이미 새 칸으로 옮긴 뒤라 떠난 칸에는 이 캐릭터가 없다
+        if (exited)
+            Managers.Interaction.RaiseTileExit(exitedCell, _owner as CreatureBase);
 
         // 재진입하더라도 같은 완료 콜백을 중복 실행하지 않도록 보관한 값이다.
         Action callback = _onComplete;
