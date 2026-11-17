@@ -83,6 +83,21 @@ public sealed class TileTerritory
         return true;
     }
 
+    /// <summary>없어진 칸의 소유권을 지우고 집계에서 뺀다. 정산이 끝났거나 소유자가 없었으면 false다.</summary>
+    /// <param name="cell">타일 데이터에서 빠진 칸이다.</param>
+    public bool Remove(Vector2Int cell)
+    {
+        // owner는 집계에서 한 칸을 빼야 할 기존 소유 진영이다.
+        if (!IsOpen || !_owners.TryGetValue(cell, out TileOwner owner))
+            return false;
+        _owners.Remove(cell);
+        if (owner == TileOwner.Player)
+            PlayerTiles--;
+        else if (owner == TileOwner.Monster)
+            MonsterTiles--;
+        return true;
+    }
+
     /// <summary>추가 점령을 잠그고 현재 소유 수를 복사하며 기존 색상과 소유권은 유지한다.</summary>
     public TerritoryScore FinishRound()
     {

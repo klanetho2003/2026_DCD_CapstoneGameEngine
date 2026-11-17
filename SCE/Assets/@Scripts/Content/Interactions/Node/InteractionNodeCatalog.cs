@@ -17,6 +17,8 @@ public static class InteractionNodeCatalog
         InteractionNodeRegistry.RegisterCondition<DayPeriodCondition>();
         InteractionNodeRegistry.RegisterCondition<StagePlayingCondition>();
         InteractionNodeRegistry.RegisterCondition<CanPushBoxCondition>();
+        InteractionNodeRegistry.RegisterCondition<OnCrumbleTileCondition>();
+        InteractionNodeRegistry.RegisterCondition<CrumbleTileStepsCondition>();
 
         // Effects
         InteractionNodeRegistry.RegisterEffect<ShowMarkerEffect>();
@@ -28,5 +30,7 @@ public static class InteractionNodeCatalog
         InteractionNodeRegistry.RegisterEffect<RaiseSignalEffect>();
         InteractionNodeRegistry.RegisterEffect<SwapCreatureDataEffect>();
         InteractionNodeRegistry.RegisterEffect<PushBoxEffect>();
+        InteractionNodeRegistry.RegisterEffect<StepCrumbleTileEffect>();
+        InteractionNodeRegistry.RegisterEffect<BreakCrumbleTileEffect>();
     }
 }

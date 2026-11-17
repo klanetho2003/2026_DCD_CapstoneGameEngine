@@ -30,7 +30,7 @@ public partial class MapManager
     /// <summary>도착을 완료하여 각 타일을 선점한 캐릭터의 이동 컴포넌트다.</summary>
     private readonly Dictionary<Vector2Int, CreatureMovement> _occupants = new();
 
-    /// <summary>박스의 별도 등록과 무관하게 외부 시스템이 벽으로 지정한 추가 차단 타일이다.</summary>
+    /// <summary>박스의 별도 등록과 무관하게 외부 시스템이 벽으로 지정한 추가 차단 타일이다 (없앤 발판 칸 포함). 라운드가 바뀌면 모두 풀린다.</summary>
     private readonly HashSet<Vector2Int> _blockedCells = new();
 
     /// <summary>캐릭터의 도착 선점과 별개로 보관하는 이번 라운드의 타일 소유권이다.</summary>
@@ -178,7 +178,7 @@ public partial class MapManager
         return false;
     }
 
-    /// <summary>박스 등이 차지하는 정적 차단 칸을 갱신하고 몬스터의 이전 경로 판단을 무효화한다.</summary>
+    /// <summary>박스 등이 차지하는 정적 차단 칸을 갱신하고 몬스터의 이전 경로 판단을 무효화한다. 라운드가 바뀌면(SetRound) 모두 풀린다.</summary>
     /// <param name="cell">벽으로 추가하거나 해제할 타일 좌표다.</param>
     /// <param name="blocked">참이면 차단 칸으로 등록하고 거짓이면 해제한다.</param>
     public void SetCellBlocked(Vector2Int cell, bool blocked)
@@ -220,6 +220,7 @@ public partial class MapManager
         _grid = map.Grid;
         _view.InitializeTerritory(in _grid);
         _view.InitializeBoxes(this);
+        _view.InitializeCrumbleTiles(this);
 
         _playerSpawnPoint = new ETileType[_grid.Width, _grid.Height];
 
@@ -294,6 +295,7 @@ public partial class MapManager
         _boxes.Clear();
         _boxDestinations.Clear();
         _boxPushers.Clear();
+        _crumbleTiles.Clear();
         _territory.Clear();
         TraversalVersion++;
         OccupancyVersion++;
@@ -313,8 +315,10 @@ public partial class MapManager
     {
         CancelBoxPushes();
         _area = area;
+        _blockedCells.Clear(); // 추가 차단(없앤 발판 칸 등)은 라운드 수명 — 라운드마다 다른 영역을 쓴다
         _view.ShowRound(round);
         _view.ResetBoxes(this);
+        _view.ResetCrumbleTiles(this);
         _territory.Clear();
         _view.ClearTerritory();
         TraversalVersion++;
