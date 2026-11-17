@@ -144,6 +144,21 @@ public static class InteractionValidator
 
             if (def.Trigger == ETriggerType.Spawned && def.Mode == EActivationMode.Latched)
                 warnings.Add($"{where}: Spawned는 스폰 시 1회 평가 — Latched는 디스폰 때만 해제됨");
+
+            // 트리거 칸을 읽는 노드는 칸을 넘기는 트리거에서만 동작한다
+            if (def.Trigger != ETriggerType.TileExit)
+            {
+                for (int c = 0; c < def.Conditions.Length; c++)
+                {
+                    if (def.Conditions[c] is ITriggerCellNode)
+                        warnings.Add($"{where}: {def.Conditions[c].GetType().Name}은 TileExit 트리거 전용 — 다른 트리거에서는 항상 거짓");
+                }
+                for (int e = 0; e < def.EffectPrototypes.Length; e++)
+                {
+                    if (def.EffectPrototypes[e] is ITriggerCellNode)
+                        warnings.Add($"{where}: {def.EffectPrototypes[e].GetType().Name}은 TileExit 트리거 전용 — 다른 트리거에서는 아무 일도 하지 않음");
+                }
+            }
         }
 
         return errors.Count == errorStart;

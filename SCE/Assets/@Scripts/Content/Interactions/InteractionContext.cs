@@ -1,3 +1,4 @@
+using UnityEngine;
 using static Define;
 
 /// <summary>
@@ -17,6 +18,11 @@ public readonly struct InteractionContext
     /// <summary>스폰 요청 단계에서만 값이 있다. 그 외에는 null.</summary>
     public readonly SpawnRequest SpawnRequest;
 
+    /// <summary>트리거가 일어난 칸 (TileExit: 보유자가 방금 떠난 칸). HasCell이 거짓이면 의미 없는 값이다.</summary>
+    public readonly Vector2Int Cell;
+    /// <summary>이 평가에 트리거 칸이 있는지다. 칸을 넘기는 트리거(TileExit)에서만 참이다.</summary>
+    public readonly bool HasCell;
+
     public InteractionContext(InteractionComponent source, CreatureBase owner, CreatureBase instigator,
     ETriggerType trigger, float time, SpawnRequest spawnRequest = null)
     {
@@ -26,6 +32,21 @@ public readonly struct InteractionContext
         Trigger = trigger;
         Time = time;
         SpawnRequest = spawnRequest;
+        Cell = default;
+        HasCell = false;
+    }
+
+    /// <summary>칸을 넘기는 트리거(TileExit)용. 촉발 주체는 없다 — 보유자 자신의 이동이다.</summary>
+    public InteractionContext(InteractionComponent source, CreatureBase owner, ETriggerType trigger, float time, Vector2Int cell)
+    {
+        Source = source;
+        Owner = owner;
+        Instigator = null;
+        Trigger = trigger;
+        Time = time;
+        SpawnRequest = null;
+        Cell = cell;
+        HasCell = true;
     }
 
     /// <summary>ETargetRef를 실제 대상으로 해석</summary>

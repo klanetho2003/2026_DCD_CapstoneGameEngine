@@ -14,6 +14,12 @@ public interface IInteractionNodeLoadHook
 }
 
 /// <summary>
+/// 트리거 칸(InteractionContext.Cell)을 읽는 조건/효과 표시. 칸을 넘기는 트리거(TileExit)에서만 뜻이 있다 —
+/// 다른 트리거에 쓰이면 검증기가 경고한다.
+/// </summary>
+public interface ITriggerCellNode { }
+
+/// <summary>
 /// 조건/효과 클래스에 부착. key는 JSON의 "type" 값이자 레지스트리 키.
 /// 툴은 이 어트리뷰트를 스캔해 노드 목록/설명을 만들고, 레지스트리 등록 누락을 검사한다.
 /// </summary>

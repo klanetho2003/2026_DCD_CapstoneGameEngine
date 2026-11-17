@@ -358,7 +358,11 @@ public class CreatureMovement : InitBase
             return;
         }
 
-        if (!IsReturning)
+        // exited는 이번 도착으로 이전 칸을 떠났는지이며 원래 칸으로의 복귀는 떠난 것이 아니다.
+        bool exited = !IsReturning;
+        // exitedCell은 이번 도착으로 떠난 이전 칸이다.
+        Vector2Int exitedCell = _currentCell;
+        if (exited)
         {
             _map.ReleaseCell(_currentCell, this);
             _currentCell = _targetCell;
@@ -370,6 +374,10 @@ public class CreatureMovement : InitBase
         IsMoving = false;
         IsReturning = false;
         _owner.CacheMoveDirection = Vector2.zero;
+
+        // 떠난 칸을 보유자의 상호작용(TileExit)에 알린다. 이미 새 칸으로 옮긴 뒤라 떠난 칸에는 이 캐릭터가 없다
+        if (exited && _owner is CreatureBase creature && creature.Interaction != null)
+            creature.Interaction.OnTileExit(exitedCell);
 
         // 재진입하더라도 같은 완료 콜백을 중복 실행하지 않도록 보관한 값이다.
         Action callback = _onComplete;

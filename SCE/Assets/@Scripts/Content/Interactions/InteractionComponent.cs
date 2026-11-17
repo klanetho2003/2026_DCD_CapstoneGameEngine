@@ -123,6 +123,21 @@ public sealed class InteractionComponent : InitBase
     }
 
     /// <summary>
+    /// 보유자가 한 칸 이동을 마쳐 이전 칸을 떠난 순간 CreatureMovement가 호출한다 (TileExit).
+    /// 떠난 칸은 컨텍스트의 Cell로 넘긴다 — 이미 새 칸으로 옮긴 뒤라 떠난 칸에는 보유자가 없다.
+    /// TileExit 상호작용이 없으면 비트 확인 1회로 끝난다.
+    /// </summary>
+    /// <param name="cell">보유자가 방금 떠난 칸이다.</param>
+    public void OnTileExit(Vector2Int cell)
+    {
+        if ((TriggerMask & (1 << (int)ETriggerType.TileExit)) == 0)
+            return;
+
+        InteractionContext ctx = new InteractionContext(this, _owner, ETriggerType.TileExit, Time.time, cell);
+        EvaluateAll(ETriggerType.TileExit, in ctx);
+    }
+
+    /// <summary>
     /// 스폰 경로가 SetInfo(파생 클래스 포함) 완료 직후 호출. Spawned 트리거를 같은 프레임에 평가한다.
     /// SetInfo 안에서 평가하지 않는 이유: 파생 클래스의 초기화(애니메이션&상태 머신)가 아직 끝나지 않았기 때문.
     /// 
