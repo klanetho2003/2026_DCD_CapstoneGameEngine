@@ -375,9 +375,16 @@ public class CreatureMovement : InitBase
         IsReturning = false;
         _owner.CacheMoveDirection = Vector2.zero;
 
-        // 떠난 칸에 놓인 상호작용 보유자(TileExit)에 알린다. 이미 새 칸으로 옮긴 뒤라 떠난 칸에는 이 캐릭터가 없다
+        // 떠난 칸 · 도착한 칸에 놓인 상호작용 보유자(TileExit → TileEnter)에 차례로 알린다. 이미 새 칸으로 옮긴 뒤라 떠난 칸에는 이 캐릭터가 없다
         if (exited)
-            Managers.Interaction.RaiseTileExit(exitedCell, _owner as CreatureBase);
+        {
+            // creature는 두 칸 트리거의 촉발 주체이며 enteredCell은 이번 도착으로 선점한 칸이다.
+            CreatureBase creature = _owner as CreatureBase;
+            Vector2Int enteredCell = _currentCell;
+            Managers.Interaction.RaiseCellTrigger(ETriggerType.TileExit, exitedCell, creature);
+            if (_owner != null && isActiveAndEnabled) // 떠난 칸의 효과로 디스폰됐으면 도착은 알리지 않는다
+                Managers.Interaction.RaiseCellTrigger(ETriggerType.TileEnter, enteredCell, creature);
+        }
 
         // 재진입하더라도 같은 완료 콜백을 중복 실행하지 않도록 보관한 값이다.
         Action callback = _onComplete;

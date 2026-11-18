@@ -246,6 +246,7 @@ public static class Define
         SpawnRequest,   // 스폰 직전 (Instantiate 전). 상태 조건 + 스폰 요청 효과만
         Spawned,        // 스폰 직후 (SetInfo 완료 후). CreatureSpawnHelper 경유 스폰에서 호출
         TileExit,       // 보유자가 놓인 칸을 캐릭터가 떠난 순간 (CreatureMovement). 촉발 주체 = 떠난 캐릭터, Cell = 그 칸. 보유자는 움직이지 않는 발판 · 맵 NPC
+        TileEnter,      // 보유자가 놓인 칸에 캐릭터가 도착한 순간 (CreatureMovement, 선점까지 마친 도착). 촉발 주체 = 도착한 캐릭터, Cell = 그 칸. 보유자는 움직이지 않는 버튼 · 맵 NPC
         Count
     }
 

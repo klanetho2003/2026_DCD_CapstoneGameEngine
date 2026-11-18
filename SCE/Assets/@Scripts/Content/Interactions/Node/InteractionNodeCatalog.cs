@@ -19,6 +19,9 @@ public static class InteractionNodeCatalog
         InteractionNodeRegistry.RegisterCondition<CanPushBoxCondition>();
         InteractionNodeRegistry.RegisterCondition<OnCrumbleTileCondition>();
         InteractionNodeRegistry.RegisterCondition<CrumbleTileStepsCondition>();
+        InteractionNodeRegistry.RegisterCondition<InstigatorTypeCondition>();
+        InteractionNodeRegistry.RegisterCondition<ButtonStateCondition>();
+        InteractionNodeRegistry.RegisterCondition<LureStateCondition>();
 
         // Effects
         InteractionNodeRegistry.RegisterEffect<ShowMarkerEffect>();
@@ -32,5 +35,8 @@ public static class InteractionNodeCatalog
         InteractionNodeRegistry.RegisterEffect<PushBoxEffect>();
         InteractionNodeRegistry.RegisterEffect<StepCrumbleTileEffect>();
         InteractionNodeRegistry.RegisterEffect<BreakCrumbleTileEffect>();
+        InteractionNodeRegistry.RegisterEffect<PressButtonEffect>();
+        InteractionNodeRegistry.RegisterEffect<ActivateLureEffect>();
+        InteractionNodeRegistry.RegisterEffect<DeactivateLureEffect>();
     }
 }

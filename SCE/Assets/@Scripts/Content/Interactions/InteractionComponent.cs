@@ -123,21 +123,22 @@ public sealed class InteractionComponent : InitBase
     }
 
     /// <summary>
-    /// 보유자가 놓인 칸을 캐릭터가 떠난 순간 InteractionManager가 호출한다 (TileExit).
-    /// 떠난 칸은 컨텍스트의 Cell로 넘긴다 — 떠난 캐릭터는 이미 새 칸으로 옮긴 뒤라 그 칸에는 아무도 없다.
+    /// 보유자가 놓인 칸을 캐릭터가 떠나거나(TileExit) 그 칸에 도착한(TileEnter) 순간 InteractionManager가 호출한다.
+    /// 그 칸은 컨텍스트의 Cell로 넘긴다 — TileExit면 떠난 캐릭터는 이미 새 칸으로 옮긴 뒤라 그 칸에는 아무도 없다.
     /// </summary>
-    /// <param name="cell">캐릭터가 방금 떠난 보유자의 칸이다.</param>
-    /// <param name="instigator">그 칸을 떠난 캐릭터다.</param>
+    /// <param name="trigger">칸 트리거 종류(TileExit · TileEnter)다.</param>
+    /// <param name="cell">캐릭터가 방금 떠나거나 도착한 보유자의 칸이다.</param>
+    /// <param name="instigator">그 칸을 떠나거나 그 칸에 도착한 캐릭터다.</param>
     /// <param name="time">쿨다운 기준 시각이다.</param>
-    public void OnTileExit(Vector2Int cell, CreatureBase instigator, float time)
+    public void OnCellTrigger(ETriggerType trigger, Vector2Int cell, CreatureBase instigator, float time)
     {
-        if ((TriggerMask & (1 << (int)ETriggerType.TileExit)) == 0)
+        if ((TriggerMask & (1 << (int)trigger)) == 0)
             return;
         if (instigator == _owner)
             instigator = null;
 
-        InteractionContext ctx = new InteractionContext(this, _owner, instigator, ETriggerType.TileExit, time, cell);
-        EvaluateAll(ETriggerType.TileExit, in ctx);
+        InteractionContext ctx = new InteractionContext(this, _owner, instigator, trigger, time, cell);
+        EvaluateAll(trigger, in ctx);
     }
 
     /// <summary>

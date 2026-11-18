@@ -46,6 +46,9 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
     /// <summary>성공한 도착 기록과 세 바퀴 순환 뒤의 탈출 단계를 관리하며 행동 트리의 칸 이동 노드가 쓴다.</summary>
     public MonsterEscapeTracker EscapeTracker { get; private set; }
 
+    /// <summary>켜진 유인 객체를 향해 가는 동안 행동 트리 대신 한 칸씩 이동시키며 유인 객체(GridLure)가 대상을 정한다.</summary>
+    public MonsterLureFollower Lure { get; private set; }
+
     /// <summary>몬스터의 이동 속도 스탯에서 읽은 기본 월드 이동 속도다.</summary>
     public float MoveSpeed { get { return GetStatValue(EStatType.MoveSpeed).Value; } }
 
@@ -63,6 +66,7 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
             Movement = gameObject.AddComponent<CreatureMovement>();
         Stepper = new MonsterTileStepper(this);
         EscapeTracker = new MonsterEscapeTracker(Stepper);
+        Lure = new MonsterLureFollower(this);
         BehaviorRunner = new BehaviorTreeRunner(this, BehaviorGameWorld.Instance);
         if (GetComponent<MonsterEscapeIndicator>() == null)
             gameObject.AddComponent<MonsterEscapeIndicator>();
@@ -101,9 +105,10 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
         ResetTileMovement();
     }
 
-    /// <summary>새 생애나 풀 반환, 사망 시 탈출 기록과 한 칸 출발 상태를 비우고 시선을 오른쪽으로 되돌린다.</summary>
+    /// <summary>새 생애나 풀 반환, 사망 시 유인 대상과 탈출 기록, 한 칸 출발 상태를 비우고 시선을 오른쪽으로 되돌린다.</summary>
     private void ResetTileMovement()
     {
+        Lure.Reset();
         EscapeTracker.Reset();
         Stepper.Reset(true);
     }
@@ -180,7 +185,7 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
     #endregion
 
     #region 행동 트리 (IBehaviorTileAgent)
-    /// <summary>사망이나 라운드 정지 중에는 진행 중인 한 칸을 칸 중앙으로 되돌리고 트리 시계와 예고 시간을 멈추며, 맵 배치가 바뀌면 탈출 기록을 비우고, 새 생애면 실행기를 묶은 뒤 예고 시간과 트리를 갱신한다.</summary>
+    /// <summary>사망이나 라운드 정지 중에는 진행 중인 한 칸을 칸 중앙으로 되돌리고 트리 시계와 예고 시간을 멈추며, 맵 배치가 바뀌면 탈출 기록을 비우고, 새 생애면 실행기를 묶은 뒤, 켜진 유인 객체를 따라가는 중이면 트리 대신 유인 이동을, 아니면 예고 시간과 트리를 갱신한다.</summary>
     private void UpdateBehavior()
     {
         if (IsDead || Managers.Stage.Phase != EStagePhase.Playing)
@@ -200,6 +205,8 @@ public class MonsterBase : CombatCreature, IMovable, IBehaviorTileAgent
             _lifeSerial = SpawnSerial;
             BehaviorRunner.Bind(_behaviorTree);
         }
+        if (Lure.Tick(HasTag(ACTION_LOCK_TAGS)))
+            return; // 유인 이동 중 — 행동 트리 시계 · 탈출 예고 시간은 멈춘다
         EscapeTracker.TickPreparation(Time.deltaTime);
         _behaviorClock += Time.deltaTime;
         BehaviorRunner.Tick(_behaviorClock);

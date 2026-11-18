@@ -102,6 +102,24 @@ public sealed class StatThresholdCondition : InteractionCondition
 }
 #endregion
 
+#region InstigatorType
+/// <summary>촉발 주체가 ObjectType 종류(Villager · Monster · NPC)의 캐릭터인지 검사한다. 촉발 주체가 없으면 거짓이다.</summary>
+[Serializable]
+[InteractionNode("InstigatorType", "촉발 주체 종류", "촉발 주체(칸 트리거면 떠나거나 도착한 캐릭터)가 ObjectType 종류임. 촉발 주체가 없으면 거짓")]
+public sealed class InstigatorTypeCondition : InteractionCondition
+{
+    [JsonProperty("objectType"), JsonConverter(typeof(StringEnumConverter))]
+    public EObjectType ObjectType = EObjectType.Monster;
+
+    /// <summary>촉발 주체의 생성 데이터 종류를 비교한다.</summary>
+    /// <param name="ctx">촉발 주체를 가진 평가 정보다.</param>
+    public override bool Evaluate(in InteractionContext ctx)
+    {
+        return ctx.Instigator != null && ctx.Instigator.CreatureType == ObjectType;
+    }
+}
+#endregion
+
 #region Not
 [Serializable]
 [InteractionNode("Not", "부정", "안쪽 조건의 반대")]

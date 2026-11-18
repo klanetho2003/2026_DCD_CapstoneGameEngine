@@ -5,7 +5,7 @@ using static Define;
 /// <summary>
 /// 정의 저장소 + 트리거 디스패처.
 /// Tick / InputInteract는 여기서 트리거별 리스트로 뿌리고, Zone은 NPC → 컴포넌트로 직접 간다.
-/// TileExit는 보유자가 놓인 칸별 목록으로 뿌린다 (CreatureMovement가 칸을 떠날 때 RaiseTileExit).
+/// TileExit · TileEnter는 보유자가 놓인 칸별 목록으로 뿌린다 (CreatureMovement가 칸을 떠나고 도착할 때 RaiseCellTrigger).
 /// </summary>
 public class InteractionManager
 {
@@ -39,8 +39,13 @@ public class InteractionManager
     private List<InteractionComponent> _pendingStateInitSwap = new();
     #endregion
 
-    #region TileExit
-    /// <summary>TileExit 상호작용을 가진 컴포넌트를 보유자가 놓인 칸으로 묶은 목록이다. 보유자는 움직이지 않는다고 본다 (발판 · 맵 NPC).</summary>
+    #region 칸 트리거 (TileExit · TileEnter)
+    /// <summary>칸으로 뿌리는 트리거(TileExit · TileEnter) 비트다.</summary>
+    private const int CellTriggerMask =
+        (1 << (int)ETriggerType.TileExit) |
+        (1 << (int)ETriggerType.TileEnter);
+
+    /// <summary>칸 트리거 상호작용을 가진 컴포넌트를 보유자가 놓인 칸으로 묶은 목록이다. 보유자는 움직이지 않는다고 본다 (발판 · 버튼 · 맵 NPC).</summary>
     private readonly Dictionary<Vector2Int, List<InteractionComponent>> _byCell = new();
     /// <summary>해제할 때 칸 목록을 찾기 위한 컴포넌트별 등록 칸이다.</summary>
     private readonly Dictionary<InteractionComponent, Vector2Int> _cellOf = new();
@@ -106,18 +111,18 @@ public class InteractionManager
         if ((mask & (1 << (int)ETriggerType.StateChanged)) != 0 && _pendingStateInit.Contains(component) == false)
             _pendingStateInit.Add(component);
 
-        if ((component.TriggerMask & (1 << (int)ETriggerType.TileExit)) != 0)
+        if ((component.TriggerMask & CellTriggerMask) != 0)
             RegisterCell(component);
     }
 
-    /// <summary>TileExit 보유자를 지금 놓인 칸에 묶는다. 맵이 없으면 칸을 정할 수 없어 경고한다.</summary>
+    /// <summary>칸 트리거 보유자를 지금 놓인 칸에 묶는다. 맵이 없으면 칸을 정할 수 없어 경고한다.</summary>
     private void RegisterCell(InteractionComponent component)
     {
         UnregisterCell(component); // 재SetInfo 방어
         MapManager map = Managers.Map;
         if (map == null || map.IsLoaded == false)
         {
-            LogPrinter.LogWarning($"[InteractionManager] '{component.name}' — 맵이 없어 TileExit 칸을 정하지 못함 (맵 로드 뒤 스폰해야 함)");
+            LogPrinter.LogWarning($"[InteractionManager] '{component.name}' — 맵이 없어 칸 트리거(TileExit · TileEnter) 칸을 정하지 못함 (맵 로드 뒤 스폰해야 함)");
             return;
         }
 
@@ -169,12 +174,13 @@ public class InteractionManager
     }
 
     /// <summary>
-    /// CreatureMovement가 캐릭터가 칸을 떠난 순간 호출한다. 그 칸에 놓인 보유자들의 TileExit를 평가한다.
+    /// CreatureMovement가 캐릭터가 칸을 떠나거나(TileExit) 칸에 도착한(TileEnter) 순간 호출한다. 그 칸에 놓인 보유자들의 그 트리거를 평가한다.
     /// 그 칸에 보유자가 없으면 사전 조회 1회로 끝난다. O(1)
     /// </summary>
-    /// <param name="cell">캐릭터가 방금 떠난 칸이다.</param>
-    /// <param name="instigator">그 칸을 떠난 캐릭터다.</param>
-    public void RaiseTileExit(Vector2Int cell, CreatureBase instigator)
+    /// <param name="trigger">칸 트리거 종류(TileExit · TileEnter)다.</param>
+    /// <param name="cell">캐릭터가 방금 떠나거나 도착한 칸이다.</param>
+    /// <param name="instigator">그 칸을 떠나거나 그 칸에 도착한 캐릭터다.</param>
+    public void RaiseCellTrigger(ETriggerType trigger, Vector2Int cell, CreatureBase instigator)
     {
         if (_byCell.TryGetValue(cell, out List<InteractionComponent> list) == false || list.Count == 0)
             return;
@@ -184,7 +190,7 @@ public class InteractionManager
 
         int count = list.Count; // 디스패치 중 Register된 것은 다음 사건부터
         for (int i = 0; i < count; i++)
-            list[i].OnTileExit(cell, instigator, time);
+            list[i].OnCellTrigger(trigger, cell, instigator, time);
 
         _isDispatching = false;
         FlushPendingUnregister();
