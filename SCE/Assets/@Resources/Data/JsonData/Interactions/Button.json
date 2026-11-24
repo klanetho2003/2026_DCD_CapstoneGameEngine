@@ -1,0 +1,31 @@
+{
+  "id": "Button",
+  "interactions": [
+    {
+      "id": "new_interaction",
+      "trigger": "TileEnter",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "ButtonState",
+          "pressed": false
+        },
+        {
+          "type": "InstigatorType",
+          "objectType": "Villager"
+        }
+      ],
+      "effects": [
+        {
+          "type": "PressButton"
+        },
+        {
+          "type": "ActivateLure",
+          "lureId": 5002
+        }
+      ]
+    }
+  ]
+}

@@ -40,6 +40,18 @@
       "AlwaysSpawn": [
         {
           "ObjectType": "NPC",
+          "DataId": 5001,
+          "CellX": 1,
+          "CellY": 4
+        },
+        {
+          "ObjectType": "NPC",
+          "DataId": 5002,
+          "CellX": 5,
+          "CellY": 6
+        },
+        {
+          "ObjectType": "NPC",
           "DataId": 5000,
           "CellX": 1,
           "CellY": 7

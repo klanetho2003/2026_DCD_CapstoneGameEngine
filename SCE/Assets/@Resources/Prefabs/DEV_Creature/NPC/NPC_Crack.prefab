@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: -7630549985172919752}
   - component: {fileID: 7356923472447261875}
   - component: {fileID: -6949563191292486291}
+  - component: {fileID: -5584095902170280305}
   m_Layer: 0
   m_Name: NPC_Crack
   m_TagString: Untagged
@@ -184,6 +185,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22ddd74936cc0354390b133da7dbfeac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractionComponent
+--- !u!114 &-5584095902170280305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1877372259340295307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 394339f99b7ffc045ae09085f9377d85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GridCrumbleTile
+  _stepSprites: []
 --- !u!1 &4532940063053286423
 GameObject:
   m_ObjectHideFlags: 0

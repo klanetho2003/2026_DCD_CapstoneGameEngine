@@ -1,5 +1,7 @@
 templateID,creatureType,prefabName,InteractionSetId,StatDatas.sType,StatDatas.sValue,StatResourceDatas.sType,StatResourceDatas.rType,StatResourceDatas.rValue
 5000,NPC,NPC_Crack,Crack,,,,,
+5001,NPC,NPC_Button,Button,,,,,
+5002,NPC,NPC_Lure,Lure,,,,,
 5101,NPC,DEV_NPC_merchant_1,merchant,,,,,
 5102,NPC,DEV_NPC_merchant_2,,,,,,
 ,,,,,,,,

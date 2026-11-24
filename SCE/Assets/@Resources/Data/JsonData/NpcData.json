@@ -9,6 +9,22 @@
       "StatResourceDatas": []
     },
     {
+      "templateID": 5001,
+      "creatureType": 2,
+      "prefabName": "NPC_Button",
+      "InteractionSetId": "Button",
+      "StatDatas": [],
+      "StatResourceDatas": []
+    },
+    {
+      "templateID": 5002,
+      "creatureType": 2,
+      "prefabName": "NPC_Lure",
+      "InteractionSetId": "Lure",
+      "StatDatas": [],
+      "StatResourceDatas": []
+    },
+    {
       "templateID": 5101,
       "creatureType": 2,
       "prefabName": "DEV_NPC_merchant_1",

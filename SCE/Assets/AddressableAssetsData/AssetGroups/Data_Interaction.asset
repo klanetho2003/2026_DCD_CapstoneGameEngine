@@ -33,8 +33,20 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 503c7df47188144449d30779e7606c5b
+    m_Address: Lure
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5ba82537649699d448ff06798e8badea
     m_Address: merchant
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 692c7ee8a22a79140b285ab3d066a52f
+    m_Address: Button
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad

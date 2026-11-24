@@ -1,0 +1,27 @@
+{
+  "id": "Lure",
+  "interactions": [
+    {
+      "id": "new_interaction",
+      "trigger": "TileEnter",
+      "mode": "Fire",
+      "maxActivations": 0,
+      "cooldown": 0.0,
+      "conditions": [
+        {
+          "type": "LureState",
+          "active": true
+        },
+        {
+          "type": "InstigatorType",
+          "objectType": "Monster"
+        }
+      ],
+      "effects": [
+        {
+          "type": "DeactivateLure"
+        }
+      ]
+    }
+  ]
+}

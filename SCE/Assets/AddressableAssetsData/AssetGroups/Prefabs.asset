@@ -15,6 +15,12 @@ MonoBehaviour:
   m_GroupName: Prefabs
   m_GUID: 021cc079675666f4da08fac5dfdbc01b
   m_SerializeEntries:
+  - m_GUID: 37aeb89d83b67b04c86795a96bb19a58
+    m_Address: NPC_Lure
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 574b6048944f089479bd07104b0cc2b9
     m_Address: DEV_BlackCat
     m_ReadOnly: 0
@@ -53,6 +59,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 906b822111d0f4f4e898f0ad62ca007c
     m_Address: DEV_TempAlert
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 98926778da72b87458279f99817dd859
+    m_Address: NPC_Button
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad

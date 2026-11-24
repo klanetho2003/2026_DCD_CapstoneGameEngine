@@ -70,6 +70,12 @@ public class DataManager
         TextAsset textAsset_8 = Managers.Resource.Load<TextAsset>("Crack");
         Managers.Interaction.LoadSet(textAsset_8.text);
 
+        TextAsset textAsset_9 = Managers.Resource.Load<TextAsset>("Button");
+        Managers.Interaction.LoadSet(textAsset_9.text);
+
+        TextAsset textAsset_10 = Managers.Resource.Load<TextAsset>("Lure");
+        Managers.Interaction.LoadSet(textAsset_10.text);
+
         // boxSet은 카드 조립 전에는 비어 있으며 에디터에서 저장한 뒤 다음 실행에 로드되는 플레이어 Set이다.
         TextAsset boxSet = Managers.Resource.Load<TextAsset>(PlayerSokobanSetKey);
         if (boxSet != null)
