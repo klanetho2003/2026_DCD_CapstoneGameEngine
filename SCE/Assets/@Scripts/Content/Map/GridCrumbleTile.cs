@@ -21,6 +21,8 @@ public sealed class GridCrumbleTile : MonoBehaviour
     private SpriteRenderer _renderer;
     /// <summary>부서지는 애니메이션을 재생할 선택 컴포넌트이며 없을 수 있다.</summary>
     private Animator _animator;
+    /// <summary>밟을 때 흔들림 · 부서질 때 흐려짐을 맡는 선택 연출이며 없을 수 있다. 있으면 Animator Break보다 먼저 쓴다.</summary>
+    private CrackOverlayFx _fx;
     /// <summary>밟은 횟수별 그림이 없을 때 유지할 저작 그림이다.</summary>
     private Sprite _authoredSprite;
     /// <summary>라운드 알림 구독 · 해제에 같은 인스턴스를 쓰도록 1회 만든 처리기다.</summary>
@@ -41,6 +43,7 @@ public sealed class GridCrumbleTile : MonoBehaviour
         _renderer = GetComponent<SpriteRenderer>();
         _authoredSprite = _renderer.sprite;
         _animator = GetComponent<Animator>();
+        _fx = GetComponent<CrackOverlayFx>();
         _onRoundChanged = ResetState;
     }
 
@@ -76,6 +79,8 @@ public sealed class GridCrumbleTile : MonoBehaviour
         _renderer.enabled = true;
         if (_animator != null && _animator.isActiveAndEnabled)
             _animator.Rebind(); // 이전 라운드의 Break 재생을 처음 상태로
+        if (_fx != null)
+            _fx.ResetVisual(); // 이전 라운드의 흔들림 · 흐려짐을 처음 상태로
         ApplyStepSprite();
     }
 
@@ -86,6 +91,8 @@ public sealed class GridCrumbleTile : MonoBehaviour
             return;
         StepCount++;
         ApplyStepSprite();
+        if (_fx != null)
+            _fx.PlayStep();
     }
 
     /// <summary>부순다 — 칸은 바로 타일 데이터에서 빠지고, 그림은 Break 애니메이션이 끝난 뒤(없으면 바로) 사라진다.</summary>
@@ -98,6 +105,12 @@ public sealed class GridCrumbleTile : MonoBehaviour
         _brokenCell = cell;
         _map.RemoveTile(cell);
 
+        if (_fx != null && _fx.isActiveAndEnabled)
+        {
+            _fx.PlayBreak();
+            _isBreaking = true; // 연출이 끝나면 Update가 Vanish를 부른다
+            return;
+        }
         if (_animator != null && _animator.isActiveAndEnabled && _animator.HasState(0, s_breakState))
         {
             _animator.Play(s_breakState, 0, 0f);
@@ -111,6 +124,8 @@ public sealed class GridCrumbleTile : MonoBehaviour
     /// <summary>Break 상태 재생이 끝났거나 Break를 벗어났는지 확인한다.</summary>
     private bool IsBreakAnimationFinished()
     {
+        if (_fx != null && _fx.isActiveAndEnabled)
+            return !_fx.IsBreaking;
         if (_animator == null || !_animator.isActiveAndEnabled)
             return true;
         if (_animator.IsInTransition(0))
@@ -129,7 +144,7 @@ public sealed class GridCrumbleTile : MonoBehaviour
             _map.ClearGroundTile(_brokenCell);
     }
 
-    /// <summary>밟은 횟수에 맞는 그림을 적용한다. 그림 목록이 비었으면 저작 그림을 유지한다.</summary>
+    /// <summary>밟은 횟수에 맞는 그림을 적용한다. 그림 목록이 비었거나 그 칸이 비었으면 저작 그림을 쓴다 (저작 그림이 없으면 아무것도 안 보임 — 0번 = 금 없음).</summary>
     private void ApplyStepSprite()
     {
         if (_stepSprites == null || _stepSprites.Length == 0)
@@ -139,7 +154,6 @@ public sealed class GridCrumbleTile : MonoBehaviour
         }
         // sprite는 밟은 횟수에 맞는 그림이며 횟수가 더 많으면 마지막 그림이다.
         Sprite sprite = _stepSprites[Mathf.Min(StepCount, _stepSprites.Length - 1)];
-        if (sprite != null)
-            _renderer.sprite = sprite;
+        _renderer.sprite = sprite != null ? sprite : _authoredSprite;
     }
 }
