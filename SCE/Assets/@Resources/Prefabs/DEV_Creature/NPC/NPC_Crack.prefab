@@ -88,7 +88,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 847ba7b1b51e0f340890cc210b65863c, type: 3}
+  m_Sprite: {fileID: 1439846702, guid: 9b4e8e9f3e0b9bc4298d1418f7a7d957, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -197,7 +197,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 394339f99b7ffc045ae09085f9377d85, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridCrumbleTile
-  _stepSprites: []
+  _stepSprites:
+  - {fileID: -6547208947833962669, guid: 9b4e8e9f3e0b9bc4298d1418f7a7d957, type: 3}
+  - {fileID: -2126796035, guid: 9b4e8e9f3e0b9bc4298d1418f7a7d957, type: 3}
+  - {fileID: 1439846702, guid: 9b4e8e9f3e0b9bc4298d1418f7a7d957, type: 3}
 --- !u!1 &4532940063053286423
 GameObject:
   m_ObjectHideFlags: 0

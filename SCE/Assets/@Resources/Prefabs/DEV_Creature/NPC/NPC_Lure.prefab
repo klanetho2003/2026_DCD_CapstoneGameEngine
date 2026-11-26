@@ -88,8 +88,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 847ba7b1b51e0f340890cc210b65863c, type: 3}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Sprite: {fileID: 908982925, guid: b625488ad833bf6408f32c5c3b4b68c1, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -197,7 +197,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14c7fa0fa3679c946b21364056f04d31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridLure
-  _activeSprite: {fileID: 0}
+  _activeSprite: {fileID: -3071857020033929463, guid: b625488ad833bf6408f32c5c3b4b68c1, type: 3}
 --- !u!1 &4532940063053286423
 GameObject:
   m_ObjectHideFlags: 0
